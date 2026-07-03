@@ -1,0 +1,32 @@
+# ROS2
+build/
+install/
+log/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.env
+
+# Model weights
+*.pt
+*.pth
+*.onnx
+*.engine
+
+# Dataset and videos
+datasets/
+videos/
+*.mp4
+*.avi
+*.bag
+*.db3
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
