@@ -1,0 +1,539 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot
+  name="车urdf(1)">
+  <link
+    name="base_link">
+    <inertial>
+      <origin
+        xyz="-0.00287488699395588 0.0326708834958189 -0.0456599026195311"
+        rpy="0 0 0" />
+      <mass
+        value="2.01382629493021" />
+      <inertia
+        ixx="0.00579585299795913"
+        ixy="-2.43850358741284E-06"
+        ixz="3.77402466798782E-05"
+        iyy="0.00308984049120909"
+        iyz="4.73869513985285E-05"
+        izz="0.00675249777498061" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://车urdf(1)/meshes/base_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://车urdf(1)/meshes/base_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <link
+    name="w 0">
+    <inertial>
+      <origin
+        xyz="0.0206456455717657 -0.0207540044863704 4.28962447514801E-05"
+        rpy="0 0 0" />
+      <mass
+        value="0.36608832072495" />
+      <inertia
+        ixx="0.000204834370693005"
+        ixy="-6.15124967644645E-05"
+        ixz="-3.51293841178721E-07"
+        iyy="0.00020492240812328"
+        iyz="-4.42281599225408E-07"
+        izz="0.000142435328497823" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://车urdf(1)/meshes/w 0.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://车urdf(1)/meshes/w 0.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="wojoint"
+    type="continuous">
+    <origin
+      xyz="0.17206 0.17206 -0.0036458"
+      rpy="3.1416 0 3.1416" />
+    <parent
+      link="base_link" />
+    <child
+      link="w 0" />
+    <axis
+      xyz="-0.70711 0.70711 0" />
+  </joint>
+  <link
+    name="w 1">
+    <inertial>
+      <origin
+        xyz="-0.020754004478491 -0.0206456455694293 4.28962399794224E-05"
+        rpy="0 0 0" />
+      <mass
+        value="0.366088320727298" />
+      <inertia
+        ixx="0.000204922408141684"
+        ixy="6.15124967798582E-05"
+        ixz="-4.42281604177855E-07"
+        iyy="0.000204834370659289"
+        iyz="3.51293816635325E-07"
+        izz="0.00014243532851014" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://车urdf(1)/meshes/w 1.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://车urdf(1)/meshes/w 1.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="w1joint"
+    type="continuous">
+    <origin
+      xyz="0.17206 -0.17206 -0.0036458"
+      rpy="3.1416 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="w 1" />
+    <axis
+      xyz="0.70711 0.70711 0" />
+  </joint>
+  <link
+    name="w 2">
+    <inertial>
+      <origin
+        xyz="0.0206456454876345 -0.0207540043832627 4.28962341050068E-05"
+        rpy="0 0 0" />
+      <mass
+        value="0.366088320169113" />
+      <inertia
+        ixx="0.000204834370519221"
+        ixy="-6.1512496775434E-05"
+        ixz="-3.5129382710272E-07"
+        iyy="0.000204922408078621"
+        iyz="-4.42281646501001E-07"
+        izz="0.000142435328366272" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://车urdf(1)/meshes/w 2.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://车urdf(1)/meshes/w 2.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="w2joint"
+    type="continuous">
+    <origin
+      xyz="-0.17206 -0.17206 -0.0036458"
+      rpy="3.1416 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="w 2" />
+    <axis
+      xyz="-0.70711 0.70711 0" />
+  </joint>
+  <link
+    name="w 3">
+    <inertial>
+      <origin
+        xyz="-0.0207540044491885 -0.0206456455502998 4.28962343937064E-05"
+        rpy="0 0 0" />
+      <mass
+        value="0.366088320566327" />
+      <inertia
+        ixx="0.000204922408147887"
+        ixy="6.15124967696277E-05"
+        ixz="-4.42281633118667E-07"
+        iyy="0.0002048343706123"
+        iyz="3.51293812968161E-07"
+        izz="0.000142435328455473" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://车urdf(1)/meshes/w 3.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://车urdf(1)/meshes/w 3.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="w3joint"
+    type="continuous">
+    <origin
+      xyz="-0.17206 0.17206 -0.0036458"
+      rpy="3.1416 0 3.1416" />
+    <parent
+      link="base_link" />
+    <child
+      link="w 3" />
+    <axis
+      xyz="0.70711 0.70711 0" />
+  </joint>
+  <link
+    name="yaw">
+    <inertial>
+      <origin
+        xyz="-0.000104829761398917 -0.000589227103042586 -0.140842550671345"
+        rpy="0 0 0" />
+      <mass
+        value="0.883658426613258" />
+      <inertia
+        ixx="0.00213024726017061"
+        ixy="-5.73528912951601E-05"
+        ixz="2.42952454253991E-06"
+        iyy="0.00206248069839824"
+        iyz="-2.22795485506688E-05"
+        izz="0.00270809171358488" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://车urdf(1)/meshes/yaw.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://车urdf(1)/meshes/yaw.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="yawjoint"
+    type="continuous">
+    <origin
+      xyz="0 0 0"
+      rpy="0 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="yaw" />
+    <axis
+      xyz="0 0 1" />
+  </joint>
+  <link
+    name="6020ph">
+    <inertial>
+      <origin
+        xyz="0.000149923407371078 -0.0594954214803141 0.131079721956733"
+        rpy="0 0 0" />
+      <mass
+        value="0.202753353111405" />
+      <inertia
+        ixx="7.05518989865931E-05"
+        ixy="4.13980200765987E-07"
+        ixz="5.09337178224181E-07"
+        iyy="0.000105949366714192"
+        iyz="2.53202874010532E-07"
+        izz="6.9955503617746E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://车urdf(1)/meshes/6020ph.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.2 0.2 0.2 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://车urdf(1)/meshes/6020ph.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="j0"
+    type="revolute">
+    <origin
+      xyz="0 0 -0.291"
+      rpy="0 0 -0.11442" />
+    <parent
+      link="base_link" />
+    <child
+      link="6020ph" />
+    <axis
+      xyz="0 -1 0" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="j1">
+    <inertial>
+      <origin
+        xyz="-0.0224736840795325 -0.104819232702008 0.130083538014049"
+        rpy="0 0 0" />
+      <mass
+        value="0.00832338785477166" />
+      <inertia
+        ixx="3.66389436167438E-07"
+        ixy="-3.86491869409277E-20"
+        ixz="-6.68555998045919E-08"
+        iyy="2.22748343163581E-06"
+        iyz="5.54109392691755E-22"
+        izz="2.0031109551508E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://车urdf(1)/meshes/j1.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://车urdf(1)/meshes/j1.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="j1"
+    type="revolute">
+    <origin
+      xyz="0 0 0"
+      rpy="0 0 0" />
+    <parent
+      link="6020ph" />
+    <child
+      link="j1" />
+    <axis
+      xyz="0 -1 0" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="j2">
+    <inertial>
+      <origin
+        xyz="-0.0419651591023542 -0.0977714009506881 0.0531855724194253"
+        rpy="0 0 0" />
+      <mass
+        value="0.0122847021612473" />
+      <inertia
+        ixx="1.9922960735686E-05"
+        ixy="-2.5410988417629E-21"
+        ixz="-9.52409426267414E-12"
+        iyy="2.00501719241709E-05"
+        iyz="1.60040577894707E-19"
+        izz="6.72583783018631E-07" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://车urdf(1)/meshes/j2.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://车urdf(1)/meshes/j2.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="j2"
+    type="fixed">
+    <origin
+      xyz="0 0 0"
+      rpy="0 0 0" />
+    <parent
+      link="j1" />
+    <child
+      link="j2" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="j3">
+    <inertial>
+      <origin
+        xyz="-0.012212955233052 -0.000694524989414164 -0.0526186404604567"
+        rpy="0 0 0" />
+      <mass
+        value="0.761286398284459" />
+      <inertia
+        ixx="0.00108381958957482"
+        ixy="1.49557502577951E-06"
+        ixz="0.000175732585068393"
+        iyy="0.00079369610947869"
+        iyz="-6.51207718021207E-07"
+        izz="0.00144943266014822" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://车urdf(1)/meshes/j3.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.898039215686275 0.917647058823529 0.929411764705882 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://车urdf(1)/meshes/j3.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="j3"
+    type="revolute">
+    <origin
+      xyz="0 0 0"
+      rpy="0 0 0" />
+    <parent
+      link="j2" />
+    <child
+      link="j3" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+</robot>
