@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<sdf version="1.7">
+  <model name="subway_tunnel">
+    <static>true</static>
+    <link name="tunnel">
+      <visual name="visual">
+        <geometry>
+          <mesh>
+            <uri>model://subway_tunnel/meshes/tunnel.dae</uri>
+            <scale>1 1 1</scale>
+          </mesh>
+        </geometry>
+        <cast_shadows>true</cast_shadows>
+      </visual>
+
+      <collision name="collision">
+        <geometry>
+          <mesh>
+            <uri>model://subway_tunnel/meshes/tunnel_collision.stl</uri>
+            <scale>1 1 1</scale>
+          </mesh>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>1</mu>
+              <mu2>1</mu2>
+            </ode>
+          </friction>
+          <contact>
+            <ode>
+              <kp>1e+13</kp>
+              <kd>1</kd>
+              <max_vel>0.01</max_vel>
+              <min_depth>0</min_depth>
+            </ode>
+          </contact>
+        </surface>
+      </collision>
+    </link>
+  </model>
+</sdf>
