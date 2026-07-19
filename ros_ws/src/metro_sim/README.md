@@ -140,7 +140,6 @@ python3 scripts/manage_nav_test_obstacle.py delete
 - 可靠的 `/odom`、`/scan` 和完整 TF；
 - 底盘固件通信超时、机械制动与硬件急停；
 - 正式 dashboard/任务管理系统对 `/navigation/obstacle_error` 的订阅和持久化。
-
 ## 迁移验收记录
 
 2026-07-19 已在 Metro 源码路径下完成独立运行验收：
