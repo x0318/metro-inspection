@@ -1,0 +1,17 @@
+tunnel_obstacle_guard:
+  ros__parameters:
+    use_sim_time: true
+    stop_distance: 2.0
+    resume_distance: 2.5
+    front_half_angle: 0.35
+    report_after: 10.0
+    scan_timeout: 2.0
+    command_timeout: 0.5
+    max_forward_speed: 0.35
+
+cmd_vel_watchdog:
+  ros__parameters:
+    input_topic: /cmd_vel_safe
+    output_topic: /cmd_vel_drive
+    timeout: 2.0
+    output_rate: 20.0

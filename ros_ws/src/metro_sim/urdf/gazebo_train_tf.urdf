@@ -1,0 +1,166 @@
+<?xml version="1.0"?>
+<robot name="gazebo_train_tf">
+  <material name="body_blue">
+    <color rgba="0.08 0.38 0.62 1"/>
+  </material>
+  <material name="dark_gray">
+    <color rgba="0.08 0.08 0.08 1"/>
+  </material>
+  <material name="black">
+    <color rgba="0.01 0.01 0.01 1"/>
+  </material>
+  <material name="sensor_green">
+    <color rgba="0.05 0.8 0.35 1"/>
+  </material>
+
+  <link name="base_footprint"/>
+
+  <link name="base_link">
+    <visual name="body">
+      <origin xyz="0 0 0.25" rpy="0 0 0"/>
+      <geometry>
+        <box size="1.40 0.90 0.34"/>
+      </geometry>
+      <material name="body_blue"/>
+    </visual>
+    <visual name="front_sensor_bar">
+      <origin xyz="0.68 0 0.50" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.10 0.62 0.10"/>
+      </geometry>
+      <material name="sensor_green"/>
+    </visual>
+  </link>
+
+  <joint name="base_joint" type="fixed">
+    <parent link="base_footprint"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 0.05" rpy="0 0 0"/>
+  </joint>
+
+  <link name="front_left_wheel">
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.14" length="0.08"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+  </link>
+  <joint name="front_left_wheel_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="front_left_wheel"/>
+    <origin xyz="0.45 0.50 0.05" rpy="0 0 0"/>
+  </joint>
+
+  <link name="front_right_wheel">
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.14" length="0.08"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+  </link>
+  <joint name="front_right_wheel_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="front_right_wheel"/>
+    <origin xyz="0.45 -0.50 0.05" rpy="0 0 0"/>
+  </joint>
+
+  <link name="rear_left_wheel">
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.14" length="0.08"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+  </link>
+  <joint name="rear_left_wheel_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="rear_left_wheel"/>
+    <origin xyz="-0.45 0.50 0.05" rpy="0 0 0"/>
+  </joint>
+
+  <link name="rear_right_wheel">
+    <visual>
+      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <geometry>
+        <cylinder radius="0.14" length="0.08"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+  </link>
+  <joint name="rear_right_wheel_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="rear_right_wheel"/>
+    <origin xyz="-0.45 -0.50 0.05" rpy="0 0 0"/>
+  </joint>
+
+  <link name="sensor_mast">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.055" length="0.72"/>
+      </geometry>
+      <material name="dark_gray"/>
+    </visual>
+  </link>
+  <joint name="sensor_mast_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="sensor_mast"/>
+    <origin xyz="0 0 0.76" rpy="0 0 0"/>
+  </joint>
+
+  <link name="laser_link">
+    <visual name="lidar_body">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.18" length="0.12"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+    <visual name="lidar_ring">
+      <origin xyz="0 0 0.07" rpy="0 0 0"/>
+      <geometry>
+        <cylinder radius="0.21" length="0.025"/>
+      </geometry>
+      <material name="sensor_green"/>
+    </visual>
+  </link>
+  <joint name="lidar_joint" type="fixed">
+    <parent link="sensor_mast"/>
+    <child link="laser_link"/>
+    <origin xyz="0 0 0.42" rpy="0 0 0"/>
+  </joint>
+
+  <link name="camera_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.18 0.10 0.10"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+  </link>
+  <joint name="camera_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="camera_link"/>
+    <origin xyz="0.62 0 0.48" rpy="0 0 0"/>
+  </joint>
+
+  <link name="camera_lens_link"/>
+  <joint name="camera_rgb_joint" type="fixed">
+    <parent link="camera_link"/>
+    <child link="camera_lens_link"/>
+    <origin xyz="0.10 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="imu_link"/>
+  <joint name="imu_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="imu_link"/>
+    <origin xyz="0 0 0.35" rpy="0 0 0"/>
+  </joint>
+</robot>

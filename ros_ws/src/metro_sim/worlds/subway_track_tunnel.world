@@ -1,0 +1,163 @@
+<?xml version="1.0"?>
+<sdf version="1.7">
+  <world name="subway_track_tunnel">
+    <physics type="ode">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+    </physics>
+
+    <scene>
+      <ambient>0.60 0.61 0.63 1</ambient>
+      <background>0.025 0.027 0.032 1</background>
+      <shadows>false</shadows>
+      <grid>false</grid>
+      <origin_visual>false</origin_visual>
+    </scene>
+
+    <gui fullscreen="0">
+      <camera name="user_camera">
+        <pose>-13 1.4 1.7 0 0.04 3.14159265</pose>
+        <view_controller>orbit</view_controller>
+        <projection_type>perspective</projection_type>
+      </camera>
+    </gui>
+
+    <light name="soft_fill" type="directional">
+      <cast_shadows>false</cast_shadows>
+      <pose>0 0 8 0 0 0</pose>
+      <diffuse>0.18 0.18 0.18 1</diffuse>
+      <specular>0.08 0.08 0.08 1</specular>
+      <direction>-0.35 0 -1</direction>
+    </light>
+
+    <light name="tunnel_fill_m18" type="point">
+      <cast_shadows>false</cast_shadows>
+      <pose>-18 0 3.45 0 0 0</pose>
+      <diffuse>0.16 0.17 0.18 1</diffuse>
+      <specular>0.02 0.02 0.02 1</specular>
+      <attenuation><range>14</range><constant>0.8</constant><linear>0.08</linear><quadratic>0.02</quadratic></attenuation>
+    </light>
+    <light name="tunnel_fill_m9" type="point">
+      <cast_shadows>false</cast_shadows>
+      <pose>-9 0 3.45 0 0 0</pose>
+      <diffuse>0.16 0.17 0.18 1</diffuse>
+      <specular>0.02 0.02 0.02 1</specular>
+      <attenuation><range>14</range><constant>0.8</constant><linear>0.08</linear><quadratic>0.02</quadratic></attenuation>
+    </light>
+    <light name="tunnel_fill_0" type="point">
+      <cast_shadows>false</cast_shadows>
+      <pose>0 0 3.45 0 0 0</pose>
+      <diffuse>0.16 0.17 0.18 1</diffuse>
+      <specular>0.02 0.02 0.02 1</specular>
+      <attenuation><range>14</range><constant>0.8</constant><linear>0.08</linear><quadratic>0.02</quadratic></attenuation>
+    </light>
+    <light name="tunnel_fill_9" type="point">
+      <cast_shadows>false</cast_shadows>
+      <pose>9 0 3.45 0 0 0</pose>
+      <diffuse>0.16 0.17 0.18 1</diffuse>
+      <specular>0.02 0.02 0.02 1</specular>
+      <attenuation><range>14</range><constant>0.8</constant><linear>0.08</linear><quadratic>0.02</quadratic></attenuation>
+    </light>
+    <light name="tunnel_fill_18" type="point">
+      <cast_shadows>false</cast_shadows>
+      <pose>18 0 3.45 0 0 0</pose>
+      <diffuse>0.16 0.17 0.18 1</diffuse>
+      <specular>0.02 0.02 0.02 1</specular>
+      <attenuation><range>14</range><constant>0.8</constant><linear>0.08</linear><quadratic>0.02</quadratic></attenuation>
+    </light>
+
+    <!--
+      Keep the detailed rails and sleepers as the visible model, but support
+      the rail vehicle on a continuous invisible surface at rail-head height.
+      Invisible side guides limit lateral drift without relying on fragile
+      wheel-flange contact simulation.
+    -->
+    <model name="smooth_robot_drive_surface">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="drive_surface_link">
+        <collision name="drive_surface_collision">
+          <pose>0 0 0.315 0 0 0</pose>
+          <geometry>
+            <box>
+              <size>50 1.80 0.05</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
+              </ode>
+            </friction>
+            <contact>
+              <ode>
+                <kp>1e+06</kp>
+                <kd>10</kd>
+                <max_vel>0.1</max_vel>
+                <min_depth>0.001</min_depth>
+              </ode>
+            </contact>
+          </surface>
+        </collision>
+        <collision name="left_hidden_guide">
+          <pose>0 0.92 0.45 0 0 0</pose>
+          <geometry><box><size>50 0.05 0.25</size></box></geometry>
+        </collision>
+        <collision name="right_hidden_guide">
+          <pose>0 -0.92 0.45 0 0 0</pose>
+          <geometry><box><size>50 0.05 0.25</size></box></geometry>
+        </collision>
+      </link>
+    </model>
+
+    <include>
+      <uri>model://subway_tunnel</uri>
+      <name>subway_tunnel</name>
+      <pose>0 0 1.75 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <include>
+      <pose>-20 0 0.42 0 0 0</pose>
+      <name>inspection_robot_with_lidar</name>
+      <uri>model://gazebo_train</uri>
+    </include>
+
+    <model name="defect_markers">
+      <static>true</static>
+      <link name="crack_marker">
+        <pose>-12 3.105 1.65 0 0 0</pose>
+        <visual name="visual">
+          <geometry><box><size>0.06 0.02 1.1</size></box></geometry>
+          <material>
+            <ambient>0.02 0.02 0.02 1</ambient>
+            <diffuse>0.02 0.02 0.02 1</diffuse>
+          </material>
+        </visual>
+      </link>
+      <link name="leak_marker">
+        <pose>7 -3.105 1.35 0 0 0</pose>
+        <visual name="visual">
+          <geometry><sphere><radius>0.32</radius></sphere></geometry>
+          <material>
+            <ambient>0.02 0.2 0.55 0.72</ambient>
+            <diffuse>0.04 0.32 0.8 0.72</diffuse>
+            <transparency>0.35</transparency>
+          </material>
+        </visual>
+      </link>
+      <link name="loose_bracket_marker">
+        <pose>23 2.84 2.72 0 0 0</pose>
+        <visual name="visual">
+          <geometry><box><size>0.55 0.12 0.12</size></box></geometry>
+          <material>
+            <ambient>0.8 0.2 0.05 1</ambient>
+            <diffuse>0.95 0.28 0.08 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+  </world>
+</sdf>
