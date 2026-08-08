@@ -1,0 +1,1423 @@
+<?xml version="1.0"?>
+<!-- Based on the teammate's simple_v4 SolidWorks export, with Gazebo orientation,
+     material, and duplicate-camera corrections applied for this project.
+     This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot
+  name="subway_v2">
+  <link
+    name="base_footprint" />
+  <!-- CAD +Z is vehicle-forward; align it with ROS base_footprint +X. -->
+  <joint
+    name="base_footprint_to_base_link"
+    type="fixed">
+    <origin
+      xyz="0 0 0"
+      rpy="-1.5707963267949 0 -1.5707963267949" />
+    <parent
+      link="base_footprint" />
+    <child
+      link="base_link" />
+  </joint>
+ <link name="imu_link">
+    <inertial>
+      <mass value="0.001" />
+      <inertia ixx="0.000001" ixy="0" ixz="0" iyy="0.000001" iyz="0" izz="0.000001" />
+    </inertial>
+  </link>
+  <joint name="imu_joint" type="fixed">
+  <origin xyz="0.02663 -0.03447 -0.02174" rpy="0 0 0" />
+  <parent link="lidar_link" />
+  <child link="imu_link" />
+</joint>
+  <link
+    name="base_link">
+    <inertial>
+      <origin
+        xyz="0.00342789855769907 0.044300778296454 -0.0137705448181943"
+        rpy="0 0 0" />
+      <mass
+        value="14.4385473688281" />
+      <inertia
+        ixx="0.215734920341753"
+        ixy="-2.15936637059225E-07"
+        ixz="1.20856557783447E-06"
+        iyy="0.278272017843691"
+        iyz="-5.34430530061155E-05"
+        izz="0.0725016920318856" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://metro_description/meshes/base_link_body.STL" />
+      </geometry>
+      <material
+        name="gazebo_grey">
+        <color
+          rgba="0.7 0.7 0.7 1" />
+      </material>
+    </visual>
+    <collision name="body_collision">
+      <origin
+        xyz="0.003429 0.014942 -0.038154"
+        rpy="0 0 0" />
+      <geometry>
+        <box size="0.476 0.244 0.465" />
+      </geometry>
+    </collision>
+  </link>
+  <link
+    name="w1">
+    <inertial>
+      <origin
+        xyz="9.91318433984922E-06 8.37358922128884E-06 0.0780641065720685"
+        rpy="0 0 0" />
+      <mass
+        value="0.432839204473948" />
+      <inertia
+        ixx="0.000254810906659782"
+        ixy="6.48032906553626E-08"
+        ixz="-6.66448946404272E-08"
+        iyy="0.000254716886605214"
+        iyz="-4.03592026086578E-08"
+        izz="0.000490322633066963" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://metro_description/meshes/w1_tire.STL" />
+      </geometry>
+      <material
+        name="gazebo_flat_black">
+        <color
+          rgba="0.1 0.1 0.1 1" />
+      </material>
+    </visual>
+    <collision name="tire_collision">
+      <origin xyz="0 0 0.087599873543" rpy="0 0 0" />
+      <geometry>
+        <cylinder radius="0.076957046108" length="0.038999736309" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="w1_joint"
+    type="continuous">
+    <origin
+      xyz="0.152328939951822 0.103 0.134095970953207"
+      rpy="1.57079632679489 -0.16843576907617 1.5707963267949" />
+    <parent
+      link="base_link" />
+    <child
+      link="w1" />
+    <axis
+      xyz="0 0 -1" />
+    <dynamics damping="0.2" friction="0.05" />
+  </joint>
+  <link
+    name="w2">
+    <inertial>
+      <origin
+        xyz="-3.20432711017893E-07 -1.29725007082526E-05 0.0780641066038899"
+        rpy="0 0 0" />
+      <mass
+        value="0.432839204200384" />
+      <inertia
+        ixx="0.000254693986362195"
+        ixy="3.9012350020123E-08"
+        ixz="1.40700359473041E-08"
+        iyy="0.000254833806900407"
+        iyz="7.66318556252981E-08"
+        izz="0.000490322633065787" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://metro_description/meshes/w2_tire.STL" />
+      </geometry>
+      <material
+        name="gazebo_flat_black">
+        <color
+          rgba="0.1 0.1 0.1 1" />
+      </material>
+    </visual>
+    <collision name="tire_collision">
+      <origin xyz="0 0 0.087599873543" rpy="0 0 0" />
+      <geometry>
+        <cylinder radius="0.076957046108" length="0.038999736309" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="w2_joint"
+    type="continuous">
+    <origin
+      xyz="-0.145471060048178 0.103 0.134095970953207"
+      rpy="1.57079632679489 0.16843576907617 -1.5707963267949" />
+    <parent
+      link="base_link" />
+    <child
+      link="w2" />
+    <axis
+      xyz="0 0 -1" />
+    <dynamics damping="0.2" friction="0.05" />
+  </joint>
+  <link
+    name="w3">
+    <inertial>
+      <origin
+        xyz="3.22186376811029E-06 -1.25701161332037E-05 0.0780641065724568"
+        rpy="0 0 0" />
+      <mass
+        value="0.432839204470938" />
+      <inertia
+        ixx="0.000254683909187753"
+        ixy="-3.37902874795592E-09"
+        ixz="-7.31472956341221E-09"
+        iyy="0.000254843884077263"
+        iyz="7.75686918092966E-08"
+        izz="0.000490322633066998" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://metro_description/meshes/w3_tire.STL" />
+      </geometry>
+      <material
+        name="gazebo_flat_black">
+        <color
+          rgba="0.1 0.1 0.1 1" />
+      </material>
+    </visual>
+    <collision name="tire_collision">
+      <origin xyz="0 0 0.087599873543" rpy="0 0 0" />
+      <geometry>
+        <cylinder radius="0.076957046108" length="0.038999736309" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="w3_joint"
+    type="continuous">
+    <origin
+      xyz="-0.145471060048178 0.102999999999999 -0.155904029046793"
+      rpy="1.57079632679489 1.06806361303278 -1.5707963267949" />
+    <parent
+      link="base_link" />
+    <child
+      link="w3" />
+    <axis
+      xyz="0 0 -1" />
+    <dynamics damping="0.2" friction="0.05" />
+  </joint>
+  <link
+    name="w4">
+    <inertial>
+      <origin
+        xyz="1.18177824037502E-05 5.3599021413997E-06 0.0780641066153224"
+        rpy="0 0 0" />
+      <mass
+        value="0.432839204102094" />
+      <inertia
+        ixx="0.000254837882755251"
+        ixy="3.05853328569567E-08"
+        ixz="-7.51126838152341E-08"
+        iyy="0.000254689910506613"
+        iyz="-2.07000468565932E-08"
+        izz="0.000490322633065432" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://metro_description/meshes/w4_tire.STL" />
+      </geometry>
+      <material
+        name="gazebo_flat_black">
+        <color
+          rgba="0.1 0.1 0.1 1" />
+      </material>
+    </visual>
+    <collision name="tire_collision">
+      <origin xyz="0 0 0.087599873543" rpy="0 0 0" />
+      <geometry>
+        <cylinder radius="0.076957046108" length="0.038999736309" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="w4_joint"
+    type="continuous">
+    <origin
+      xyz="0.152328939951822 0.102999999999999 -0.155904029046793"
+      rpy="1.57079632679489 -1.06806361303278 1.5707963267949" />
+    <parent
+      link="base_link" />
+    <child
+      link="w4" />
+    <axis
+      xyz="0 0 -1" />
+    <dynamics damping="0.2" friction="0.05" />
+  </joint>
+  <link
+    name="yuntai">
+    <inertial>
+      <origin
+        xyz="-2.56377579639991E-07 -0.110169069602299 -0.0784992077231397"
+        rpy="0 0 0" />
+      <mass
+        value="0.904884147270093" />
+      <inertia
+        ixx="0.00311178538498172"
+        ixy="4.7292512973693E-06"
+        ixz="6.19240417083095E-07"
+        iyy="0.0025251066654015"
+        iyz="-2.23541087825991E-05"
+        izz="0.00263526415654357" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://metro_description/meshes/yuntai.STL" />
+      </geometry>
+      <material
+        name="gazebo_grey">
+        <color
+          rgba="0.7 0.7 0.7 1" />
+      </material>
+    </visual>
+  </link>
+  <joint
+    name="yaw"
+    type="fixed">
+    <origin
+      xyz="-0.0738710600481814 -0.166 -0.0109040290468001"
+      rpy="3.14159265358979 1.5707963267949 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="yuntai" />
+    <axis
+      xyz="0 -1 0" />
+  </joint>
+  <link
+    name="pitch">
+    <inertial>
+      <origin
+        xyz="-0.0925241163064857 0.0326598382405011 -0.039798784483146"
+        rpy="0 0 0" />
+      <mass
+        value="1.90241501200622" />
+      <inertia
+        ixx="0.0021941081471964"
+        ixy="3.19697219377039E-10"
+        ixz="-3.42069944155664E-06"
+        iyy="0.00512780545767912"
+        iyz="2.6072651496461E-05"
+        izz="0.00325257938604102" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://metro_description/meshes/pitch_body.STL" />
+      </geometry>
+      <material
+        name="gazebo_dark_grey">
+        <color
+          rgba="0.175 0.175 0.175 1" />
+      </material>
+    </visual>
+  </link>
+  <joint
+    name="ph"
+    type="revolute">
+    <origin
+      xyz="0 0.01 0"
+      rpy="-0.7864854630904483 -1.5707963267949 0" />
+    <parent
+      link="yuntai" />
+    <child
+      link="pitch" />
+    <axis
+      xyz="-1 0 0" />
+    <limit
+      lower="0"
+      upper="0"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="leida">
+    <inertial>
+      <origin
+        xyz="-6.70843705679936E-05 -0.000571404395515208 0.0183157980108806"
+        rpy="0 0 0" />
+      <mass
+        value="0.224138920024067" />
+      <inertia
+        ixx="9.82520762873099E-05"
+        ixy="-2.15936637052776E-07"
+        ixz="1.20856557780612E-06"
+        iyy="0.000207409840614029"
+        iyz="1.4930931552229E-07"
+        izz="0.000241137504421461" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://metro_description/meshes/leida.STL" />
+      </geometry>
+      <material
+        name="gazebo_white">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+  </link>
+  <joint
+    name="ld"
+    type="fixed">
+    <origin
+      xyz="0.00342893995182154 -0.0120000000000005 0.139095970953207"
+      rpy="0 0 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="leida" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+  <link
+    name="xj1">
+    <inertial>
+      <origin
+        xyz="1.38777878078145E-17 0.00131485474518439 0.0293800194825995"
+        rpy="0 0 0" />
+      <mass
+        value="0.0702201485513357" />
+      <inertia
+        ixx="6.8924576094566E-05"
+        ixy="-3.15031867405231E-22"
+        ixz="-2.47911825157509E-20"
+        iyy="6.88359580916203E-05"
+        iyz="4.53852695686592E-06"
+        izz="9.16131167809349E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://metro_description/meshes/xj1.STL" />
+      </geometry>
+      <material
+        name="gazebo_white">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+  </link>
+  <joint
+    name="xj1_joint"
+    type="fixed">
+    <origin
+      xyz="0.163428939951822 -0.0135000000000005 -0.0109040290467929"
+      rpy="3.14159265358979 -1.5707963267949 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="xj1" />
+    <axis
+      xyz="0 0 0" />
+       </joint>
+
+  <link name="xj1_camera_link" />
+
+  <joint name="xj1_camera_joint" type="fixed">
+    <origin
+      xyz="0 0 0.018478"
+      rpy="-1.5707963267949 -1.5707963267949 0" />
+    <parent link="xj1" />
+    <child link="xj1_camera_link" />
+  </joint>
+
+  <link name="xj1_optical_frame" />
+
+  <joint name="xj1_optical_joint" type="fixed">
+    <origin
+      xyz="0 0 0"
+      rpy="-1.5707963267949 0 -1.5707963267949" />
+    <parent link="xj1_camera_link" />
+    <child link="xj1_optical_frame" />
+  </joint>
+  <link
+    name="xj2">
+    <inertial>
+      <origin
+        xyz="-1.04083408558608E-17 0.0013148547451844 0.0293800194825994"
+        rpy="0 0 0" />
+      <mass
+        value="0.0702201485513357" />
+      <inertia
+        ixx="6.8924576094566E-05"
+        ixy="-3.35080282705558E-21"
+        ixz="2.46223356814039E-20"
+        iyy="6.88359580916203E-05"
+        iyz="4.53852695686592E-06"
+        izz="9.1613116780935E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://metro_description/meshes/xj2.STL" />
+      </geometry>
+      <material
+        name="gazebo_white">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+  </link>
+  <joint
+    name="xj2_joint"
+    type="fixed">
+    <origin
+      xyz="-0.156571060048178 -0.0135000000000005 -0.0109040290467929"
+      rpy="3.14159265358979 1.5707963267949 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="xj2" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+
+  <!-- Provisional: reuse the xj1 optical-center offset until xj2 is measured. -->
+  <link name="xj2_camera_link" />
+
+  <joint name="xj2_camera_joint" type="fixed">
+    <origin
+      xyz="0 0 0.018478"
+      rpy="-1.5707963267949 -1.5707963267949 0" />
+    <parent link="xj2" />
+    <child link="xj2_camera_link" />
+  </joint>
+
+  <link name="xj2_optical_frame" />
+
+  <joint name="xj2_optical_joint" type="fixed">
+    <origin
+      xyz="0 0 0"
+      rpy="-1.5707963267949 0 -1.5707963267949" />
+    <parent link="xj2_camera_link" />
+    <child link="xj2_optical_frame" />
+  </joint>
+  <link
+    name="xj3">
+    <inertial>
+      <origin
+        xyz="2.77555756156289E-17 0.00131485474518442 0.0293800194825995"
+        rpy="0 0 0" />
+      <mass
+        value="0.0702201485513357" />
+      <inertia
+        ixx="6.8924576094566E-05"
+        ixy="-1.5602745394948E-21"
+        ixz="1.45285092869587E-21"
+        iyy="6.88359580916203E-05"
+        iyz="4.53852695686594E-06"
+        izz="9.16131167809349E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://metro_description/meshes/xj3.STL" />
+      </geometry>
+      <material
+        name="gazebo_white">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+  </link>
+  <joint
+    name="xj3_joint"
+    type="fixed">
+    <origin
+      xyz="0.227928939951822 -0.107 -0.229404029046793"
+      rpy="-1.5707963267949 -1.5707963267949 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="xj3" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+
+  <!-- Provisional simulation optical center: 1 mm beyond the current mesh front. -->
+  <link name="xj3_camera_link" />
+
+  <joint name="xj3_camera_joint" type="fixed">
+    <origin
+      xyz="0 0 0.077"
+      rpy="-1.5707963267949 -1.5707963267949 0" />
+    <parent link="xj3" />
+    <child link="xj3_camera_link" />
+  </joint>
+
+  <link name="xj3_optical_frame" />
+
+  <joint name="xj3_optical_joint" type="fixed">
+    <origin
+      xyz="0 0 0"
+      rpy="-1.5707963267949 0 -1.5707963267949" />
+    <parent link="xj3_camera_link" />
+    <child link="xj3_optical_frame" />
+  </joint>
+  <link
+    name="xj4">
+    <inertial>
+      <origin
+        xyz="0 0.00131485474518439 0.0293800194825995"
+        rpy="0 0 0" />
+      <mass
+        value="0.0702201485513357" />
+      <inertia
+        ixx="6.89245760945659E-05"
+        ixy="-1.61086165545802E-21"
+        ixz="-8.74978812214365E-21"
+        iyy="6.88359580916203E-05"
+        iyz="4.53852695686589E-06"
+        izz="9.16131167809348E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://metro_description/meshes/xj4.STL" />
+      </geometry>
+      <material
+        name="gazebo_white">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+  </link>
+  <joint
+    name="xj4_joint"
+    type="fixed">
+    <origin
+      xyz="-0.221071060048178 -0.107 -0.229404029046793"
+      rpy="-1.5707963267949 1.5707963267949 0" />
+    <parent
+      link="base_link" />
+    <child
+      link="xj4" />
+    <axis
+      xyz="0 0 0" />
+  </joint>
+
+  <!-- Provisional simulation optical center: 1 mm beyond the current mesh front. -->
+  <link name="xj4_camera_link" />
+
+  <joint name="xj4_camera_joint" type="fixed">
+    <origin
+      xyz="0 0 0.077"
+      rpy="-1.5707963267949 -1.5707963267949 0" />
+    <parent link="xj4" />
+    <child link="xj4_camera_link" />
+  </joint>
+
+  <link name="xj4_optical_frame" />
+
+  <joint name="xj4_optical_joint" type="fixed">
+    <origin
+      xyz="0 0 0"
+      rpy="-1.5707963267949 0 -1.5707963267949" />
+    <parent link="xj4_camera_link" />
+    <child link="xj4_optical_frame" />
+  </joint>
+  <link name="lidar_link">
+    <inertial>
+      <mass value="0.001" />
+      <inertia ixx="0.000001" ixy="0" ixz="0" iyy="0.000001" iyz="0" izz="0.000001" />
+    </inertial>
+  </link>
+  <joint name="lidar_joint" type="fixed">
+    <origin xyz="-0.0055 0 0.0078" 
+    rpy="1.5707963267949 -1.5707963267949 0" />
+    <parent link="leida" />
+    <child link="lidar_link" />
+  </joint>
+  <link name="odin1_rgb_optical_frame" />
+
+  <joint name="odin1_rgb_optical_joint" type="fixed">
+    <origin
+      xyz="0.01462035 0.03437643 0.00044495"
+      rpy="-1.56469628 -0.00208000 -1.58220663" />
+    <parent link="lidar_link" />
+    <child link="odin1_rgb_optical_frame" />
+  </joint>
+  <link name="pitch_camera">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.001" />
+      <inertia
+        ixx="0.000001"
+        ixy="0"
+        ixz="0"
+        iyy="0.000001"
+        iyz="0"
+        izz="0.000001" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://metro_description/meshes/pitch_camera.STL" />
+      </geometry>
+      <material name="gazebo_white">
+        <color rgba="1 1 1 1" />
+      </material>
+    </visual>
+  </link>
+  <joint
+    name="pitch_camera_joint"
+    type="fixed">
+    <origin
+      xyz="0 0 0"
+      rpy="0 0 0" />
+    <parent link="pitch" />
+    <child link="pitch_camera" />
+  </joint>
+
+  <!-- Provisional simulation optical center: 1 mm beyond the current mesh front. -->
+  <link name="pitch_camera_sensor_link" />
+
+  <joint name="pitch_camera_sensor_joint" type="fixed">
+    <origin
+      xyz="-0.077300002798 0.003299999982 0.087818765"
+      rpy="-1.5707963267949 -1.5707963267949 0" />
+    <parent link="pitch_camera" />
+    <child link="pitch_camera_sensor_link" />
+  </joint>
+
+  <link name="pitch_camera_optical_frame" />
+
+  <joint name="pitch_camera_optical_joint" type="fixed">
+    <origin
+      xyz="0 0 0"
+      rpy="-1.5707963267949 0 -1.5707963267949" />
+    <parent link="pitch_camera_sensor_link" />
+    <child link="pitch_camera_optical_frame" />
+  </joint>
+  <link name="w1_hub">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.001" />
+      <inertia
+        ixx="0.000001"
+        ixy="0"
+        ixz="0"
+        iyy="0.000001"
+        iyz="0"
+        izz="0.000001" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://metro_description/meshes/w1_hub.STL" />
+      </geometry>
+      <material name="gazebo_grey">
+        <color rgba="0.7 0.7 0.7 1" />
+      </material>
+    </visual>
+  </link>
+  <joint
+    name="w1_hub_joint"
+    type="revolute">
+    <origin
+      xyz="0 0 0"
+      rpy="0 0 0" />
+    <parent link="w1" />
+    <child link="w1_hub" />
+    <axis xyz="0 0 1" />
+    <limit lower="0" upper="0" effort="0" velocity="0" />
+  </joint>
+  <link name="w2_hub">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.001" />
+      <inertia
+        ixx="0.000001"
+        ixy="0"
+        ixz="0"
+        iyy="0.000001"
+        iyz="0"
+        izz="0.000001" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://metro_description/meshes/w2_hub.STL" />
+      </geometry>
+      <material name="gazebo_grey">
+        <color rgba="0.7 0.7 0.7 1" />
+      </material>
+    </visual>
+  </link>
+  <joint
+    name="w2_hub_joint"
+    type="revolute">
+    <origin
+      xyz="0 0 0"
+      rpy="0 0 0" />
+    <parent link="w2" />
+    <child link="w2_hub" />
+    <axis xyz="0 0 1" />
+    <limit lower="0" upper="0" effort="0" velocity="0" />
+  </joint>
+  <link name="w3_hub">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.001" />
+      <inertia
+        ixx="0.000001"
+        ixy="0"
+        ixz="0"
+        iyy="0.000001"
+        iyz="0"
+        izz="0.000001" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://metro_description/meshes/w3_hub.STL" />
+      </geometry>
+      <material name="gazebo_grey">
+        <color rgba="0.7 0.7 0.7 1" />
+      </material>
+    </visual>
+  </link>
+  <joint
+    name="w3_hub_joint"
+    type="revolute">
+    <origin
+      xyz="0 0 0"
+      rpy="0 0 0" />
+    <parent link="w3" />
+    <child link="w3_hub" />
+    <axis xyz="0 0 1" />
+    <limit lower="0" upper="0" effort="0" velocity="0" />
+  </joint>
+  <link name="w4_hub">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.001" />
+      <inertia
+        ixx="0.000001"
+        ixy="0"
+        ixz="0"
+        iyy="0.000001"
+        iyz="0"
+        izz="0.000001" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://metro_description/meshes/w4_hub.STL" />
+      </geometry>
+      <material name="gazebo_grey">
+        <color rgba="0.7 0.7 0.7 1" />
+      </material>
+    </visual>
+  </link>
+  <joint
+    name="w4_hub_joint"
+    type="revolute">
+    <origin
+      xyz="0 0 0"
+      rpy="0 0 0" />
+    <parent link="w4" />
+    <child link="w4_hub" />
+    <axis xyz="0 0 1" />
+    <limit lower="0" upper="0" effort="0" velocity="0" />
+  </joint>
+  <gazebo>
+    <static>false</static>
+    <plugin name="subway_v2_planar_move" filename="libgazebo_ros_planar_move.so">
+      <ros>
+        <remapping>cmd_vel:=cmd_vel_drive</remapping>
+        <remapping>odom:=odom</remapping>
+      </ros>
+      <update_rate>100</update_rate>
+      <publish_rate>30</publish_rate>
+      <publish_odom>true</publish_odom>
+      <publish_odom_tf>true</publish_odom_tf>
+      <odometry_frame>odom</odometry_frame>
+      <robot_base_frame>base_footprint</robot_base_frame>
+      <covariance_x>0.0001</covariance_x>
+      <covariance_y>0.0001</covariance_y>
+      <covariance_yaw>0.01</covariance_yaw>
+    </plugin>
+    <plugin name="subway_v2_joint_state" filename="libgazebo_ros_joint_state_publisher.so">
+      <ros>
+        <remapping>~/out:=joint_states</remapping>
+      </ros>
+      <update_rate>30</update_rate>
+      <joint_name>w1_joint</joint_name>
+      <joint_name>w2_joint</joint_name>
+      <joint_name>w3_joint</joint_name>
+      <joint_name>w4_joint</joint_name>
+      <joint_name>ph</joint_name>
+    </plugin>
+  </gazebo>
+  <gazebo reference="base_link">
+    <material>Gazebo/Grey</material>
+    <!-- Low slip resistance lets planar_move reproduce omnidirectional motion. -->
+    <mu1>0.001</mu1>
+    <mu2>0.001</mu2>
+  </gazebo>
+  <gazebo reference="w1">
+    <material>Gazebo/FlatBlack</material>
+  </gazebo>
+  <gazebo reference="w2">
+    <material>Gazebo/FlatBlack</material>
+  </gazebo>
+  <gazebo reference="w3">
+    <material>Gazebo/FlatBlack</material>
+  </gazebo>
+  <gazebo reference="w4">
+    <material>Gazebo/FlatBlack</material>
+  </gazebo>
+  <gazebo reference="yuntai">
+    <material>Gazebo/Grey</material>
+  </gazebo>
+  <gazebo reference="pitch">
+    <material>Gazebo/DarkGrey</material>
+  </gazebo>
+  <gazebo reference="leida">
+    <material>Gazebo/White</material>
+  </gazebo>
+  <gazebo reference="imu_joint">
+    <preserveFixedJoint>true</preserveFixedJoint>
+  </gazebo>
+  <gazebo reference="lidar_joint">
+    <preserveFixedJoint>true</preserveFixedJoint>
+  </gazebo>
+  <gazebo reference="imu_link">
+    <sensor name="odin1_imu" type="imu">
+      <always_on>true</always_on>
+      <update_rate>100</update_rate>
+      <imu>
+        <angular_velocity>
+          <x><noise type="gaussian"><mean>0</mean><stddev>0.0002</stddev></noise></x>
+          <y><noise type="gaussian"><mean>0</mean><stddev>0.0002</stddev></noise></y>
+          <z><noise type="gaussian"><mean>0</mean><stddev>0.0002</stddev></noise></z>
+        </angular_velocity>
+        <linear_acceleration>
+          <x><noise type="gaussian"><mean>0</mean><stddev>0.017</stddev></noise></x>
+          <y><noise type="gaussian"><mean>0</mean><stddev>0.017</stddev></noise></y>
+          <z><noise type="gaussian"><mean>0</mean><stddev>0.017</stddev></noise></z>
+        </linear_acceleration>
+      </imu>
+      <plugin name="odin1_imu_plugin" filename="libgazebo_ros_imu_sensor.so">
+        <initial_orientation_as_reference>false</initial_orientation_as_reference>
+        <ros>
+  <namespace>/odin1</namespace>
+  <remapping>~/out:=imu</remapping>
+        </ros>
+      </plugin>
+    </sensor>
+  </gazebo>
+ <gazebo reference="lidar_link">
+  <sensor name="odin1_lidar" type="gpu_ray">
+    <always_on>true</always_on>
+    <visualize>false</visualize>
+    <pose>0 0 0 0 0 0</pose>
+    <update_rate>10</update_rate>
+
+    <ray>
+      <scan>
+        <horizontal>
+          <samples>240</samples>
+          <resolution>1</resolution>
+          <min_angle>-1.0471975511966</min_angle>
+          <max_angle>1.0471975511966</max_angle>
+        </horizontal>
+
+        <vertical>
+          <samples>180</samples>
+          <resolution>1</resolution>
+          <min_angle>-0.78539816339745</min_angle>
+          <max_angle>0.78539816339745</max_angle>
+        </vertical>
+      </scan>
+
+      <range>
+        <min>0.2</min>
+        <max>30.0</max>
+        <resolution>0.01</resolution>
+      </range>
+
+      <noise>
+        <type>gaussian</type>
+        <mean>0</mean>
+        <stddev>0.03</stddev>
+      </noise>
+    </ray>
+
+    <plugin
+      name="odin1_pointcloud_plugin"
+      filename="libgazebo_ros_ray_sensor.so">
+      <ros>
+  <namespace>/odin1</namespace>
+  <remapping>~/out:=cloud_raw</remapping>
+</ros>
+      <output_type>sensor_msgs/PointCloud2</output_type>
+      <frame_name>lidar_link</frame_name>
+    </plugin>
+  </sensor>
+    <sensor name="odin1_rgb_camera" type="camera">
+    <always_on>true</always_on>
+    <visualize>false</visualize>
+    <update_rate>10</update_rate>
+
+    <!-- Gazebo camera body frame: +X is the viewing direction. -->
+    <pose>
+      0.01462035 0.03437643 0.00044495
+      -0.00208004 -0.00610004 -0.01139042
+    </pose>
+
+    <camera name="odin1_rgb">
+      <horizontal_fov>2.25147473507268</horizontal_fov>
+      <image>
+        <width>1600</width>
+        <height>1296</height>
+        <format>R8G8B8</format>
+      </image>
+      <clip>
+        <!-- Clip the scaled CAD housing without moving the calibrated optical center. -->
+        <near>0.10</near>
+        <far>100.0</far>
+      </clip>
+    </camera>
+
+    <plugin
+      name="odin1_rgb_camera_plugin"
+      filename="libgazebo_ros_camera.so">
+      <ros>
+        <namespace>/odin1</namespace>
+      </ros>
+      <camera_name>rgb</camera_name>
+      <frame_name>odin1_rgb_optical_frame</frame_name>
+    </plugin>
+  </sensor>
+</gazebo>
+
+  <gazebo reference="xj1">
+    <material>Gazebo/White</material>
+  </gazebo>
+
+  <gazebo reference="xj1_camera_link">
+    <sensor name="xj1_camera_sensor" type="camera">
+      <always_on>true</always_on>
+      <visualize>false</visualize>
+      <!-- Hardware maximum: 249.1 FPS; match the current real-camera driver setting. -->
+      <update_rate>30</update_rate>
+
+      <!-- The camera link already uses Gazebo's +X-forward body convention. -->
+      <pose>0 0 0 0 0 0</pose>
+
+      <camera name="xj1_camera">
+        <horizontal_fov>0.7845372999428053</horizontal_fov>
+
+        <image>
+          <width>1440</width>
+          <height>1080</height>
+          <format>B8G8R8</format>
+        </image>
+
+        <clip>
+          <near>0.05</near>
+          <far>100.0</far>
+        </clip>
+
+        <noise>
+          <type>gaussian</type>
+          <mean>0</mean>
+          <stddev>0.01</stddev>
+        </noise>
+
+        <distortion>
+          <k1>-0.099402</k1>
+          <k2>0.115175</k2>
+          <k3>0.0</k3>
+          <p1>-0.003985</p1>
+          <p2>-0.001845</p2>
+          <center>0.4835390972222 0.5071845925926</center>
+        </distortion>
+
+        <lens>
+          <intrinsics>
+            <fx>1740.35217</fx>
+            <fy>1740.4613</fy>
+            <cx>696.2963</cx>
+            <cy>547.75936</cy>
+            <s>0</s>
+          </intrinsics>
+        </lens>
+      </camera>
+
+      <plugin name="xj1_camera_plugin" filename="libgazebo_ros_camera.so">
+        <ros>
+          <namespace>/subway_v2</namespace>
+        </ros>
+        <camera_name>xj1</camera_name>
+        <frame_name>xj1_optical_frame</frame_name>
+
+        <focal_length>1740.35217</focal_length>
+        <cx>696.2963</cx>
+        <cy>547.75936</cy>
+        <border_crop>false</border_crop>
+
+        <rectification_matrix>1 0 0 0 1 0 0 0 1</rectification_matrix>
+        <P_fx>1715.05176</P_fx>
+        <P_fy>1723.86292</P_fy>
+        <P_cx>693.56983</P_cx>
+        <P_cy>545.3029</P_cy>
+      </plugin>
+    </sensor>
+  </gazebo>
+  <gazebo reference="xj2">
+    <material>Gazebo/White</material>
+  </gazebo>
+
+  <gazebo reference="xj2_camera_link">
+    <sensor name="xj2_camera_sensor" type="camera">
+      <always_on>true</always_on>
+      <visualize>false</visualize>
+      <!-- Hardware maximum: 249.1 FPS; match the current real-camera driver setting. -->
+      <update_rate>30</update_rate>
+
+      <pose>0 0 0 0 0 0</pose>
+
+      <!-- Provisional: reuse xj1 calibration until xj2 is calibrated separately. -->
+      <camera name="xj2_camera">
+        <horizontal_fov>0.7845372999428053</horizontal_fov>
+
+        <image>
+          <width>1440</width>
+          <height>1080</height>
+          <format>B8G8R8</format>
+        </image>
+
+        <clip>
+          <near>0.05</near>
+          <far>100.0</far>
+        </clip>
+
+        <noise>
+          <type>gaussian</type>
+          <mean>0</mean>
+          <stddev>0.01</stddev>
+        </noise>
+
+        <distortion>
+          <k1>-0.099402</k1>
+          <k2>0.115175</k2>
+          <k3>0.0</k3>
+          <p1>-0.003985</p1>
+          <p2>-0.001845</p2>
+          <center>0.4835390972222 0.5071845925926</center>
+        </distortion>
+
+        <lens>
+          <intrinsics>
+            <fx>1740.35217</fx>
+            <fy>1740.4613</fy>
+            <cx>696.2963</cx>
+            <cy>547.75936</cy>
+            <s>0</s>
+          </intrinsics>
+        </lens>
+      </camera>
+
+      <plugin name="xj2_camera_plugin" filename="libgazebo_ros_camera.so">
+        <ros>
+          <namespace>/subway_v2</namespace>
+        </ros>
+        <camera_name>xj2</camera_name>
+        <frame_name>xj2_optical_frame</frame_name>
+
+        <focal_length>1740.35217</focal_length>
+        <cx>696.2963</cx>
+        <cy>547.75936</cy>
+        <border_crop>false</border_crop>
+
+        <rectification_matrix>1 0 0 0 1 0 0 0 1</rectification_matrix>
+        <P_fx>1715.05176</P_fx>
+        <P_fy>1723.86292</P_fy>
+        <P_cx>693.56983</P_cx>
+        <P_cy>545.3029</P_cy>
+      </plugin>
+    </sensor>
+  </gazebo>
+  <gazebo reference="xj3">
+    <material>Gazebo/White</material>
+  </gazebo>
+
+  <gazebo reference="xj3_camera_link">
+    <sensor name="xj3_camera_sensor" type="camera">
+      <always_on>true</always_on>
+      <visualize>false</visualize>
+      <!-- Hardware maximum: 249.1 FPS; match the current real-camera driver setting. -->
+      <update_rate>30</update_rate>
+      <pose>0 0 0 0 0 0</pose>
+
+      <!-- Provisional: reuse xj1 calibration until xj3 is calibrated separately. -->
+      <camera name="xj3_camera">
+        <horizontal_fov>0.7845372999428053</horizontal_fov>
+        <image>
+          <width>1440</width>
+          <height>1080</height>
+          <format>B8G8R8</format>
+        </image>
+        <clip>
+          <near>0.05</near>
+          <far>100.0</far>
+        </clip>
+        <noise>
+          <type>gaussian</type>
+          <mean>0</mean>
+          <stddev>0.01</stddev>
+        </noise>
+        <distortion>
+          <k1>-0.099402</k1>
+          <k2>0.115175</k2>
+          <k3>0.0</k3>
+          <p1>-0.003985</p1>
+          <p2>-0.001845</p2>
+          <center>0.4835390972222 0.5071845925926</center>
+        </distortion>
+        <lens>
+          <intrinsics>
+            <fx>1740.35217</fx>
+            <fy>1740.4613</fy>
+            <cx>696.2963</cx>
+            <cy>547.75936</cy>
+            <s>0</s>
+          </intrinsics>
+        </lens>
+      </camera>
+
+      <plugin name="xj3_camera_plugin" filename="libgazebo_ros_camera.so">
+        <ros>
+          <namespace>/subway_v2</namespace>
+        </ros>
+        <camera_name>xj3</camera_name>
+        <frame_name>xj3_optical_frame</frame_name>
+        <focal_length>1740.35217</focal_length>
+        <cx>696.2963</cx>
+        <cy>547.75936</cy>
+        <border_crop>false</border_crop>
+        <rectification_matrix>1 0 0 0 1 0 0 0 1</rectification_matrix>
+        <P_fx>1715.05176</P_fx>
+        <P_fy>1723.86292</P_fy>
+        <P_cx>693.56983</P_cx>
+        <P_cy>545.3029</P_cy>
+      </plugin>
+    </sensor>
+  </gazebo>
+  <gazebo reference="xj4">
+    <material>Gazebo/White</material>
+  </gazebo>
+
+  <gazebo reference="xj4_camera_link">
+    <sensor name="xj4_camera_sensor" type="camera">
+      <always_on>true</always_on>
+      <visualize>false</visualize>
+      <!-- Hardware maximum: 249.1 FPS; match the current real-camera driver setting. -->
+      <update_rate>30</update_rate>
+      <pose>0 0 0 0 0 0</pose>
+
+      <!-- Provisional: reuse xj1 calibration until xj4 is calibrated separately. -->
+      <camera name="xj4_camera">
+        <horizontal_fov>0.7845372999428053</horizontal_fov>
+        <image>
+          <width>1440</width>
+          <height>1080</height>
+          <format>B8G8R8</format>
+        </image>
+        <clip>
+          <near>0.05</near>
+          <far>100.0</far>
+        </clip>
+        <noise>
+          <type>gaussian</type>
+          <mean>0</mean>
+          <stddev>0.01</stddev>
+        </noise>
+        <distortion>
+          <k1>-0.099402</k1>
+          <k2>0.115175</k2>
+          <k3>0.0</k3>
+          <p1>-0.003985</p1>
+          <p2>-0.001845</p2>
+          <center>0.4835390972222 0.5071845925926</center>
+        </distortion>
+        <lens>
+          <intrinsics>
+            <fx>1740.35217</fx>
+            <fy>1740.4613</fy>
+            <cx>696.2963</cx>
+            <cy>547.75936</cy>
+            <s>0</s>
+          </intrinsics>
+        </lens>
+      </camera>
+
+      <plugin name="xj4_camera_plugin" filename="libgazebo_ros_camera.so">
+        <ros>
+          <namespace>/subway_v2</namespace>
+        </ros>
+        <camera_name>xj4</camera_name>
+        <frame_name>xj4_optical_frame</frame_name>
+        <focal_length>1740.35217</focal_length>
+        <cx>696.2963</cx>
+        <cy>547.75936</cy>
+        <border_crop>false</border_crop>
+        <rectification_matrix>1 0 0 0 1 0 0 0 1</rectification_matrix>
+        <P_fx>1715.05176</P_fx>
+        <P_fy>1723.86292</P_fy>
+        <P_cx>693.56983</P_cx>
+        <P_cy>545.3029</P_cy>
+      </plugin>
+    </sensor>
+  </gazebo>
+  <gazebo reference="pitch_camera">
+    <material>Gazebo/White</material>
+  </gazebo>
+
+  <gazebo reference="pitch_camera_sensor_link">
+    <sensor name="pitch_camera_sensor" type="camera">
+      <always_on>true</always_on>
+      <visualize>false</visualize>
+      <!-- Hardware maximum: 249.1 FPS; match the current real-camera driver setting. -->
+      <update_rate>30</update_rate>
+      <pose>0 0 0 0 0 0</pose>
+
+      <!-- Provisional: reuse xj1 calibration until the gimbal camera is calibrated. -->
+      <camera name="pitch_camera">
+        <horizontal_fov>0.7845372999428053</horizontal_fov>
+        <image>
+          <width>1440</width>
+          <height>1080</height>
+          <format>B8G8R8</format>
+        </image>
+        <clip>
+          <near>0.05</near>
+          <far>100.0</far>
+        </clip>
+        <noise>
+          <type>gaussian</type>
+          <mean>0</mean>
+          <stddev>0.01</stddev>
+        </noise>
+        <distortion>
+          <k1>-0.099402</k1>
+          <k2>0.115175</k2>
+          <k3>0.0</k3>
+          <p1>-0.003985</p1>
+          <p2>-0.001845</p2>
+          <center>0.4835390972222 0.5071845925926</center>
+        </distortion>
+        <lens>
+          <intrinsics>
+            <fx>1740.35217</fx>
+            <fy>1740.4613</fy>
+            <cx>696.2963</cx>
+            <cy>547.75936</cy>
+            <s>0</s>
+          </intrinsics>
+        </lens>
+      </camera>
+
+      <plugin name="pitch_camera_plugin" filename="libgazebo_ros_camera.so">
+        <ros>
+          <namespace>/subway_v2</namespace>
+        </ros>
+        <camera_name>pitch_camera</camera_name>
+        <frame_name>pitch_camera_optical_frame</frame_name>
+        <focal_length>1740.35217</focal_length>
+        <cx>696.2963</cx>
+        <cy>547.75936</cy>
+        <border_crop>false</border_crop>
+        <rectification_matrix>1 0 0 0 1 0 0 0 1</rectification_matrix>
+        <P_fx>1715.05176</P_fx>
+        <P_fy>1723.86292</P_fy>
+        <P_cx>693.56983</P_cx>
+        <P_cy>545.3029</P_cy>
+      </plugin>
+    </sensor>
+  </gazebo>
+  <gazebo reference="w1_hub">
+    <material>Gazebo/Grey</material>
+  </gazebo>
+  <gazebo reference="w2_hub">
+    <material>Gazebo/Grey</material>
+  </gazebo>
+  <gazebo reference="w3_hub">
+    <material>Gazebo/Grey</material>
+  </gazebo>
+  <gazebo reference="w4_hub">
+    <material>Gazebo/Grey</material>
+  </gazebo>
+</robot>
