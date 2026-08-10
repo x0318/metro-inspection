@@ -1,0 +1,60 @@
+damage_localizer:
+  ros__parameters:
+    detections_topic: /damage_detections
+    cloud_topic: /lidar/points
+    image_topic: /camera/image_raw
+    mask_topic: /damage_mask
+    use_mask: true
+    mask_time_tolerance_sec: 0.20
+    mask_min_value: 1
+    mask_fallback_to_bbox: true
+    camera_info_topic: /camera/camera_info
+    camera_point_topic: /damage_point_camera
+    global_point_topic: /damage_point_global
+    debug_image_topic: /localization/debug_projection
+    marker_topic: /localization/estimated_marker
+    global_frame: odom
+    sync_queue_size: 20
+    sync_slop_sec: 0.08
+    roi_scale: 0.90
+    min_roi_points: 3
+    # estimator_method 可选：dbscan_median 或 mad_median
+    estimator_method: dbscan_median
+    dbscan_eps_m: 0.15
+    dbscan_min_samples: 3
+    max_depth_deviation_m: 0.20
+    max_debug_points: 1800
+
+localization_evaluator:
+  ros__parameters:
+    estimated_topic: /damage_point_global
+    truth_point_topic: /damage_ground_truth
+    error_topic: /localization/error_m
+    mae_topic: /localization/mae_m
+    rmse_topic: /localization/rmse_m
+    median_error_topic: /localization/median_error_m
+    truth_marker_topic: /localization/truth_marker
+    global_frame: odom
+    truth_xyz: [3.0, -2.35, 1.65]
+    log_every_n: 10
+damage_semantic_mapper:
+  ros__parameters:
+    input_topic: /damage_point_global
+    output_topic: /damage_semantic_result
+    tunnel_frame: odom
+    allow_frame_mismatch: false
+    chainage_start_m: 12000.0
+    chainage_axis: x
+    chainage_sign: 1.0
+    segment_start_id: 1000
+    segment_length_m: 1.2
+    segment_name: segment
+    clock_center_y_m: 0.0
+    clock_center_z_m: 1.75
+    default_class_name: red_damage
+    default_confidence: 1.0
+    save_csv: true
+    result_csv_path: results/damage_semantic_records.csv
+    min_publish_interval_sec: 0.2
+    log_every_n: 10
+

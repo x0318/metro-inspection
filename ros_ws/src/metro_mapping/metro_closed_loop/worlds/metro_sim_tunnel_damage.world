@@ -1,0 +1,120 @@
+<?xml version="1.0"?>
+<sdf version="1.7">
+  <world name="metro_sim_tunnel_damage">
+    <!-- gazebo_ros launch loads ROS-Gazebo system plugins with -s libgazebo_ros_init/factory. -->
+    <physics name="default_physics" type="ode">
+      <real_time_update_rate>1000</real_time_update_rate>
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+    </physics>
+
+    <scene>
+      <ambient>0.60 0.61 0.63 1</ambient>
+      <background>0.025 0.027 0.032 1</background>
+      <shadows>false</shadows>
+      <grid>false</grid>
+      <origin_visual>false</origin_visual>
+    </scene>
+
+    <gui fullscreen="0">
+      <camera name="user_camera">
+        <pose>-4 -5 2.7 0 0.22 0.72</pose>
+        <view_controller>orbit</view_controller>
+        <projection_type>perspective</projection_type>
+      </camera>
+    </gui>
+
+    <light name="soft_fill" type="directional">
+      <cast_shadows>false</cast_shadows>
+      <pose>0 0 8 0 0 0</pose>
+      <diffuse>0.18 0.18 0.18 1</diffuse>
+      <specular>0.08 0.08 0.08 1</specular>
+      <direction>-0.35 0 -1</direction>
+    </light>
+
+    <light name="tunnel_fill_m18" type="point"><cast_shadows>false</cast_shadows><pose>-18 0 3.45 0 0 0</pose><diffuse>0.16 0.17 0.18 1</diffuse><specular>0.02 0.02 0.02 1</specular><attenuation><range>14</range><constant>0.8</constant><linear>0.08</linear><quadratic>0.02</quadratic></attenuation></light>
+    <light name="tunnel_fill_m9" type="point"><cast_shadows>false</cast_shadows><pose>-9 0 3.45 0 0 0</pose><diffuse>0.16 0.17 0.18 1</diffuse><specular>0.02 0.02 0.02 1</specular><attenuation><range>14</range><constant>0.8</constant><linear>0.08</linear><quadratic>0.02</quadratic></attenuation></light>
+    <light name="tunnel_fill_0" type="point"><cast_shadows>false</cast_shadows><pose>0 0 3.45 0 0 0</pose><diffuse>0.16 0.17 0.18 1</diffuse><specular>0.02 0.02 0.02 1</specular><attenuation><range>14</range><constant>0.8</constant><linear>0.08</linear><quadratic>0.02</quadratic></attenuation></light>
+    <light name="tunnel_fill_9" type="point"><cast_shadows>false</cast_shadows><pose>9 0 3.45 0 0 0</pose><diffuse>0.16 0.17 0.18 1</diffuse><specular>0.02 0.02 0.02 1</specular><attenuation><range>14</range><constant>0.8</constant><linear>0.08</linear><quadratic>0.02</quadratic></attenuation></light>
+    <light name="tunnel_fill_18" type="point"><cast_shadows>false</cast_shadows><pose>18 0 3.45 0 0 0</pose><diffuse>0.16 0.17 0.18 1</diffuse><specular>0.02 0.02 0.02 1</specular><attenuation><range>14</range><constant>0.8</constant><linear>0.08</linear><quadratic>0.02</quadratic></attenuation></light>
+
+    <!--
+      Collision-only rail-center drive surface.
+      It matches metro_sim/worlds/subway_track_tunnel.world: track centerline is y=0,
+      drive surface is around z=0.315 m, so the hardware car sits visually on the sleepers/rails.
+    -->
+    <model name="invisible_drive_plane">
+      <static>true</static>
+      <pose>0 0 0 0 0 0</pose>
+      <link name="drive_plane_link">
+        <collision name="drive_plane_collision">
+          <pose>0 0 0.295 0 0 0</pose>
+          <geometry><box><size>50 1.8 0.05</size></box></geometry>
+          <surface>
+            <friction><ode><mu>1.0</mu><mu2>1.0</mu2></ode></friction>
+            <contact><ode><kp>1e+06</kp><kd>10</kd><max_vel>0.1</max_vel><min_depth>0.001</min_depth></ode></contact>
+          </surface>
+        </collision>
+      </link>
+    </model>
+
+    <!-- Tunnel mesh from /home/yang/metro-inspection/ros_ws/src/metro_sim/models/subway_tunnel. -->
+    <include>
+      <uri>model://subway_tunnel</uri>
+      <name>subway_tunnel</name>
+      <pose>0 0 1.75 0 0 0</pose>
+      <static>true</static>
+    </include>
+
+    <!--
+      Right-side wall validation target.
+      Center is (x=3.0, y=-2.35, z=1.65), placed slightly in front of the inner right wall so it is visible to the camera and LiDAR.
+      The car starts at x=3.0, y=0.0 and the camera/lidar look right, so the damage is visible immediately.
+    -->
+    <model name="red_damage_patch">
+      <static>true</static>
+      <pose>3.0 -2.35 1.65 0 0 0</pose>
+      <link name="patch">
+        <!-- Transparent red fill: looks like a detected damage region and still has collision for LiDAR. -->
+        <visual name="patch_transparent_fill">
+          <geometry><box><size>1.60 0.025 1.20</size></box></geometry>
+          <material>
+            <ambient>1 0 0 0.28</ambient>
+            <diffuse>1 0 0 0.28</diffuse>
+            <specular>0.05 0 0 0.28</specular>
+            <emissive>0.45 0 0 0.28</emissive>
+          </material>
+          <transparency>0.72</transparency>
+        </visual>
+
+        <!-- Solid red bounding-box border: four thin boxes, similar to a YOLO detection box. -->
+        <visual name="patch_border_top">
+          <pose>0 0 0.56 0 0 0</pose>
+          <geometry><box><size>1.60 0.045 0.08</size></box></geometry>
+          <material><ambient>1 0 0 1</ambient><diffuse>1 0 0 1</diffuse><specular>0.12 0 0 1</specular><emissive>1 0 0 1</emissive></material>
+        </visual>
+        <visual name="patch_border_bottom">
+          <pose>0 0 -0.56 0 0 0</pose>
+          <geometry><box><size>1.60 0.045 0.08</size></box></geometry>
+          <material><ambient>1 0 0 1</ambient><diffuse>1 0 0 1</diffuse><specular>0.12 0 0 1</specular><emissive>1 0 0 1</emissive></material>
+        </visual>
+        <visual name="patch_border_left">
+          <pose>-0.76 0 0 0 0 0</pose>
+          <geometry><box><size>0.08 0.045 1.20</size></box></geometry>
+          <material><ambient>1 0 0 1</ambient><diffuse>1 0 0 1</diffuse><specular>0.12 0 0 1</specular><emissive>1 0 0 1</emissive></material>
+        </visual>
+        <visual name="patch_border_right">
+          <pose>0.76 0 0 0 0 0</pose>
+          <geometry><box><size>0.08 0.045 1.20</size></box></geometry>
+          <material><ambient>1 0 0 1</ambient><diffuse>1 0 0 1</diffuse><specular>0.12 0 0 1</specular><emissive>1 0 0 1</emissive></material>
+        </visual>
+
+        <!-- One whole collision plane: LiDAR can hit the filled region, not only the border. -->
+        <collision name="patch_collision">
+          <geometry><box><size>1.60 0.025 1.20</size></box></geometry>
+          <laser_retro>80.0</laser_retro>
+        </collision>
+      </link>
+    </model>
+  </world>
+</sdf>

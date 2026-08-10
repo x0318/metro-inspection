@@ -30,3 +30,19 @@ videos/
 # OS
 .DS_Store
 Thumbs.db
+
+# ROS2 build outputs
+ros_ws/build/
+ros_ws/install/
+ros_ws/log/
+ros_ws/src/metro_mapping/build/
+ros_ws/src/metro_mapping/install/
+ros_ws/src/metro_mapping/log/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Runtime results
+ros_ws/results/
+*.log
