@@ -1,0 +1,120 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+METRO_SIM_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+ROS_WS_DIR="$(cd "${METRO_SIM_DIR}/../.." && pwd)"
+DESCRIPTION_DIR="${ROS_WS_DIR}/src/metro_description"
+
+WORLD_FILE="${METRO_SIM_DIR}/worlds/subway_tunnel_v2_mapping.world"
+URDF_FILE="${DESCRIPTION_DIR}/urdf/subway_v2.urdf"
+SCALE_FILE="${METRO_SIM_DIR}/config/subway_v2_model_scale.txt"
+SCALE_SCRIPT="${SCRIPT_DIR}/scale_subway_v2_urdf.py"
+MAPPING_MODEL_SCRIPT="${SCRIPT_DIR}/prepare_subway_v2_mapping_model.py"
+SOURCE_MODEL_SDF="${METRO_SIM_DIR}/models/subway_v2/model.sdf"
+
+if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+  cat <<'EOF'
+Usage: open_subway_tunnel_v2_mapping.sh [gazebo_ros launch arguments]
+
+Starts the lidar/IMU mapping profile without the six RGB camera sensors.
+Gazebo GUI is disabled by default. Pass gui:=true only when visual inspection
+is needed; it reduces the high-density GPU lidar publication rate.
+
+Environment overrides:
+  ROS_DOMAIN_ID                         ROS 2 discovery domain (default: 70)
+  SUBWAY_TUNNEL_V2_GAZEBO_MASTER_URI  Gazebo master URI
+                                       (default: http://127.0.0.1:11372)
+
+Examples:
+  ./ros_ws/src/metro_sim/scripts/open_subway_tunnel_v2_mapping.sh
+  ./ros_ws/src/metro_sim/scripts/open_subway_tunnel_v2_mapping.sh gui:=true
+EOF
+  exit 0
+fi
+
+for required_file in \
+  "${WORLD_FILE}" \
+  "${URDF_FILE}" \
+  "${SCALE_FILE}" \
+  "${SCALE_SCRIPT}" \
+  "${MAPPING_MODEL_SCRIPT}" \
+  "${SOURCE_MODEL_SDF}" \
+  "${METRO_SIM_DIR}/models/subway_tunnel_v2/model.sdf"; do
+  if [[ ! -f "${required_file}" ]]; then
+    echo "Required file not found: ${required_file}" >&2
+    exit 1
+  fi
+done
+
+set +u
+source /opt/ros/humble/setup.bash
+if [[ -f "${ROS_WS_DIR}/install/setup.bash" ]]; then
+  source "${ROS_WS_DIR}/install/setup.bash"
+fi
+set -u
+
+for required_command in python3 check_urdf ros2 gz; do
+  if ! command -v "${required_command}" >/dev/null 2>&1; then
+    echo "Required command not found: ${required_command}" >&2
+    exit 1
+  fi
+done
+
+export ROS_DOMAIN_ID="${ROS_DOMAIN_ID:-70}"
+export GAZEBO_MASTER_URI="${SUBWAY_TUNNEL_V2_GAZEBO_MASTER_URI:-http://127.0.0.1:11372}"
+export GAZEBO_PLUGIN_PATH="/opt/ros/humble/lib${GAZEBO_PLUGIN_PATH:+:${GAZEBO_PLUGIN_PATH}}"
+export GAZEBO_MODEL_DATABASE_URI=""
+
+if [[ "${GAZEBO_MASTER_URI}" =~ ^http://(127\.0\.0\.1|localhost):([0-9]+)$ ]]; then
+  MASTER_PORT="${BASH_REMATCH[2]}"
+  if [[ -n "$(ss -ltnH "sport = :${MASTER_PORT}")" ]]; then
+    echo "Gazebo master ${GAZEBO_MASTER_URI} is already in use." >&2
+    echo "Close that instance or choose another port." >&2
+    exit 1
+  fi
+fi
+
+RUN_DIR="$(mktemp -d)"
+SCALED_URDF="${RUN_DIR}/subway_v2_scaled.urdf"
+MAPPING_MODEL_DIR="${RUN_DIR}/subway_v2_mapping"
+ROBOT_STATE_PUBLISHER_PID=""
+
+cleanup() {
+  local exit_code=$?
+  trap - EXIT INT TERM
+  if [[ -n "${ROBOT_STATE_PUBLISHER_PID}" ]] && \
+      kill -0 "${ROBOT_STATE_PUBLISHER_PID}" 2>/dev/null; then
+    kill "${ROBOT_STATE_PUBLISHER_PID}" 2>/dev/null || true
+    wait "${ROBOT_STATE_PUBLISHER_PID}" 2>/dev/null || true
+  fi
+  rm -rf -- "${RUN_DIR}"
+  exit "${exit_code}"
+}
+trap cleanup EXIT INT TERM
+
+python3 "${MAPPING_MODEL_SCRIPT}" "${SOURCE_MODEL_SDF}" "${MAPPING_MODEL_DIR}"
+gz sdf -k "${MAPPING_MODEL_DIR}/model.sdf"
+
+ROBOT_SCALE="$(tr -d '[:space:]' < "${SCALE_FILE}")"
+python3 "${SCALE_SCRIPT}" \
+  "${URDF_FILE}" "${SCALED_URDF}" --scale "${ROBOT_SCALE}"
+check_urdf "${SCALED_URDF}" >/dev/null
+
+export GAZEBO_MODEL_PATH="${RUN_DIR}:${METRO_SIM_DIR}/models${GAZEBO_MODEL_PATH:+:${GAZEBO_MODEL_PATH}}"
+
+echo "ROS_DOMAIN_ID=${ROS_DOMAIN_ID}"
+echo "GAZEBO_MASTER_URI=${GAZEBO_MASTER_URI}"
+echo "Mapping profile: Odin1 lidar + IMU, cameras disabled, gui=false"
+echo "Temporary model directory: ${MAPPING_MODEL_DIR}"
+
+ros2 run robot_state_publisher robot_state_publisher \
+  "${SCALED_URDF}" \
+  --ros-args -p use_sim_time:=true &
+ROBOT_STATE_PUBLISHER_PID=$!
+
+ros2 launch gazebo_ros gazebo.launch.py \
+  world:="${WORLD_FILE}" \
+  verbose:=true \
+  gui:=false \
+  "$@"

@@ -1,137 +1,199 @@
+<?xml version='1.0' encoding='utf-8'?>
 <sdf version="1.7">
   <model name="subway_v2">
     <link name="base_footprint">
       <inertial>
-        <pose>-0.041673 -0.011144 -0.115332 0 -0 0</pose>
-        <mass>15.8485</mass>
+        <pose>0.011174 -0.000164 0.512032 0 -0 0</pose>
+        <mass>18.7872</mass>
         <inertia>
-          <ixx>1.01297</ixx>
-          <ixy>-3.29039e-05</ixy>
-          <ixz>0.013876</ixz>
-          <iyy>2.47048</iyy>
-          <iyz>0.000776995</iyz>
-          <izz>3.11496</izz>
+          <ixx>1.70375</ixx>
+          <ixy>-7.41401e-05</ixy>
+          <ixz>-0.15453</ixz>
+          <iyy>3.02746</iyy>
+          <iyz>0.000661518</iyz>
+          <izz>2.87407</izz>
         </inertia>
       </inertial>
-      <collision name="base_footprint_fixed_joint_lump__body_collision_collision">
-        <pose>-0.121641 -0.010932 -0.047637 -1.5708 -0 -1.5708</pose>
+      <collision name="base_footprint_fixed_joint_lump__base_link_collision_collision">
+        <pose>-0.081924 0 0.545704 -1.5708 -0 -1.5708</pose>
         <geometry>
           <box>
-            <size>1.51756 0.777911 1.48249</size>
+            <size>1.43104 0.829804 1.39646</size>
+          </box>
+        </geometry>
+        <surface>
+          <contact>
+            <ode />
+          </contact>
+          <friction>
+            <ode>
+              <mu>0.001</mu>
+              <mu2>0.001</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+      <collision name="base_footprint_fixed_joint_lump__leida_collision_collision_1">
+        <pose>0.501464 0 0.67493 -1.5708 -0 -1.5708</pose>
+        <geometry>
+          <box>
+            <size>0.300638 0.186396 0.139496</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="base_footprint_fixed_joint_lump__xj1_collision_collision_2">
+        <pose>0.000225 -0.538469 0.895359 1.5708 0 -0</pose>
+        <geometry>
+          <box>
+            <size>0.113792 0.17268 0.361088</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="base_footprint_fixed_joint_lump__xj2_collision_collision_3">
+        <pose>-0.000225 0.538469 0.895359 1.5708 -0 3.14159</pose>
+        <geometry>
+          <box>
+            <size>0.113792 0.17268 0.361088</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="base_footprint_fixed_joint_lump__xj3_collision_collision_4">
+        <pose>-0.656669 -0.674932 0.810217 3.14159 0 -0</pose>
+        <geometry>
+          <box>
+            <size>0.113792 0.114017 0.34874</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="base_footprint_fixed_joint_lump__xj4_collision_collision_5">
+        <pose>-0.657119 0.674932 0.810217 3.14159 -0 3.14159</pose>
+        <geometry>
+          <box>
+            <size>0.113792 0.114017 0.34874</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="base_footprint_fixed_joint_lump__yuntai_collision_collision_6">
+        <pose>-0 0 0.949654 1.5708 -0 3.14159</pose>
+        <geometry>
+          <box>
+            <size>0.420893 0.657679 0.577225</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="base_footprint_fixed_joint_lump__pitch_collision_collision_7">
+        <pose>0.066121 0 1.05892 -1.57188 -0 1.5708</pose>
+        <geometry>
+          <box>
+            <size>0.582035 0.369785 0.705747</size>
           </box>
         </geometry>
       </collision>
       <visual name="base_footprint_fixed_joint_lump__base_link_visual">
-        <pose>0 0 0 -1.5708 -0 -1.5708</pose>
+        <pose>0.032782 0.010309 0.644866 -1.5708 -0 -1.5708</pose>
         <geometry>
           <mesh>
-            <scale>3.18816 3.18816 3.18816</scale>
-            <uri>model://subway_v2/meshes/base_link_body.STL</uri>
+            <scale>3.00638 3.00638 3.00638</scale>
+            <uri>model://subway_v2/meshes/base_link.STL</uri>
           </mesh>
         </geometry>
-        <material>
-          <script>
-            <name>Gazebo/Grey</name>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-          </script>
-        </material>
       </visual>
-      <visual name="base_footprint_fixed_joint_lump__leida_visual_1">
-        <pose>0.44346 -0.010932 0.038258 -1.5708 -0 -1.5708</pose>
+      <visual name="base_footprint_fixed_joint_lump__w1_fixed_mount_visual_visual_1">
+        <pose>0.435925 -0.44765 0.335209 1.5708 1.40236 -0</pose>
         <geometry>
           <mesh>
-            <scale>3.18816 3.18816 3.18816</scale>
-            <uri>model://subway_v2/meshes/leida.STL</uri>
+            <scale>3.00638 3.00638 3.00638</scale>
+            <uri>model://subway_v2/meshes/w1_mount.STL</uri>
           </mesh>
         </geometry>
-        <material>
-          <script>
-            <name>Gazebo/White</name>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-          </script>
-        </material>
       </visual>
-      <visual name="base_footprint_fixed_joint_lump__xj1_visual_2">
-        <pose>-0.034764 -0.521038 0.04304 1.5708 0 -0</pose>
+      <visual name="base_footprint_fixed_joint_lump__w2_fixed_mount_visual_visual_2">
+        <pose>0.435925 0.44765 0.335209 1.5708 -1.40236 3.14159</pose>
         <geometry>
           <mesh>
-            <scale>3.18816 3.18816 3.18816</scale>
+            <scale>3.00638 3.00638 3.00638</scale>
+            <uri>model://subway_v2/meshes/w2_mount.STL</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name="base_footprint_fixed_joint_lump__w3_fixed_mount_visual_visual_3">
+        <pose>-0.435925 0.44765 0.335209 1.5708 -0.502733 3.14159</pose>
+        <geometry>
+          <mesh>
+            <scale>3.00638 3.00638 3.00638</scale>
+            <uri>model://subway_v2/meshes/w3_mount.STL</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name="base_footprint_fixed_joint_lump__w4_fixed_mount_visual_visual_4">
+        <pose>-0.435925 -0.44765 0.335209 1.5708 0.502733 -0</pose>
+        <geometry>
+          <mesh>
+            <scale>3.00638 3.00638 3.00638</scale>
+            <uri>model://subway_v2/meshes/w4_mount.STL</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name="base_footprint_fixed_joint_lump__xj1_visual_5">
+        <pose>-0 -0.481021 0.685452 1.5708 0 -0</pose>
+        <geometry>
+          <mesh>
+            <scale>3.00638 3.00638 3.00638</scale>
             <uri>model://subway_v2/meshes/xj1.STL</uri>
           </mesh>
         </geometry>
-        <material>
-          <script>
-            <name>Gazebo/White</name>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-          </script>
-        </material>
       </visual>
-      <visual name="base_footprint_fixed_joint_lump__xj2_visual_3">
-        <pose>-0.034764 0.499174 0.04304 1.5708 -0 3.14159</pose>
+      <visual name="base_footprint_fixed_joint_lump__xj2_visual_6">
+        <pose>-0 0.481021 0.685452 1.5708 -0 3.14159</pose>
         <geometry>
           <mesh>
-            <scale>3.18816 3.18816 3.18816</scale>
+            <scale>3.00638 3.00638 3.00638</scale>
             <uri>model://subway_v2/meshes/xj2.STL</uri>
           </mesh>
         </geometry>
-        <material>
-          <script>
-            <name>Gazebo/White</name>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-          </script>
-        </material>
       </visual>
-      <visual name="base_footprint_fixed_joint_lump__xj3_visual_4">
-        <pose>-0.731377 -0.726674 0.341133 3.14159 0 -0</pose>
+      <visual name="base_footprint_fixed_joint_lump__xj3_visual_7">
+        <pose>-0.656894 -0.674932 0.966549 3.14159 0 -0</pose>
         <geometry>
           <mesh>
-            <scale>3.18816 3.18816 3.18816</scale>
+            <scale>3.00638 3.00638 3.00638</scale>
             <uri>model://subway_v2/meshes/xj3.STL</uri>
           </mesh>
         </geometry>
-        <material>
-          <script>
-            <name>Gazebo/White</name>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-          </script>
-        </material>
       </visual>
-      <visual name="base_footprint_fixed_joint_lump__xj4_visual_5">
-        <pose>-0.731377 0.70481 0.341133 3.14159 -0 3.14159</pose>
+      <visual name="base_footprint_fixed_joint_lump__xj4_visual_8">
+        <pose>-0.656894 0.674932 0.966549 3.14159 -0 3.14159</pose>
         <geometry>
           <mesh>
-            <scale>3.18816 3.18816 3.18816</scale>
+            <scale>3.00638 3.00638 3.00638</scale>
             <uri>model://subway_v2/meshes/xj4.STL</uri>
           </mesh>
         </geometry>
-        <material>
-          <script>
-            <name>Gazebo/White</name>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-          </script>
-        </material>
       </visual>
-      <visual name="base_footprint_fixed_joint_lump__yuntai_visual_6">
-        <pose>-0.034764 0.235513 0.529235 1.5708 -0 3.14159</pose>
+      <visual name="base_footprint_fixed_joint_lump__yuntai_visual_9">
+        <pose>-0 0.232393 1.14393 1.5708 -0 3.14159</pose>
         <geometry>
           <mesh>
-            <scale>3.18816 3.18816 3.18816</scale>
+            <scale>3.00638 3.00638 3.00638</scale>
             <uri>model://subway_v2/meshes/yuntai.STL</uri>
           </mesh>
         </geometry>
-        <material>
-          <script>
-            <name>Gazebo/Grey</name>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-          </script>
-        </material>
+      </visual>
+      <visual name="base_footprint_fixed_joint_lump__pitch_visual_10">
+        <pose>-0 0.232393 1.17399 -1.57188 -0 1.5708</pose>
+        <geometry>
+          <mesh>
+            <scale>3.00638 3.00638 3.00638</scale>
+            <uri>model://subway_v2/meshes/pitch.STL</uri>
+          </mesh>
+        </geometry>
       </visual>
       <sensor name="xj1_camera_sensor" type="camera">
         <always_on>1</always_on>
         <visualize>0</visualize>
         <update_rate>30</update_rate>
         <camera name="xj1_camera">
-          <horizontal_fov>0.784537</horizontal_fov>
+          <horizontal_fov>0.7845372999428053</horizontal_fov>
           <image>
             <width>1440</width>
             <height>1080</height>
@@ -149,17 +211,17 @@
           <distortion>
             <k1>-0.099402</k1>
             <k2>0.115175</k2>
-            <k3>0</k3>
+            <k3>0.0</k3>
             <p1>-0.003985</p1>
             <p2>-0.001845</p2>
-            <center>0.483539 0.507185</center>
+            <center>0.4835390972222 0.5071845925926</center>
           </distortion>
           <lens>
             <intrinsics>
-              <fx>1740.35</fx>
-              <fy>1740.46</fy>
-              <cx>696.296</cx>
-              <cy>547.759</cy>
+              <fx>1740.35217</fx>
+              <fy>1740.4613</fy>
+              <cx>696.2963</cx>
+              <cy>547.75936</cy>
               <s>0</s>
             </intrinsics>
             <type>stereographic</type>
@@ -182,14 +244,14 @@
           <P_cx>693.56983</P_cx>
           <P_cy>545.3029</P_cy>
         </plugin>
-        <pose>-0.034764 -0.579949 0.04304 -0 -0 -1.5708</pose>
+        <pose>-0 -0.536573 0.685452 -0 -0 -1.5708</pose>
       </sensor>
       <sensor name="xj2_camera_sensor" type="camera">
         <always_on>1</always_on>
         <visualize>0</visualize>
         <update_rate>30</update_rate>
         <camera name="xj2_camera">
-          <horizontal_fov>0.784537</horizontal_fov>
+          <horizontal_fov>0.7845372999428053</horizontal_fov>
           <image>
             <width>1440</width>
             <height>1080</height>
@@ -207,17 +269,17 @@
           <distortion>
             <k1>-0.099402</k1>
             <k2>0.115175</k2>
-            <k3>0</k3>
+            <k3>0.0</k3>
             <p1>-0.003985</p1>
             <p2>-0.001845</p2>
-            <center>0.483539 0.507185</center>
+            <center>0.4835390972222 0.5071845925926</center>
           </distortion>
           <lens>
             <intrinsics>
-              <fx>1740.35</fx>
-              <fy>1740.46</fy>
-              <cx>696.296</cx>
-              <cy>547.759</cy>
+              <fx>1740.35217</fx>
+              <fy>1740.4613</fy>
+              <cx>696.2963</cx>
+              <cy>547.75936</cy>
               <s>0</s>
             </intrinsics>
             <type>stereographic</type>
@@ -240,14 +302,14 @@
           <P_cx>693.56983</P_cx>
           <P_cy>545.3029</P_cy>
         </plugin>
-        <pose>-0.034764 0.558085 0.04304 0 -0 1.5708</pose>
+        <pose>-0 0.536573 0.685452 0 -0 1.5708</pose>
       </sensor>
       <sensor name="xj3_camera_sensor" type="camera">
         <always_on>1</always_on>
         <visualize>0</visualize>
         <update_rate>30</update_rate>
         <camera name="xj3_camera">
-          <horizontal_fov>0.784537</horizontal_fov>
+          <horizontal_fov>0.7845372999428053</horizontal_fov>
           <image>
             <width>1440</width>
             <height>1080</height>
@@ -265,17 +327,17 @@
           <distortion>
             <k1>-0.099402</k1>
             <k2>0.115175</k2>
-            <k3>0</k3>
+            <k3>0.0</k3>
             <p1>-0.003985</p1>
             <p2>-0.001845</p2>
-            <center>0.483539 0.507185</center>
+            <center>0.4835390972222 0.5071845925926</center>
           </distortion>
           <lens>
             <intrinsics>
-              <fx>1740.35</fx>
-              <fy>1740.46</fy>
-              <cx>696.296</cx>
-              <cy>547.759</cy>
+              <fx>1740.35217</fx>
+              <fy>1740.4613</fy>
+              <cx>696.2963</cx>
+              <cy>547.75936</cy>
               <s>0</s>
             </intrinsics>
             <type>stereographic</type>
@@ -298,14 +360,14 @@
           <P_cx>693.56983</P_cx>
           <P_cy>545.3029</P_cy>
         </plugin>
-        <pose>-0.731377 -0.726674 0.095645 3.14159 1.57079 1.5708</pose>
+        <pose>-0.656894 -0.674932 0.735057 3.14159 1.57079 1.5708</pose>
       </sensor>
       <sensor name="xj4_camera_sensor" type="camera">
         <always_on>1</always_on>
         <visualize>0</visualize>
         <update_rate>30</update_rate>
         <camera name="xj4_camera">
-          <horizontal_fov>0.784537</horizontal_fov>
+          <horizontal_fov>0.7845372999428053</horizontal_fov>
           <image>
             <width>1440</width>
             <height>1080</height>
@@ -323,17 +385,17 @@
           <distortion>
             <k1>-0.099402</k1>
             <k2>0.115175</k2>
-            <k3>0</k3>
+            <k3>0.0</k3>
             <p1>-0.003985</p1>
             <p2>-0.001845</p2>
-            <center>0.483539 0.507185</center>
+            <center>0.4835390972222 0.5071845925926</center>
           </distortion>
           <lens>
             <intrinsics>
-              <fx>1740.35</fx>
-              <fy>1740.46</fy>
-              <cx>696.296</cx>
-              <cy>547.759</cy>
+              <fx>1740.35217</fx>
+              <fy>1740.4613</fy>
+              <cx>696.2963</cx>
+              <cy>547.75936</cy>
               <s>0</s>
             </intrinsics>
             <type>stereographic</type>
@@ -356,11 +418,69 @@
           <P_cx>693.56983</P_cx>
           <P_cy>545.3029</P_cy>
         </plugin>
-        <pose>-0.731377 0.70481 0.095645 3.14159 1.57079 -1.57079</pose>
+        <pose>-0.656894 0.674932 0.735057 3.14159 1.57079 -1.57079</pose>
+      </sensor>
+      <sensor name="pitch_camera_sensor" type="camera">
+        <always_on>1</always_on>
+        <visualize>0</visualize>
+        <update_rate>30</update_rate>
+        <camera name="pitch_camera">
+          <horizontal_fov>0.7845372999428053</horizontal_fov>
+          <image>
+            <width>1440</width>
+            <height>1080</height>
+            <format>B8G8R8</format>
+          </image>
+          <clip>
+            <near>0.05</near>
+            <far>100</far>
+          </clip>
+          <noise>
+            <type>gaussian</type>
+            <mean>0</mean>
+            <stddev>0.01</stddev>
+          </noise>
+          <distortion>
+            <k1>-0.099402</k1>
+            <k2>0.115175</k2>
+            <k3>0.0</k3>
+            <p1>-0.003985</p1>
+            <p2>-0.001845</p2>
+            <center>0.4835390972222 0.5071845925926</center>
+          </distortion>
+          <lens>
+            <intrinsics>
+              <fx>1740.35217</fx>
+              <fy>1740.4613</fy>
+              <cx>696.2963</cx>
+              <cy>547.75936</cy>
+              <s>0</s>
+            </intrinsics>
+            <type>stereographic</type>
+            <scale_to_hfov>1</scale_to_hfov>
+          </lens>
+        </camera>
+        <plugin name="pitch_camera_plugin" filename="libgazebo_ros_camera.so">
+          <ros>
+            <namespace>/subway_v2</namespace>
+          </ros>
+          <camera_name>pitch_camera</camera_name>
+          <frame_name>pitch_camera_optical_frame</frame_name>
+          <focal_length>1740.35217</focal_length>
+          <cx>696.2963</cx>
+          <cy>547.75936</cy>
+          <border_crop>0</border_crop>
+          <rectification_matrix>1 0 0 0 1 0 0 0 1</rectification_matrix>
+          <P_fx>1715.05176</P_fx>
+          <P_fy>1723.86292</P_fy>
+          <P_cx>693.56983</P_cx>
+          <P_cy>545.3029</P_cy>
+        </plugin>
+        <pose>-0.264006 -0 1.16378 0 0.001087 3.14159</pose>
       </sensor>
     </link>
     <joint name="lidar_joint" type="fixed">
-      <pose relative_to="base_footprint">0.468328 0.006603 0.038258 0 0 0</pose>
+      <pose relative_to="base_footprint">0.574218 0 0.680943 0 0 -0</pose>
       <parent>base_footprint</parent>
       <child>lidar_link</child>
       <axis>
@@ -389,12 +509,12 @@
         <pose>0 0 0 0 -0 0</pose>
         <mass>0.001</mass>
         <inertia>
-          <ixx>1.01644e-05</ixx>
+          <ixx>9.03832e-06</ixx>
           <ixy>0</ixy>
           <ixz>0</ixz>
-          <iyy>1.01644e-05</iyy>
+          <iyy>9.03832e-06</iyy>
           <iyz>0</iyz>
-          <izz>1.01644e-05</izz>
+          <izz>9.03832e-06</izz>
         </inertia>
       </inertial>
       <sensor name="odin1_lidar" type="gpu_ray">
@@ -443,7 +563,7 @@
         <update_rate>10</update_rate>
         <pose>0.01462 0.034376 0.000445 -0.00208 -0.0061 -0.01139</pose>
         <camera name="odin1_rgb">
-          <horizontal_fov>2.25147</horizontal_fov>
+          <horizontal_fov>1.6527705344413242</horizontal_fov>
           <image>
             <width>1600</width>
             <height>1296</height>
@@ -453,13 +573,33 @@
             <near>0.1</near>
             <far>100</far>
           </clip>
+          <lens>
+            <intrinsics>
+              <fx>736.9688</fx>
+              <fy>737.0365</fy>
+              <cx>766.6570</cx>
+              <cy>642.9091</cy>
+              <s>0.2058</s>
+            </intrinsics>
+            <type>stereographic</type>
+            <scale_to_hfov>1</scale_to_hfov>
+          </lens>
         </camera>
         <plugin name="odin1_rgb_camera_plugin" filename="libgazebo_ros_camera.so">
           <ros>
             <namespace>/odin1</namespace>
+            <remapping>rgb/camera_info:=rgb/camera_info_gazebo</remapping>
           </ros>
           <camera_name>rgb</camera_name>
           <frame_name>odin1_rgb_optical_frame</frame_name>
+          <cx>766.6570</cx>
+          <cy>642.9091</cy>
+          <border_crop>0</border_crop>
+          <rectification_matrix>1 0 0 0 1 0 0 0 1</rectification_matrix>
+          <P_fx>736.9688</P_fx>
+          <P_fy>737.0365</P_fy>
+          <P_cx>766.6570</P_cx>
+          <P_cy>642.9091</P_cy>
         </plugin>
       </sensor>
     </link>
@@ -493,12 +633,12 @@
         <pose>0 0 0 0 -0 0</pose>
         <mass>0.001</mass>
         <inertia>
-          <ixx>1.01644e-05</ixx>
+          <ixx>9.03832e-06</ixx>
           <ixy>0</ixy>
           <ixz>0</ixz>
-          <iyy>1.01644e-05</iyy>
+          <iyy>9.03832e-06</iyy>
           <iyz>0</iyz>
-          <izz>1.01644e-05</izz>
+          <izz>9.03832e-06</izz>
         </inertia>
       </inertial>
       <sensor name="odin1_imu" type="imu">
@@ -556,7 +696,7 @@
       </sensor>
     </link>
     <joint name="w1_joint" type="revolute">
-      <pose relative_to="base_footprint">0.42752 -0.485649 -0.328381 1.5708 1.40236 0</pose>
+      <pose relative_to="base_footprint">0.435925 -0.754 0.232992 1.5708 1.40236 -0</pose>
       <parent>base_footprint</parent>
       <child>w1</child>
       <axis>
@@ -576,96 +716,83 @@
     <link name="w1">
       <pose relative_to="w1_joint">0 0 0 0 -0 0</pose>
       <inertial>
-        <pose>3.2e-05 2.7e-05 0.248881 0 -0 0</pose>
-        <mass>0.432839</mass>
+        <pose>0 0 -0.029012 0 -0 0</pose>
+        <mass>0.5</mass>
         <inertia>
-          <ixx>0.00258999</ixx>
-          <ixy>6.58685e-07</ixy>
-          <ixz>-6.77403e-07</ixz>
-          <iyy>0.00258904</iyy>
-          <iyz>-4.10226e-07</iyz>
-          <izz>0.00498382</izz>
-        </inertia>
-      </inertial>
-      <collision name="w1_fixed_joint_lump__tire_collision_collision">
-        <pose>0 0 0.279282 0 -0 0</pose>
-        <geometry>
-          <cylinder>
-            <length>0.124337</length>
-            <radius>0.245351</radius>
-          </cylinder>
-        </geometry>
-      </collision>
-      <visual name="w1_visual">
-        <pose>0 0 0 0 -0 0</pose>
-        <geometry>
-          <mesh>
-            <scale>3.18816 3.18816 3.18816</scale>
-            <uri>model://subway_v2/meshes/w1_tire.STL</uri>
-          </mesh>
-        </geometry>
-        <material>
-          <script>
-            <name>Gazebo/FlatBlack</name>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-          </script>
-        </material>
-      </visual>
-    </link>
-    <joint name="w1_hub_joint" type="revolute">
-      <pose relative_to="w1">0 0 0 0 -0 0</pose>
-      <parent>w1</parent>
-      <child>w1_hub</child>
-      <axis>
-        <xyz>0 0 1</xyz>
-        <limit>
-          <lower>0</lower>
-          <upper>0</upper>
-          <effort>0</effort>
-          <velocity>0</velocity>
-        </limit>
-        <dynamics>
-          <spring_reference>0</spring_reference>
-          <spring_stiffness>0</spring_stiffness>
-        </dynamics>
-      </axis>
-    </joint>
-    <link name="w1_hub">
-      <pose relative_to="w1_hub_joint">0 0 0 0 -0 0</pose>
-      <inertial>
-        <pose>0 0 0 0 -0 0</pose>
-        <mass>0.001</mass>
-        <inertia>
-          <ixx>1.01644e-05</ixx>
+          <ixx>0.00734293</ixx>
           <ixy>0</ixy>
           <ixz>0</ixz>
-          <iyy>1.01644e-05</iyy>
+          <iyy>0.00734293</iyy>
           <iyz>0</iyz>
-          <izz>1.01644e-05</izz>
+          <izz>0.0135716</izz>
         </inertia>
       </inertial>
-      <visual name="w1_hub_visual">
+      <collision name="w1_tread_collision_collision">
         <pose>0 0 0 0 -0 0</pose>
         <geometry>
+          <cylinder>
+            <length>0.0571212</length>
+            <radius>0.180383</radius>
+          </cylinder>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <kp>1e+06</kp>
+              <kd>10</kd>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+          <friction>
+            <ode>
+              <mu>1</mu>
+              <mu2>1</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+      <collision name="w1_flange_collision_collision_1">
+        <pose>0 0 -0.048102 0 -0 0</pose>
+        <geometry>
+          <cylinder>
+            <length>0.0390829</length>
+            <radius>0.232994</radius>
+          </cylinder>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <kp>1e+06</kp>
+              <kd>10</kd>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+          <friction>
+            <ode>
+              <mu>1</mu>
+              <mu2>1</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+      <visual name="w1_visual">
+        <pose>-0.10077 0.017136 -0.30635 0 -0 0</pose>
+        <geometry>
           <mesh>
-            <scale>3.18816 3.18816 3.18816</scale>
-            <uri>model://subway_v2/meshes/w1_hub.STL</uri>
+            <scale>3.00638 3.00638 3.00638</scale>
+            <uri>model://subway_v2/meshes/w1_wheel.STL</uri>
           </mesh>
         </geometry>
-        <material>
-          <script>
-            <name>Gazebo/Grey</name>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-          </script>
-        </material>
       </visual>
     </link>
     <joint name="w2_joint" type="revolute">
-      <pose relative_to="base_footprint">0.42752 0.463785 -0.328381 1.5708 -1.40236 3.14159</pose>
+      <pose relative_to="base_footprint">0.435925 0.754 0.232992 1.5708 -1.40236 3.14159</pose>
       <parent>base_footprint</parent>
       <child>w2</child>
       <axis>
-        <xyz>0 0 -1</xyz>
+        <xyz>0 0 1</xyz>
         <limit>
           <lower>-1e+16</lower>
           <upper>1e+16</upper>
@@ -681,96 +808,83 @@
     <link name="w2">
       <pose relative_to="w2_joint">0 0 0 0 -0 0</pose>
       <inertial>
-        <pose>-1e-06 -4.1e-05 0.248881 0 -0 0</pose>
-        <mass>0.432839</mass>
+        <pose>0 0 -0.029012 0 -0 0</pose>
+        <mass>0.5</mass>
         <inertia>
-          <ixx>0.0025888</ixx>
-          <ixy>3.96536e-07</ixy>
-          <ixz>1.43013e-07</ixz>
-          <iyy>0.00259022</iyy>
-          <iyz>7.78914e-07</iyz>
-          <izz>0.00498382</izz>
-        </inertia>
-      </inertial>
-      <collision name="w2_fixed_joint_lump__tire_collision_collision">
-        <pose>0 0 0.279282 0 -0 0</pose>
-        <geometry>
-          <cylinder>
-            <length>0.124337</length>
-            <radius>0.245351</radius>
-          </cylinder>
-        </geometry>
-      </collision>
-      <visual name="w2_visual">
-        <pose>0 0 0 0 -0 0</pose>
-        <geometry>
-          <mesh>
-            <scale>3.18816 3.18816 3.18816</scale>
-            <uri>model://subway_v2/meshes/w2_tire.STL</uri>
-          </mesh>
-        </geometry>
-        <material>
-          <script>
-            <name>Gazebo/FlatBlack</name>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-          </script>
-        </material>
-      </visual>
-    </link>
-    <joint name="w2_hub_joint" type="revolute">
-      <pose relative_to="w2">0 0 0 0 -0 0</pose>
-      <parent>w2</parent>
-      <child>w2_hub</child>
-      <axis>
-        <xyz>0 0 1</xyz>
-        <limit>
-          <lower>0</lower>
-          <upper>0</upper>
-          <effort>0</effort>
-          <velocity>0</velocity>
-        </limit>
-        <dynamics>
-          <spring_reference>0</spring_reference>
-          <spring_stiffness>0</spring_stiffness>
-        </dynamics>
-      </axis>
-    </joint>
-    <link name="w2_hub">
-      <pose relative_to="w2_hub_joint">0 0 0 0 -0 0</pose>
-      <inertial>
-        <pose>0 0 0 0 -0 0</pose>
-        <mass>0.001</mass>
-        <inertia>
-          <ixx>1.01644e-05</ixx>
+          <ixx>0.00734293</ixx>
           <ixy>0</ixy>
           <ixz>0</ixz>
-          <iyy>1.01644e-05</iyy>
+          <iyy>0.00734293</iyy>
           <iyz>0</iyz>
-          <izz>1.01644e-05</izz>
+          <izz>0.0135716</izz>
         </inertia>
       </inertial>
-      <visual name="w2_hub_visual">
+      <collision name="w2_tread_collision_collision">
         <pose>0 0 0 0 -0 0</pose>
         <geometry>
+          <cylinder>
+            <length>0.0571212</length>
+            <radius>0.180383</radius>
+          </cylinder>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <kp>1e+06</kp>
+              <kd>10</kd>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+          <friction>
+            <ode>
+              <mu>1</mu>
+              <mu2>1</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+      <collision name="w2_flange_collision_collision_1">
+        <pose>0 0 -0.048102 0 -0 0</pose>
+        <geometry>
+          <cylinder>
+            <length>0.0390829</length>
+            <radius>0.232994</radius>
+          </cylinder>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <kp>1e+06</kp>
+              <kd>10</kd>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+          <friction>
+            <ode>
+              <mu>1</mu>
+              <mu2>1</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+      <visual name="w2_visual">
+        <pose>0.10077 0.017136 -0.30635 0 -0 0</pose>
+        <geometry>
           <mesh>
-            <scale>3.18816 3.18816 3.18816</scale>
-            <uri>model://subway_v2/meshes/w2_hub.STL</uri>
+            <scale>3.00638 3.00638 3.00638</scale>
+            <uri>model://subway_v2/meshes/w2_wheel.STL</uri>
           </mesh>
         </geometry>
-        <material>
-          <script>
-            <name>Gazebo/Grey</name>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-          </script>
-        </material>
       </visual>
     </link>
     <joint name="w3_joint" type="revolute">
-      <pose relative_to="base_footprint">-0.497047 0.463785 -0.328381 1.5708 -0.502733 3.14159</pose>
+      <pose relative_to="base_footprint">-0.435925 0.754 0.232992 1.5708 -0.502733 3.14159</pose>
       <parent>base_footprint</parent>
       <child>w3</child>
       <axis>
-        <xyz>0 0 -1</xyz>
+        <xyz>0 0 1</xyz>
         <limit>
           <lower>-1e+16</lower>
           <upper>1e+16</upper>
@@ -786,92 +900,79 @@
     <link name="w3">
       <pose relative_to="w3_joint">0 0 0 0 -0 0</pose>
       <inertial>
-        <pose>1e-05 -4e-05 0.248881 0 -0 0</pose>
-        <mass>0.432839</mass>
+        <pose>0 0 -0.029012 0 -0 0</pose>
+        <mass>0.5</mass>
         <inertia>
-          <ixx>0.0025887</ixx>
-          <ixy>-3.43457e-08</ixy>
-          <ixz>-7.43496e-08</ixz>
-          <iyy>0.00259033</iyy>
-          <iyz>7.88437e-07</iyz>
-          <izz>0.00498382</izz>
-        </inertia>
-      </inertial>
-      <collision name="w3_fixed_joint_lump__tire_collision_collision">
-        <pose>0 0 0.279282 0 -0 0</pose>
-        <geometry>
-          <cylinder>
-            <length>0.124337</length>
-            <radius>0.245351</radius>
-          </cylinder>
-        </geometry>
-      </collision>
-      <visual name="w3_visual">
-        <pose>0 0 0 0 -0 0</pose>
-        <geometry>
-          <mesh>
-            <scale>3.18816 3.18816 3.18816</scale>
-            <uri>model://subway_v2/meshes/w3_tire.STL</uri>
-          </mesh>
-        </geometry>
-        <material>
-          <script>
-            <name>Gazebo/FlatBlack</name>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-          </script>
-        </material>
-      </visual>
-    </link>
-    <joint name="w3_hub_joint" type="revolute">
-      <pose relative_to="w3">0 0 0 0 -0 0</pose>
-      <parent>w3</parent>
-      <child>w3_hub</child>
-      <axis>
-        <xyz>0 0 1</xyz>
-        <limit>
-          <lower>0</lower>
-          <upper>0</upper>
-          <effort>0</effort>
-          <velocity>0</velocity>
-        </limit>
-        <dynamics>
-          <spring_reference>0</spring_reference>
-          <spring_stiffness>0</spring_stiffness>
-        </dynamics>
-      </axis>
-    </joint>
-    <link name="w3_hub">
-      <pose relative_to="w3_hub_joint">0 0 0 0 -0 0</pose>
-      <inertial>
-        <pose>0 0 0 0 -0 0</pose>
-        <mass>0.001</mass>
-        <inertia>
-          <ixx>1.01644e-05</ixx>
+          <ixx>0.00734293</ixx>
           <ixy>0</ixy>
           <ixz>0</ixz>
-          <iyy>1.01644e-05</iyy>
+          <iyy>0.00734293</iyy>
           <iyz>0</iyz>
-          <izz>1.01644e-05</izz>
+          <izz>0.0135716</izz>
         </inertia>
       </inertial>
-      <visual name="w3_hub_visual">
+      <collision name="w3_tread_collision_collision">
         <pose>0 0 0 0 -0 0</pose>
         <geometry>
+          <cylinder>
+            <length>0.0571212</length>
+            <radius>0.180383</radius>
+          </cylinder>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <kp>1e+06</kp>
+              <kd>10</kd>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+          <friction>
+            <ode>
+              <mu>1</mu>
+              <mu2>1</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+      <collision name="w3_flange_collision_collision_1">
+        <pose>0 0 -0.048102 0 -0 0</pose>
+        <geometry>
+          <cylinder>
+            <length>0.0390829</length>
+            <radius>0.232994</radius>
+          </cylinder>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <kp>1e+06</kp>
+              <kd>10</kd>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+          <friction>
+            <ode>
+              <mu>1</mu>
+              <mu2>1</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+      <visual name="w3_visual">
+        <pose>0.04925 0.08957 -0.30635 0 -0 0</pose>
+        <geometry>
           <mesh>
-            <scale>3.18816 3.18816 3.18816</scale>
-            <uri>model://subway_v2/meshes/w3_hub.STL</uri>
+            <scale>3.00638 3.00638 3.00638</scale>
+            <uri>model://subway_v2/meshes/w3_wheel.STL</uri>
           </mesh>
         </geometry>
-        <material>
-          <script>
-            <name>Gazebo/Grey</name>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-          </script>
-        </material>
       </visual>
     </link>
     <joint name="w4_joint" type="revolute">
-      <pose relative_to="base_footprint">-0.497047 -0.485649 -0.328381 1.5708 0.502733 -0</pose>
+      <pose relative_to="base_footprint">-0.435925 -0.754 0.232992 1.5708 0.502733 -0</pose>
       <parent>base_footprint</parent>
       <child>w4</child>
       <axis>
@@ -891,226 +992,100 @@
     <link name="w4">
       <pose relative_to="w4_joint">0 0 0 0 -0 0</pose>
       <inertial>
-        <pose>3.8e-05 1.7e-05 0.248881 0 -0 0</pose>
-        <mass>0.432839</mass>
+        <pose>0 0 -0.029012 0 -0 0</pose>
+        <mass>0.5</mass>
         <inertia>
-          <ixx>0.00259027</ixx>
-          <ixy>3.10881e-07</ixy>
-          <ixz>-7.63473e-07</ixz>
-          <iyy>0.00258876</iyy>
-          <iyz>-2.10403e-07</iyz>
-          <izz>0.00498382</izz>
-        </inertia>
-      </inertial>
-      <collision name="w4_fixed_joint_lump__tire_collision_collision">
-        <pose>0 0 0.279282 0 -0 0</pose>
-        <geometry>
-          <cylinder>
-            <length>0.124337</length>
-            <radius>0.245351</radius>
-          </cylinder>
-        </geometry>
-      </collision>
-      <visual name="w4_visual">
-        <pose>0 0 0 0 -0 0</pose>
-        <geometry>
-          <mesh>
-            <scale>3.18816 3.18816 3.18816</scale>
-            <uri>model://subway_v2/meshes/w4_tire.STL</uri>
-          </mesh>
-        </geometry>
-        <material>
-          <script>
-            <name>Gazebo/FlatBlack</name>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-          </script>
-        </material>
-      </visual>
-    </link>
-    <joint name="w4_hub_joint" type="revolute">
-      <pose relative_to="w4">0 0 0 0 -0 0</pose>
-      <parent>w4</parent>
-      <child>w4_hub</child>
-      <axis>
-        <xyz>0 0 1</xyz>
-        <limit>
-          <lower>0</lower>
-          <upper>0</upper>
-          <effort>0</effort>
-          <velocity>0</velocity>
-        </limit>
-        <dynamics>
-          <spring_reference>0</spring_reference>
-          <spring_stiffness>0</spring_stiffness>
-        </dynamics>
-      </axis>
-    </joint>
-    <link name="w4_hub">
-      <pose relative_to="w4_hub_joint">0 0 0 0 -0 0</pose>
-      <inertial>
-        <pose>0 0 0 0 -0 0</pose>
-        <mass>0.001</mass>
-        <inertia>
-          <ixx>1.01644e-05</ixx>
+          <ixx>0.00734293</ixx>
           <ixy>0</ixy>
           <ixz>0</ixz>
-          <iyy>1.01644e-05</iyy>
+          <iyy>0.00734293</iyy>
           <iyz>0</iyz>
-          <izz>1.01644e-05</izz>
+          <izz>0.0135716</izz>
         </inertia>
       </inertial>
-      <visual name="w4_hub_visual">
+      <collision name="w4_tread_collision_collision">
         <pose>0 0 0 0 -0 0</pose>
         <geometry>
-          <mesh>
-            <scale>3.18816 3.18816 3.18816</scale>
-            <uri>model://subway_v2/meshes/w4_hub.STL</uri>
-          </mesh>
+          <cylinder>
+            <length>0.0571212</length>
+            <radius>0.180383</radius>
+          </cylinder>
         </geometry>
-        <material>
-          <script>
-            <name>Gazebo/Grey</name>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-          </script>
-        </material>
-      </visual>
-    </link>
-    <joint name="ph" type="revolute">
-      <pose relative_to="base_footprint">-0.034764 0.235513 0.561116 0.784311 -0 1.5708</pose>
-      <parent>base_footprint</parent>
-      <child>pitch</child>
-      <axis>
-        <xyz>-1 0 0</xyz>
-        <limit>
-          <lower>0</lower>
-          <upper>0</upper>
-          <effort>0</effort>
-          <velocity>0</velocity>
-        </limit>
-        <dynamics>
-          <spring_reference>0</spring_reference>
-          <spring_stiffness>0</spring_stiffness>
-        </dynamics>
-      </axis>
-    </joint>
-    <link name="pitch">
-      <pose relative_to="ph">0 0 0 0 -0 0</pose>
-      <inertial>
-        <pose>-0.294827 0.10407 -0.126818 0 -0 0</pose>
-        <mass>1.90342</mass>
-        <inertia>
-          <ixx>0.0223388</ixx>
-          <ixy>3.0702e-05</ixy>
-          <ixz>-7.21783e-05</ixz>
-          <iyy>0.0522341</iyy>
-          <iyz>0.000278217</iyz>
-          <izz>0.0331684</izz>
-        </inertia>
-      </inertial>
-      <visual name="pitch_visual">
-        <pose>0 0 0 0 -0 0</pose>
+        <surface>
+          <contact>
+            <ode>
+              <kp>1e+06</kp>
+              <kd>10</kd>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+          <friction>
+            <ode>
+              <mu>1</mu>
+              <mu2>1</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+      <collision name="w4_flange_collision_collision_1">
+        <pose>0 0 -0.048102 0 -0 0</pose>
+        <geometry>
+          <cylinder>
+            <length>0.0390829</length>
+            <radius>0.232994</radius>
+          </cylinder>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <kp>1e+06</kp>
+              <kd>10</kd>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+          <friction>
+            <ode>
+              <mu>1</mu>
+              <mu2>1</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+      <visual name="w4_visual">
+        <pose>-0.04925 0.08957 -0.30635 0 -0 0</pose>
         <geometry>
           <mesh>
-            <scale>3.18816 3.18816 3.18816</scale>
-            <uri>model://subway_v2/meshes/pitch_body.STL</uri>
+            <scale>3.00638 3.00638 3.00638</scale>
+            <uri>model://subway_v2/meshes/w4_wheel.STL</uri>
           </mesh>
         </geometry>
-        <material>
-          <script>
-            <name>Gazebo/DarkGrey</name>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-          </script>
-        </material>
       </visual>
-      <visual name="pitch_camera_visual_1">
-        <pose>0 0 0 0 -0 0</pose>
-        <geometry>
-          <mesh>
-            <scale>3.18816 3.18816 3.18816</scale>
-            <uri>model://subway_v2/meshes/pitch_camera.STL</uri>
-          </mesh>
-        </geometry>
-        <material>
-          <script>
-            <name>Gazebo/DarkGrey</name>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-          </script>
-        </material>
-      </visual>
-      <sensor name="pitch_camera_sensor" type="camera">
-        <always_on>1</always_on>
-        <visualize>0</visualize>
-        <update_rate>30</update_rate>
-        <camera name="pitch_camera">
-          <horizontal_fov>0.784537</horizontal_fov>
-          <image>
-            <width>1440</width>
-            <height>1080</height>
-            <format>B8G8R8</format>
-          </image>
-          <clip>
-            <near>0.05</near>
-            <far>100</far>
-          </clip>
-          <noise>
-            <type>gaussian</type>
-            <mean>0</mean>
-            <stddev>0.01</stddev>
-          </noise>
-          <distortion>
-            <k1>-0.099402</k1>
-            <k2>0.115175</k2>
-            <k3>0</k3>
-            <p1>-0.003985</p1>
-            <p2>-0.001845</p2>
-            <center>0.483539 0.507185</center>
-          </distortion>
-          <lens>
-            <intrinsics>
-              <fx>1740.35</fx>
-              <fy>1740.46</fy>
-              <cx>696.296</cx>
-              <cy>547.759</cy>
-              <s>0</s>
-            </intrinsics>
-            <type>stereographic</type>
-            <scale_to_hfov>1</scale_to_hfov>
-          </lens>
-        </camera>
-        <plugin name="pitch_camera_plugin" filename="libgazebo_ros_camera.so">
-          <ros>
-            <namespace>/subway_v2</namespace>
-          </ros>
-          <camera_name>pitch_camera</camera_name>
-          <frame_name>pitch_camera_optical_frame</frame_name>
-          <focal_length>1740.35217</focal_length>
-          <cx>696.2963</cx>
-          <cy>547.75936</cy>
-          <border_crop>0</border_crop>
-          <rectification_matrix>1 0 0 0 1 0 0 0 1</rectification_matrix>
-          <P_fx>1715.05176</P_fx>
-          <P_fy>1723.86292</P_fy>
-          <P_cx>693.56983</P_cx>
-          <P_cy>545.3029</P_cy>
-        </plugin>
-        <pose>-0.246445 0.010521 0.27998 3.14159 -1.57079 1.57079</pose>
-      </sensor>
     </link>
     <static>0</static>
-    <plugin name="subway_v2_planar_move" filename="libgazebo_ros_planar_move.so">
+    <plugin name="subway_v2_diff_drive" filename="libgazebo_ros_diff_drive.so">
       <ros>
         <remapping>cmd_vel:=cmd_vel_drive</remapping>
         <remapping>odom:=odom</remapping>
       </ros>
       <update_rate>100</update_rate>
-      <publish_rate>30</publish_rate>
+      <num_wheel_pairs>2</num_wheel_pairs>
+      <left_joint>w2_joint</left_joint>
+      <right_joint>w1_joint</right_joint>
+      <left_joint>w3_joint</left_joint>
+      <right_joint>w4_joint</right_joint>
+      <wheel_separation>1.508</wheel_separation>
+      <wheel_separation>1.508</wheel_separation>
+      <wheel_diameter>0.360765550239234</wheel_diameter>
+      <wheel_diameter>0.360765550239234</wheel_diameter>
+      <max_wheel_torque>40</max_wheel_torque>
+      <max_wheel_acceleration>1.0</max_wheel_acceleration>
       <publish_odom>1</publish_odom>
       <publish_odom_tf>1</publish_odom_tf>
+      <publish_wheel_tf>0</publish_wheel_tf>
       <odometry_frame>odom</odometry_frame>
       <robot_base_frame>base_footprint</robot_base_frame>
-      <covariance_x>0.0001</covariance_x>
-      <covariance_y>0.0001</covariance_y>
-      <covariance_yaw>0.01</covariance_yaw>
     </plugin>
     <plugin name="subway_v2_joint_state" filename="libgazebo_ros_joint_state_publisher.so">
       <ros>
@@ -1121,7 +1096,6 @@
       <joint_name>w2_joint</joint_name>
       <joint_name>w3_joint</joint_name>
       <joint_name>w4_joint</joint_name>
-      <joint_name>ph</joint_name>
     </plugin>
   </model>
 </sdf>

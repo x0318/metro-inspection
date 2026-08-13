@@ -4,7 +4,7 @@ project(metro_description)
 find_package(ament_cmake REQUIRED)
 
 install(
-  DIRECTORY urdf meshes docs
+  DIRECTORY urdf meshes
   DESTINATION share/${PROJECT_NAME}
 )
 

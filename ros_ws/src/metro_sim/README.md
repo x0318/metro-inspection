@@ -24,6 +24,49 @@ cd ~/my-project/metro-inspection/ros_ws/src/metro_sim
 ./scripts/open_subway_tunnel.sh
 ```
 
+## V6 完整传感器与建图模式
+
+完整传感器模式保留 Odin1、IMU 和六路 RGB 相机，使用端口 `11370`：
+
+```bash
+cd ~/my-project/metro-inspection
+./ros_ws/src/metro_sim/scripts/open_subway_tunnel_v2_sensors.sh
+```
+
+该入口同时把 Gazebo Classic 的近似 Odin1 标定从
+`/odin1/rgb/camera_info_gazebo` 转换为真实标定
+`/odin1/rgb/camera_info`，与融合模式使用同一个接口。
+
+点云建图模式从同一份 `subway_v2/model.sdf` 临时派生，只关闭六路
+RGB 相机并默认不启动 Gazebo GUI；雷达的 `240 x 180` 分辨率、FOV、
+量程、噪声和 10 Hz 请求值保持不变。默认端口为 `11372`：
+
+```bash
+cd ~/my-project/metro-inspection
+./ros_ws/src/metro_sim/scripts/open_subway_tunnel_v2_mapping.sh
+```
+
+需要观察模型时可临时打开 GUI，但会降低高密度 GPU 雷达频率：
+
+```bash
+./ros_ws/src/metro_sim/scripts/open_subway_tunnel_v2_mapping.sh gui:=true
+```
+
+完整 sensors 仿真和融合节点运行后，使用统一入口查看 Odin1 原始图像、
+带检测框/点云投影/定位十字的识别调试图、三维点云和病害位置标记：
+
+```bash
+cd ~/my-project/metro-inspection
+./ros_ws/src/metro_sim/scripts/open_subway_v2_perception_rviz.sh
+```
+
+该脚本会自动加载 ROS 2 和当前工作空间，因此 RViz 可以解析
+`package://metro_description/...` 的机器人网格。不要只在未加载工作空间的
+终端直接运行 `rviz2 -d ...`，否则 RobotModel 会显示资源查找错误。
+
+建图模式只在 `/tmp` 写入轻量 SDF/config，退出时自动删除；不会复制
+`subway_v2` 的 STL，也不会在仓库中累积新模型。
+
 ## 启动导航与安全演示
 
 ```bash
@@ -49,9 +92,13 @@ Nav2 /cmd_vel
 → /cmd_vel_safe
 → cmd_vel_watchdog
 → /cmd_vel_drive
-→ train_planar_move
+→ subway_v2_diff_drive（V2/V6 车辆）
 → 车辆
 ```
+
+`open_nav2_demo.sh` 仍使用旧 `gazebo_train` 演示模型及其
+`train_planar_move`；V2 传感器、建图和融合入口使用四轮
+`subway_v2_diff_drive`，车轮会按轮轨接触真实旋转。
 
 - `/scan`：前向障碍与雷达存活输入。
 - `/odom`：车辆当前位置和相对导航目标基准。
