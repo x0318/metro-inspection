@@ -52,6 +52,7 @@ cd /home/jo/my-project/metro-inspection/ros_ws
 source /opt/ros/humble/setup.bash
 colcon build --symlink-install --packages-up-to metro_dashboard_bridge
 source install/setup.bash
+export ROS_DOMAIN_ID=70
 export METRO_DASHBOARD_DIR=/home/jo/my-project/metro-inspection/dashboard
 ros2 run metro_dashboard_bridge defect_event_bridge
 ```
@@ -61,14 +62,17 @@ ros2 run metro_dashboard_bridge defect_event_bridge
 ```text
 ROS topic: /defect_events
 HTTP:      http://127.0.0.1:8088
+ROS domain: 70
 ```
 
 打开 HTTP 根路径即可进入巡检工作台。当前页面只使用真实存在的健康状态、相机和病害
 查询接口；导航和病害截图模块将在后续步骤单独迁移。
 
-可以使用环境变量修改 HTTP 地址，使用 ROS 参数或 remap 修改话题：
+一键启动脚本默认使用与完整传感器仿真一致的 `ROS_DOMAIN_ID=70`。可以使用环境变量修改
+ROS domain 和 HTTP 地址，使用 ROS 参数或 remap 修改话题：
 
 ```bash
+ROS_DOMAIN_ID=70 \
 METRO_DASHBOARD_BIND_ADDRESS=0.0.0.0 \
 METRO_DASHBOARD_PORT=8089 \
 ros2 run metro_dashboard_bridge defect_event_bridge \

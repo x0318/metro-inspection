@@ -35,7 +35,8 @@ METRO_DASHBOARD_PORT=8089 bash scripts/open_defect_dashboard.sh
 ```
 
 脚本会构建 `metro_dashboard_bridge` 及其接口依赖，然后启动 ROS 2 订阅节点和 FastAPI。
-病害记录目前保存在进程内存中，服务重启后清空。
+脚本默认使用完整传感器仿真一致的 `ROS_DOMAIN_ID=70`。接入其他 ROS 2 系统时，可以用
+`ROS_DOMAIN_ID=<目标值>` 覆盖。病害记录目前保存在进程内存中，服务重启后清空。
 
 相机预览默认不超过 `640×360`，保持源图像宽高比，以 JPEG 质量 55、每路 6 FPS 输出。
 Gazebo 未启动或三秒内没有新帧时，对应相机会显示离线。预览参数和五路压缩图像话题可
