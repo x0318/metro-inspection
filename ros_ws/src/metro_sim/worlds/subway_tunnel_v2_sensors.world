@@ -53,7 +53,7 @@
       <!-- Full model: keeps Odin1, IMU, cameras, odometry, and joint plugins. -->
       <uri>model://subway_v2</uri>
       <name>subway_v2</name>
-      <pose>19.2 0 0.5214 0 0 0</pose>
+      <pose>19.2 0 0.5214 0 0 3.141592653589793</pose>
       <static>false</static>
     </include>
   </world>

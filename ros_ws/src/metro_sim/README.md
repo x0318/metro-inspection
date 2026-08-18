@@ -26,6 +26,9 @@ cd ~/my-project/metro-inspection/ros_ws/src/metro_sim
 
 ## V6 完整传感器与建图模式
 
+四种 V2 场景都在 `x=19.2、yaw=pi` 放置车辆，使 Pitch 相机端朝隧道
+巡检前进方向。正 `linear.x` 沿车头行驶时，世界坐标 `x` 会减小。
+
 完整传感器模式保留 Odin1、IMU 和六路 RGB 相机，使用端口 `11370`：
 
 ```bash
