@@ -146,10 +146,10 @@ WHEEL_VISUAL_ORIGINS = {
     "w4": "-0.016381944871 0.029793151047 -0.101900000000",
 }
 WHEEL_AXIS_BY_NAME = {
-    "w1_joint": "0 0 -1",
-    "w2_joint": "0 0 1",
-    "w3_joint": "0 0 1",
-    "w4_joint": "0 0 -1",
+    "w1_joint": "0 0 1",
+    "w2_joint": "0 0 -1",
+    "w3_joint": "0 0 -1",
+    "w4_joint": "0 0 1",
 }
 WHEEL_MASS = "0.5"
 WHEEL_INERTIA_TRANSVERSE = "0.000812421666667"
@@ -199,11 +199,11 @@ PRESERVED_JOINT_ORIGINS = {
     ),
 }
 
-# Rz(-90 deg) * Rx(-90 deg) maps CAD Y-up into REP-103 and makes the Odin1/CAD
-# nose point along base_footprint +X. Translation centers the wheel pairs on the
-# track and puts the lowest V6 tire vertex on base_footprint z=0.
-ROOT_XYZ = "0.010904028627 0.003428939952 0.214499211212"
-ROOT_RPY = "-1.570796326795 0 -1.570796326795"
+# Rz(+90 deg) * Rx(-90 deg) maps CAD Y-up into REP-103 and makes the physical
+# Pitch-camera end point along base_footprint +X. Translation centers the wheel
+# pairs on the track and puts the lowest V6 tire vertex on base_footprint z=0.
+ROOT_XYZ = "-0.010904028627 -0.003428939952 0.214499211212"
+ROOT_RPY = "-1.570796326795 0 1.570796326795"
 
 PRESERVED_SENSOR_LINKS = (
     "lidar_link",

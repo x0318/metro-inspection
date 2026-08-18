@@ -52,7 +52,7 @@ global TF:   odom
 ```
 
 The `xj1` through `xj4` cameras are not interchangeable defaults. Their current
-views do not overlap the forward-facing Odin1 point cloud, even though their TF
+views do not overlap the rear-facing Odin1 point cloud, even though their TF
 frames exist. Select a different camera only after its field-of-view overlap and
 lidar-to-camera extrinsic calibration have been verified.
 

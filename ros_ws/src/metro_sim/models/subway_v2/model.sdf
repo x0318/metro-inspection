@@ -3,19 +3,19 @@
   <model name="subway_v2">
     <link name="base_footprint">
       <inertial>
-        <pose>0.011174 -0.000164 0.512032 0 -0 0</pose>
+        <pose>-0.011174 0.000164 0.512032 0 -0 0</pose>
         <mass>18.7872</mass>
         <inertia>
           <ixx>1.70375</ixx>
           <ixy>-7.41401e-05</ixy>
-          <ixz>-0.15453</ixz>
+          <ixz>0.15453</ixz>
           <iyy>3.02746</iyy>
-          <iyz>0.000661518</iyz>
+          <iyz>-0.000661518</iyz>
           <izz>2.87407</izz>
         </inertia>
       </inertial>
       <collision name="base_footprint_fixed_joint_lump__base_link_collision_collision">
-        <pose>-0.081924 0 0.545704 -1.5708 -0 -1.5708</pose>
+        <pose>0.081924 -0 0.545704 -1.5708 -0 1.5708</pose>
         <geometry>
           <box>
             <size>1.43104 0.829804 1.39646</size>
@@ -34,7 +34,7 @@
         </surface>
       </collision>
       <collision name="base_footprint_fixed_joint_lump__leida_collision_collision_1">
-        <pose>0.501464 0 0.67493 -1.5708 -0 -1.5708</pose>
+        <pose>-0.501464 -0 0.67493 -1.5708 -0 1.5708</pose>
         <geometry>
           <box>
             <size>0.300638 0.186396 0.139496</size>
@@ -42,7 +42,7 @@
         </geometry>
       </collision>
       <collision name="base_footprint_fixed_joint_lump__xj1_collision_collision_2">
-        <pose>0.000225 -0.538469 0.895359 1.5708 0 -0</pose>
+        <pose>-0.000225 0.538469 0.895359 1.5708 0 -3.14159</pose>
         <geometry>
           <box>
             <size>0.113792 0.17268 0.361088</size>
@@ -50,7 +50,7 @@
         </geometry>
       </collision>
       <collision name="base_footprint_fixed_joint_lump__xj2_collision_collision_3">
-        <pose>-0.000225 0.538469 0.895359 1.5708 -0 3.14159</pose>
+        <pose>0.000225 -0.538469 0.895359 1.5708 -0 0</pose>
         <geometry>
           <box>
             <size>0.113792 0.17268 0.361088</size>
@@ -58,7 +58,7 @@
         </geometry>
       </collision>
       <collision name="base_footprint_fixed_joint_lump__xj3_collision_collision_4">
-        <pose>-0.656669 -0.674932 0.810217 3.14159 0 -0</pose>
+        <pose>0.656669 0.674932 0.810217 3.14159 0 -3.14159</pose>
         <geometry>
           <box>
             <size>0.113792 0.114017 0.34874</size>
@@ -66,7 +66,7 @@
         </geometry>
       </collision>
       <collision name="base_footprint_fixed_joint_lump__xj4_collision_collision_5">
-        <pose>-0.657119 0.674932 0.810217 3.14159 -0 3.14159</pose>
+        <pose>0.657119 -0.674932 0.810217 3.14159 -0 0</pose>
         <geometry>
           <box>
             <size>0.113792 0.114017 0.34874</size>
@@ -74,7 +74,7 @@
         </geometry>
       </collision>
       <collision name="base_footprint_fixed_joint_lump__yuntai_collision_collision_6">
-        <pose>-0 0 0.949654 1.5708 -0 3.14159</pose>
+        <pose>0 -0 0.949654 1.5708 -0 0</pose>
         <geometry>
           <box>
             <size>0.420893 0.657679 0.577225</size>
@@ -82,7 +82,7 @@
         </geometry>
       </collision>
       <collision name="base_footprint_fixed_joint_lump__pitch_collision_collision_7">
-        <pose>0.066121 0 1.05892 -1.57188 -0 1.5708</pose>
+        <pose>-0.066121 -0 1.05892 -1.57188 -0 -1.5708</pose>
         <geometry>
           <box>
             <size>0.582035 0.369785 0.705747</size>
@@ -90,7 +90,7 @@
         </geometry>
       </collision>
       <visual name="base_footprint_fixed_joint_lump__base_link_visual">
-        <pose>0.032782 0.010309 0.644866 -1.5708 -0 -1.5708</pose>
+        <pose>-0.032782 -0.010309 0.644866 -1.5708 -0 1.5708</pose>
         <geometry>
           <mesh>
             <scale>3.00638 3.00638 3.00638</scale>
@@ -99,7 +99,7 @@
         </geometry>
       </visual>
       <visual name="base_footprint_fixed_joint_lump__w1_fixed_mount_visual_visual_1">
-        <pose>0.435925 -0.44765 0.335209 1.5708 1.40236 -0</pose>
+        <pose>-0.435925 0.44765 0.335209 1.5708 1.40236 -3.14159</pose>
         <geometry>
           <mesh>
             <scale>3.00638 3.00638 3.00638</scale>
@@ -108,7 +108,7 @@
         </geometry>
       </visual>
       <visual name="base_footprint_fixed_joint_lump__w2_fixed_mount_visual_visual_2">
-        <pose>0.435925 0.44765 0.335209 1.5708 -1.40236 3.14159</pose>
+        <pose>-0.435925 -0.44765 0.335209 1.5708 -1.40236 0</pose>
         <geometry>
           <mesh>
             <scale>3.00638 3.00638 3.00638</scale>
@@ -117,7 +117,7 @@
         </geometry>
       </visual>
       <visual name="base_footprint_fixed_joint_lump__w3_fixed_mount_visual_visual_3">
-        <pose>-0.435925 0.44765 0.335209 1.5708 -0.502733 3.14159</pose>
+        <pose>0.435925 -0.44765 0.335209 1.5708 -0.502733 0</pose>
         <geometry>
           <mesh>
             <scale>3.00638 3.00638 3.00638</scale>
@@ -126,7 +126,7 @@
         </geometry>
       </visual>
       <visual name="base_footprint_fixed_joint_lump__w4_fixed_mount_visual_visual_4">
-        <pose>-0.435925 -0.44765 0.335209 1.5708 0.502733 -0</pose>
+        <pose>0.435925 0.44765 0.335209 1.5708 0.502733 -3.14159</pose>
         <geometry>
           <mesh>
             <scale>3.00638 3.00638 3.00638</scale>
@@ -135,7 +135,7 @@
         </geometry>
       </visual>
       <visual name="base_footprint_fixed_joint_lump__xj1_visual_5">
-        <pose>-0 -0.481021 0.685452 1.5708 0 -0</pose>
+        <pose>0 0.481021 0.685452 1.5708 0 -3.14159</pose>
         <geometry>
           <mesh>
             <scale>3.00638 3.00638 3.00638</scale>
@@ -144,7 +144,7 @@
         </geometry>
       </visual>
       <visual name="base_footprint_fixed_joint_lump__xj2_visual_6">
-        <pose>-0 0.481021 0.685452 1.5708 -0 3.14159</pose>
+        <pose>0 -0.481021 0.685452 1.5708 -0 0</pose>
         <geometry>
           <mesh>
             <scale>3.00638 3.00638 3.00638</scale>
@@ -153,7 +153,7 @@
         </geometry>
       </visual>
       <visual name="base_footprint_fixed_joint_lump__xj3_visual_7">
-        <pose>-0.656894 -0.674932 0.966549 3.14159 0 -0</pose>
+        <pose>0.656894 0.674932 0.966549 3.14159 0 -3.14159</pose>
         <geometry>
           <mesh>
             <scale>3.00638 3.00638 3.00638</scale>
@@ -162,7 +162,7 @@
         </geometry>
       </visual>
       <visual name="base_footprint_fixed_joint_lump__xj4_visual_8">
-        <pose>-0.656894 0.674932 0.966549 3.14159 -0 3.14159</pose>
+        <pose>0.656894 -0.674932 0.966549 3.14159 -0 0</pose>
         <geometry>
           <mesh>
             <scale>3.00638 3.00638 3.00638</scale>
@@ -171,7 +171,7 @@
         </geometry>
       </visual>
       <visual name="base_footprint_fixed_joint_lump__yuntai_visual_9">
-        <pose>-0 0.232393 1.14393 1.5708 -0 3.14159</pose>
+        <pose>0 -0.232393 1.14393 1.5708 -0 0</pose>
         <geometry>
           <mesh>
             <scale>3.00638 3.00638 3.00638</scale>
@@ -180,7 +180,7 @@
         </geometry>
       </visual>
       <visual name="base_footprint_fixed_joint_lump__pitch_visual_10">
-        <pose>-0 0.232393 1.17399 -1.57188 -0 1.5708</pose>
+        <pose>0 -0.232393 1.17399 -1.57188 -0 -1.5708</pose>
         <geometry>
           <mesh>
             <scale>3.00638 3.00638 3.00638</scale>
@@ -244,7 +244,7 @@
           <P_cx>693.56983</P_cx>
           <P_cy>545.3029</P_cy>
         </plugin>
-        <pose>-0 -0.536573 0.685452 -0 -0 -1.5708</pose>
+        <pose>0 0.536573 0.685452 -0 -0 1.5708</pose>
       </sensor>
       <sensor name="xj2_camera_sensor" type="camera">
         <always_on>1</always_on>
@@ -302,7 +302,7 @@
           <P_cx>693.56983</P_cx>
           <P_cy>545.3029</P_cy>
         </plugin>
-        <pose>-0 0.536573 0.685452 0 -0 1.5708</pose>
+        <pose>0 -0.536573 0.685452 0 -0 -1.5708</pose>
       </sensor>
       <sensor name="xj3_camera_sensor" type="camera">
         <always_on>1</always_on>
@@ -360,7 +360,7 @@
           <P_cx>693.56983</P_cx>
           <P_cy>545.3029</P_cy>
         </plugin>
-        <pose>-0.656894 -0.674932 0.735057 3.14159 1.57079 1.5708</pose>
+        <pose>0.656894 0.674932 0.735057 -3.14159 1.57079 -1.5708</pose>
       </sensor>
       <sensor name="xj4_camera_sensor" type="camera">
         <always_on>1</always_on>
@@ -418,7 +418,7 @@
           <P_cx>693.56983</P_cx>
           <P_cy>545.3029</P_cy>
         </plugin>
-        <pose>-0.656894 0.674932 0.735057 3.14159 1.57079 -1.57079</pose>
+        <pose>0.656894 -0.674932 0.735057 3.14159 1.57079 1.5708</pose>
       </sensor>
       <sensor name="pitch_camera_sensor" type="camera">
         <always_on>1</always_on>
@@ -476,11 +476,11 @@
           <P_cx>693.56983</P_cx>
           <P_cy>545.3029</P_cy>
         </plugin>
-        <pose>-0.264006 -0 1.16378 0 0.001087 3.14159</pose>
+        <pose>0.264006 0 1.16378 0 0.001087 0</pose>
       </sensor>
     </link>
     <joint name="lidar_joint" type="fixed">
-      <pose relative_to="base_footprint">0.574218 0 0.680943 0 0 -0</pose>
+      <pose relative_to="base_footprint">-0.574218 -0 0.680943 0 0 -3.14159</pose>
       <parent>base_footprint</parent>
       <child>lidar_link</child>
       <axis>
@@ -696,11 +696,11 @@
       </sensor>
     </link>
     <joint name="w1_joint" type="revolute">
-      <pose relative_to="base_footprint">0.435925 -0.754 0.232992 1.5708 1.40236 -0</pose>
+      <pose relative_to="base_footprint">-0.435925 0.754 0.232992 1.5708 1.40236 -3.14159</pose>
       <parent>base_footprint</parent>
       <child>w1</child>
       <axis>
-        <xyz>0 0 -1</xyz>
+        <xyz>0 0 1</xyz>
         <limit>
           <lower>-1e+16</lower>
           <upper>1e+16</upper>
@@ -788,11 +788,11 @@
       </visual>
     </link>
     <joint name="w2_joint" type="revolute">
-      <pose relative_to="base_footprint">0.435925 0.754 0.232992 1.5708 -1.40236 3.14159</pose>
+      <pose relative_to="base_footprint">-0.435925 -0.754 0.232992 1.5708 -1.40236 0</pose>
       <parent>base_footprint</parent>
       <child>w2</child>
       <axis>
-        <xyz>0 0 1</xyz>
+        <xyz>0 0 -1</xyz>
         <limit>
           <lower>-1e+16</lower>
           <upper>1e+16</upper>
@@ -880,11 +880,11 @@
       </visual>
     </link>
     <joint name="w3_joint" type="revolute">
-      <pose relative_to="base_footprint">-0.435925 0.754 0.232992 1.5708 -0.502733 3.14159</pose>
+      <pose relative_to="base_footprint">0.435925 -0.754 0.232992 1.5708 -0.502733 0</pose>
       <parent>base_footprint</parent>
       <child>w3</child>
       <axis>
-        <xyz>0 0 1</xyz>
+        <xyz>0 0 -1</xyz>
         <limit>
           <lower>-1e+16</lower>
           <upper>1e+16</upper>
@@ -972,11 +972,11 @@
       </visual>
     </link>
     <joint name="w4_joint" type="revolute">
-      <pose relative_to="base_footprint">-0.435925 -0.754 0.232992 1.5708 0.502733 -0</pose>
+      <pose relative_to="base_footprint">0.435925 0.754 0.232992 1.5708 0.502733 -3.14159</pose>
       <parent>base_footprint</parent>
       <child>w4</child>
       <axis>
-        <xyz>0 0 -1</xyz>
+        <xyz>0 0 1</xyz>
         <limit>
           <lower>-1e+16</lower>
           <upper>1e+16</upper>
@@ -1071,10 +1071,10 @@
       </ros>
       <update_rate>100</update_rate>
       <num_wheel_pairs>2</num_wheel_pairs>
-      <left_joint>w2_joint</left_joint>
-      <right_joint>w1_joint</right_joint>
-      <left_joint>w3_joint</left_joint>
-      <right_joint>w4_joint</right_joint>
+      <left_joint>w1_joint</left_joint>
+      <right_joint>w2_joint</right_joint>
+      <left_joint>w4_joint</left_joint>
+      <right_joint>w3_joint</right_joint>
       <wheel_separation>1.508</wheel_separation>
       <wheel_separation>1.508</wheel_separation>
       <wheel_diameter>0.360765550239234</wheel_diameter>

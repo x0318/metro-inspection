@@ -34,8 +34,14 @@ ODIN1_CAMERA_CALIBRATION = {
     "s": 0.2058,
 }
 WHEEL_NAMES = ("w1", "w2", "w3", "w4")
-LEFT_WHEEL_JOINTS = ("w2_joint", "w3_joint")
-RIGHT_WHEEL_JOINTS = ("w1_joint", "w4_joint")
+LEFT_WHEEL_JOINTS = ("w1_joint", "w4_joint")
+RIGHT_WHEEL_JOINTS = ("w2_joint", "w3_joint")
+WHEEL_AXES = {
+    "w1": (0.0, 0.0, 1.0),
+    "w2": (0.0, 0.0, -1.0),
+    "w3": (0.0, 0.0, -1.0),
+    "w4": (0.0, 0.0, 1.0),
+}
 
 
 def parse_values(text: str, count: int, label: str) -> tuple[float, ...]:
@@ -269,6 +275,14 @@ def validate_wheel_drive(model: ET.Element) -> None:
         wheel_centers[wheel_name] = parse_values(
             pose.text, 6, f"{wheel_name}_joint pose"
         )[:3]
+        axis_text = joint.findtext("axis/xyz")
+        if axis_text is None:
+            raise ValueError(f"{wheel_name}_joint axis is missing")
+        axis = parse_values(axis_text, 3, f"{wheel_name}_joint axis")
+        if axis != WHEEL_AXES[wheel_name]:
+            raise ValueError(
+                f"{wheel_name}_joint axis must be {WHEEL_AXES[wheel_name]}, found {axis}"
+            )
         collisions = link.findall("collision")
         names = {collision.get("name", "") for collision in collisions}
         expected = {
@@ -298,11 +312,26 @@ def validate_wheel_drive(model: ET.Element) -> None:
     if misplaced:
         raise ValueError(f"Wheel collisions must not be fixed to chassis: {misplaced}")
 
+    for left_joint, right_joint in zip(LEFT_WHEEL_JOINTS, RIGHT_WHEEL_JOINTS):
+        left_name = left_joint.removesuffix("_joint")
+        right_name = right_joint.removesuffix("_joint")
+        left_center = wheel_centers[left_name]
+        right_center = wheel_centers[right_name]
+        if left_center[1] <= 0.0 or right_center[1] >= 0.0:
+            raise ValueError(
+                "Drive pair must follow REP-103 left/right signs: "
+                f"left {left_name}={left_center}, right {right_name}={right_center}"
+            )
+        if abs(left_center[0] - right_center[0]) > POSITION_TOLERANCE:
+            raise ValueError(
+                f"Drive pair {left_name}/{right_name} is not aligned longitudinally"
+            )
+
     expected_separations = (
-        abs(wheel_centers["w2"][1] - wheel_centers["w1"][1]),
-        abs(wheel_centers["w3"][1] - wheel_centers["w4"][1]),
+        abs(wheel_centers["w1"][1] - wheel_centers["w2"][1]),
+        abs(wheel_centers["w4"][1] - wheel_centers["w3"][1]),
     )
-    expected_diameters = (tread_diameters["w2"], tread_diameters["w3"])
+    expected_diameters = (tread_diameters["w1"], tread_diameters["w4"])
     for actual, expected in zip(separations, expected_separations):
         if not math.isfinite(actual) or abs(actual - expected) > POSITION_TOLERANCE:
             raise ValueError(
@@ -374,12 +403,12 @@ def validate_generated_model(model: ET.Element, urdf_root: ET.Element) -> None:
     )
     pitch_forward_error = max(
         abs(pitch_camera_forward[index] - expected)
-        for index, expected in enumerate((-1.0, 0.0, 0.0))
+        for index, expected in enumerate((1.0, 0.0, 0.0))
     )
     if pitch_forward_error > 0.002:
         raise ValueError(
-            "Pitch camera optical axis must point rearward through its lens "
-            "(base_footprint -X), "
+            "Pitch camera optical axis must point toward the robot front "
+            "(base_footprint +X), "
             f"found {pitch_camera_forward}"
         )
     pitch_camera_up = rotate_vector(pitch_camera_rotation, (0.0, 0.0, 1.0))
@@ -434,11 +463,11 @@ def validate_generated_model(model: ET.Element, urdf_root: ET.Element) -> None:
         )
     base_forward_error = max(
         abs(sdf_forward[index] - expected)
-        for index, expected in enumerate((1.0, 0.0, 0.0))
+        for index, expected in enumerate((-1.0, 0.0, 0.0))
     )
     if base_forward_error > AXIS_TOLERANCE:
         raise ValueError(
-            "Odin1 scan axis must point toward robot front (base_footprint +X), "
+            "Odin1 scan axis must point rearward (base_footprint -X), "
             f"found {sdf_forward}"
         )
 
