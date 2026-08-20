@@ -3,6 +3,18 @@
 This directory contains image-point-cloud damage localization code imported from
 `origin/feature/mapping` at commit `ac976bf`.
 
+It also contains `metro_pointcloud_mapping`, the first-stage odometry-based
+accumulated cloud package. The simulation mapping profile starts it automatically:
+
+```bash
+cd /home/jo/my-project/metro-inspection
+./ros_ws/src/metro_sim/scripts/open_subway_tunnel_v2_mapping.sh
+```
+
+Its `/mapping/cloud_map` output and PCD save service validate the accumulation
+pipeline. This baseline does not perform scan registration or loop closure; a
+LiDAR/IMU SLAM source must later replace wheel odometry for a drift-corrected map.
+
 The current simulation remains owned by `metro_sim`. Do not use the teammate demo
 `closed_loop.launch.py`: it starts a second Gazebo world, robot, camera, and lidar.
 The imported `metro_closed_loop` package is intentionally reduced to its red-patch

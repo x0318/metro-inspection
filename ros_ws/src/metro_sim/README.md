@@ -42,7 +42,10 @@ cd ~/my-project/metro-inspection
 
 点云建图模式从同一份 `subway_v2/model.sdf` 临时派生，只关闭六路
 RGB 相机并默认不启动 Gazebo GUI；雷达的 `240 x 180` 分辨率、FOV、
-量程、噪声和 10 Hz 请求值保持不变。默认端口为 `11372`：
+量程、噪声和 10 Hz 请求值保持不变。该入口还会启动
+`metro_pointcloud_mapping`，把带时间戳的 `/odin1/cloud_raw` 变换到
+`odom`，以 5 cm 体素累计并发布 `/mapping/cloud_map`。默认端口为
+`11372`：
 
 ```bash
 cd ~/my-project/metro-inspection
@@ -54,6 +57,22 @@ cd ~/my-project/metro-inspection
 ```bash
 ./ros_ws/src/metro_sim/scripts/open_subway_tunnel_v2_mapping.sh gui:=true
 ```
+
+另开终端保存或清空当前累计地图：
+
+```bash
+source /opt/ros/humble/setup.bash
+source ~/my-project/metro-inspection/ros_ws/install/setup.bash
+export ROS_DOMAIN_ID=70
+
+ros2 service call /mapping/save_map std_srvs/srv/Trigger '{}'
+ros2 service call /mapping/reset_map std_srvs/srv/Trigger '{}'
+```
+
+默认 PCD 文件为 `results/maps/subway_v2_accumulated.pcd`，也可在启动前
+通过 `SUBWAY_MAPPING_PCD_PATH` 指定其他位置。当前阶段使用轮式 `/odom`
+进行累计，是三维建图数据链基线，不包含回环和漂移修正，不能等同于
+最终 LiDAR/IMU SLAM 地图。
 
 完整 sensors 仿真和融合节点运行后，使用统一入口查看 Odin1 原始图像、
 带检测框/点云投影/定位十字的识别调试图、三维点云和病害位置标记：

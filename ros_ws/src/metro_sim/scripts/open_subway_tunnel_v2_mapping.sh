@@ -4,6 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 METRO_SIM_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 ROS_WS_DIR="$(cd "${METRO_SIM_DIR}/../.." && pwd)"
+REPOSITORY_DIR="$(cd "${ROS_WS_DIR}/.." && pwd)"
 DESCRIPTION_DIR="${ROS_WS_DIR}/src/metro_description"
 
 WORLD_FILE="${METRO_SIM_DIR}/worlds/subway_tunnel_v2_mapping.world"
@@ -12,19 +13,23 @@ SCALE_FILE="${METRO_SIM_DIR}/config/subway_v2_model_scale.txt"
 SCALE_SCRIPT="${SCRIPT_DIR}/scale_subway_v2_urdf.py"
 MAPPING_MODEL_SCRIPT="${SCRIPT_DIR}/prepare_subway_v2_mapping_model.py"
 SOURCE_MODEL_SDF="${METRO_SIM_DIR}/models/subway_v2/model.sdf"
+MAPPING_PCD_PATH="${SUBWAY_MAPPING_PCD_PATH:-${REPOSITORY_DIR}/results/maps/subway_v2_accumulated.pcd}"
 
 if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
   cat <<'EOF'
 Usage: open_subway_tunnel_v2_mapping.sh [gazebo_ros launch arguments]
 
-Starts the lidar/IMU mapping profile without the six RGB camera sensors.
-Gazebo GUI is disabled by default. Pass gui:=true only when visual inspection
-is needed; it reduces the high-density GPU lidar publication rate.
+Starts the lidar/IMU mapping profile and the odometry-based point-cloud
+accumulator without the six RGB camera sensors. Gazebo GUI is disabled by
+default. Pass gui:=true only when visual inspection is needed; it reduces the
+high-density GPU lidar publication rate.
 
 Environment overrides:
   ROS_DOMAIN_ID                         ROS 2 discovery domain (default: 70)
   SUBWAY_TUNNEL_V2_GAZEBO_MASTER_URI  Gazebo master URI
                                        (default: http://127.0.0.1:11372)
+  SUBWAY_MAPPING_PCD_PATH              save_map output path
+                                       (default: results/maps/subway_v2_accumulated.pcd)
 
 Examples:
   ./ros_ws/src/metro_sim/scripts/open_subway_tunnel_v2_mapping.sh
@@ -61,6 +66,14 @@ for required_command in python3 check_urdf ros2 gz; do
   fi
 done
 
+if ! ros2 pkg prefix metro_pointcloud_mapping >/dev/null 2>&1; then
+  echo "ROS package metro_pointcloud_mapping is not built in ${ROS_WS_DIR}." >&2
+  echo "Build it with:" >&2
+  echo "  cd ${ROS_WS_DIR}" >&2
+  echo "  colcon build --symlink-install --packages-select metro_pointcloud_mapping" >&2
+  exit 1
+fi
+
 export ROS_DOMAIN_ID="${ROS_DOMAIN_ID:-70}"
 export GAZEBO_MASTER_URI="${SUBWAY_TUNNEL_V2_GAZEBO_MASTER_URI:-http://127.0.0.1:11372}"
 export GAZEBO_PLUGIN_PATH="/opt/ros/humble/lib${GAZEBO_PLUGIN_PATH:+:${GAZEBO_PLUGIN_PATH}}"
@@ -79,6 +92,7 @@ RUN_DIR="$(mktemp -d)"
 SCALED_URDF="${RUN_DIR}/subway_v2_scaled.urdf"
 MAPPING_MODEL_DIR="${RUN_DIR}/subway_v2_mapping"
 ROBOT_STATE_PUBLISHER_PID=""
+POINTCLOUD_MAPPING_PID=""
 
 cleanup() {
   local exit_code=$?
@@ -87,6 +101,11 @@ cleanup() {
       kill -0 "${ROBOT_STATE_PUBLISHER_PID}" 2>/dev/null; then
     kill "${ROBOT_STATE_PUBLISHER_PID}" 2>/dev/null || true
     wait "${ROBOT_STATE_PUBLISHER_PID}" 2>/dev/null || true
+  fi
+  if [[ -n "${POINTCLOUD_MAPPING_PID}" ]] && \
+      kill -0 "${POINTCLOUD_MAPPING_PID}" 2>/dev/null; then
+    kill "${POINTCLOUD_MAPPING_PID}" 2>/dev/null || true
+    wait "${POINTCLOUD_MAPPING_PID}" 2>/dev/null || true
   fi
   rm -rf -- "${RUN_DIR}"
   exit "${exit_code}"
@@ -106,12 +125,18 @@ export GAZEBO_MODEL_PATH="${RUN_DIR}:${METRO_SIM_DIR}/models${GAZEBO_MODEL_PATH:
 echo "ROS_DOMAIN_ID=${ROS_DOMAIN_ID}"
 echo "GAZEBO_MASTER_URI=${GAZEBO_MASTER_URI}"
 echo "Mapping profile: Odin1 lidar + IMU, cameras disabled, gui=false"
+echo "Accumulated map topic: /mapping/cloud_map"
+echo "PCD save path: ${MAPPING_PCD_PATH}"
 echo "Temporary model directory: ${MAPPING_MODEL_DIR}"
 
 ros2 run robot_state_publisher robot_state_publisher \
   "${SCALED_URDF}" \
   --ros-args -p use_sim_time:=true &
 ROBOT_STATE_PUBLISHER_PID=$!
+
+ros2 launch metro_pointcloud_mapping accumulated_map.launch.py \
+  pcd_path:="${MAPPING_PCD_PATH}" &
+POINTCLOUD_MAPPING_PID=$!
 
 ros2 launch gazebo_ros gazebo.launch.py \
   world:="${WORLD_FILE}" \
