@@ -1,21 +1,72 @@
 """Fuse raw wheel odometry and Odin1 IMU into a local odometry estimate."""
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
+from launch.actions import DeclareLaunchArgument, OpaqueFunction
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
 
-def generate_launch_description():
-    config_file = LaunchConfiguration("config_file")
-    use_sim_time = LaunchConfiguration("use_sim_time")
-    frequency = LaunchConfiguration("frequency")
-    transform_time_offset = LaunchConfiguration("transform_time_offset")
-    raw_odom_topic = LaunchConfiguration("raw_odom_topic")
-    imu_topic = LaunchConfiguration("imu_topic")
-    filtered_odom_topic = LaunchConfiguration("filtered_odom_topic")
+def _is_true(value):
+    return value.strip().lower() in {"1", "true", "yes", "on"}
 
+
+def _launch_ekf(context):
+    fuse_lidar_odometry = _is_true(
+        LaunchConfiguration("fuse_lidar_odometry").perform(context)
+    )
+
+    parameter_overrides = {
+        "use_sim_time": LaunchConfiguration("use_sim_time"),
+        "frequency": LaunchConfiguration("frequency"),
+        "transform_time_offset": LaunchConfiguration("transform_time_offset"),
+    }
+    if fuse_lidar_odometry:
+        parameter_overrides.update(
+            {
+                "odom1": "lidar/odom",
+                "odom1_config": [
+                    True,
+                    True,
+                    False,
+                    False,
+                    False,
+                    True,
+                    False,
+                    False,
+                    False,
+                    False,
+                    False,
+                    False,
+                    False,
+                    False,
+                    False,
+                ],
+                "odom1_differential": True,
+                "odom1_relative": False,
+                "odom1_queue_size": 10,
+                "odom1_pose_rejection_threshold": 5.0,
+            }
+        )
+
+    return [
+        Node(
+            package="robot_localization",
+            executable="ekf_node",
+            name="odometry_ekf",
+            output="screen",
+            parameters=[LaunchConfiguration("config_file"), parameter_overrides],
+            remappings=[
+                ("wheel/odom_raw", LaunchConfiguration("raw_odom_topic")),
+                ("odin1/imu", LaunchConfiguration("imu_topic")),
+                ("lidar/odom", LaunchConfiguration("lidar_odom_topic")),
+                ("odometry/filtered", LaunchConfiguration("filtered_odom_topic")),
+            ],
+        )
+    ]
+
+
+def generate_launch_description():
     default_config = PathJoinSubstitution(
         [FindPackageShare("metro_localization"), "config", "ekf_odom.yaml"]
     )
@@ -45,26 +96,19 @@ def generate_launch_description():
             ),
             DeclareLaunchArgument("imu_topic", default_value="/odin1/imu"),
             DeclareLaunchArgument(
+                "lidar_odom_topic", default_value="/lidar/odom"
+            ),
+            DeclareLaunchArgument(
                 "filtered_odom_topic", default_value="/odometry/filtered"
             ),
-            Node(
-                package="robot_localization",
-                executable="ekf_node",
-                name="odometry_ekf",
-                output="screen",
-                parameters=[
-                    config_file,
-                    {
-                        "use_sim_time": use_sim_time,
-                        "frequency": frequency,
-                        "transform_time_offset": transform_time_offset,
-                    },
-                ],
-                remappings=[
-                    ("wheel/odom_raw", raw_odom_topic),
-                    ("odin1/imu", imu_topic),
-                    ("odometry/filtered", filtered_odom_topic),
-                ],
+            DeclareLaunchArgument(
+                "fuse_lidar_odometry",
+                default_value="false",
+                description=(
+                    "Fuse differential x/y/yaw from lidar odometry. Enable only "
+                    "when a scan-matching odometry node is running."
+                ),
             ),
+            OpaqueFunction(function=_launch_ekf),
         ]
     )

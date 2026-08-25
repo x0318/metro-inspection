@@ -1,102 +1,117 @@
 # Metro mapping integration
 
-This directory contains image-point-cloud damage localization code imported from
-`origin/feature/mapping` at commit `ac976bf`.
+This directory contains two independent data paths:
 
-It also contains `metro_pointcloud_mapping`, the first-stage odometry-based
-accumulated cloud package. The simulation mapping profile starts it automatically:
+- `metro_localization` projects a 2D damage detection into the lidar cloud and
+  reports a 3D damage position.
+- `metro_pointcloud_mapping` builds a loop-closing 3D lidar map.
 
-```bash
-cd /home/jo/my-project/metro-inspection
-./ros_ws/src/metro_sim/scripts/open_subway_tunnel_v2_mapping.sh
+The simulation mapping path is:
+
+```text
+/wheel/odom_raw + /odin1/imu + /lidar/odom
+  -> robot_localization EKF
+  -> /odometry/filtered + odom -> base_footprint
+
+/odin1/cloud_raw -> cloud quality gate -> RTAB-Map ICP and pose graph
+  -> map -> odom -> optimized /mapping/cloud_map
+  -> PCD file + RTAB-Map database
 ```
 
-Its `/mapping/cloud_map` output and PCD save service validate the accumulation
-pipeline. The V2 entry scripts now start a local EKF that publishes
-`/odometry/filtered` and owns `odom -> base_footprint`, using
-`/wheel/odom_raw` plus `/odin1/imu`. This improves local motion stability but
-does not perform scan registration or loop closure; a LiDAR/IMU SLAM source must
-still provide global drift correction for the final map.
+TF ownership is deliberately unique: the EKF publishes
+`odom -> base_footprint`, RTAB-Map publishes `map -> odom`, and ICP does not
+publish TF. The Gazebo differential-drive plugin must keep
+`publish_odom_tf=false`.
 
-The current simulation remains owned by `metro_sim`. Do not use the teammate demo
-`closed_loop.launch.py`: it starts a second Gazebo world, robot, camera, and lidar.
-The imported `metro_closed_loop` package is intentionally reduced to its red-patch
-placeholder detector and a launch adapter for the existing `subway_v2` sensors.
+## Install and build
 
-Build the two packages:
+ROS 2 Humble runtime dependencies are not vendored in this repository:
 
 ```bash
-cd /home/jo/my-project/metro-inspection/ros_ws
+sudo apt update
+sudo apt install ros-humble-robot-localization ros-humble-rtabmap-ros
+
+cd ~/my-project/metro-inspection/ros_ws
 source /opt/ros/humble/setup.bash
-sudo apt install ros-humble-robot-localization
 colcon build --symlink-install \
-  --packages-select metro_localization metro_closed_loop
+  --packages-up-to metro_localization metro_pointcloud_mapping
 source install/setup.bash
 ```
 
-Start the full sensor simulation first, then start fusion in a second terminal:
+## Simulation workflow
+
+Start the lidar/IMU-only simulation and mapping stack:
 
 ```bash
+cd ~/my-project/metro-inspection
+./ros_ws/src/metro_sim/scripts/open_subway_tunnel_v2_mapping.sh
+```
+
+Open the mapping RViz in a second terminal:
+
+```bash
+cd ~/my-project/metro-inspection
+./ros_ws/src/metro_sim/scripts/open_subway_v2_mapping_rviz.sh
+```
+
+Drive forward from a third terminal. Keep this publisher running while the
+robot moves, then press `Ctrl+C` and send the zero command:
+
+```bash
+source /opt/ros/humble/setup.bash
+source ~/my-project/metro-inspection/ros_ws/install/setup.bash
 export ROS_DOMAIN_ID=70
-ros2 launch metro_closed_loop subway_v2_fusion.launch.py \
-  run_camera_info_calibrator:=false \
-  run_placeholder_detector:=false
+
+ros2 topic pub --rate 10 /cmd_vel_safe geometry_msgs/msg/Twist \
+  '{linear: {x: 0.2}, angular: {z: 0.0}}'
+ros2 topic pub --once /cmd_vel_safe geometry_msgs/msg/Twist '{}'
 ```
 
-The full sensor startup script already publishes calibrated camera information.
-Disabling the launch file's second calibrator keeps exactly one publisher on
-`/odin1/rgb/camera_info`. The standalone fusion performance profile below still
-uses the launch default (`true`) because it starts its own calibration relay.
-
-For normal fusion work, prefer the single-command performance profile. It keeps
-only the Odin1 RGB, lidar, and IMU sensors and removes the five unrelated cameras
-from a temporary SDF:
+Save and validate the map:
 
 ```bash
-cd /home/jo/my-project/metro-inspection
-./ros_ws/src/metro_sim/scripts/open_subway_tunnel_v2_fusion.sh
+ros2 service call /mapping/save_map std_srvs/srv/Trigger '{}'
+cd ~/my-project/metro-inspection
+./ros_ws/src/metro_sim/scripts/check_subway_v2_slam.sh
 ```
 
-The adapter defaults to the only camera-lidar pair currently verified to have both
-a calibrated transform and overlapping fields of view:
+The default outputs are:
 
 ```text
-image:       /odin1/rgb/image_raw
-camera info: /odin1/rgb/camera_info
-cloud:       /odin1/cloud_raw
-global TF:   odom
+results/maps/subway_v2_optimized.pcd
+results/maps/subway_v2_rtabmap.db
 ```
 
-The `xj1` through `xj4` cameras are not interchangeable defaults. Their current
-views do not overlap the rear-facing Odin1 point cloud, even though their TF
-frames exist. Select a different camera only after its field-of-view overlap and
-lidar-to-camera extrinsic calibration have been verified.
-
-The red-color detector is only a wiring test and can classify red tunnel hardware
-as damage. It is disabled by default and remains disabled during normal fusion.
-Enable it only for an explicit end-to-end wiring test:
+The launch script starts a new database by default. Resume a previous mapping
+session without deleting its graph with:
 
 ```bash
-ros2 launch metro_closed_loop subway_v2_fusion.launch.py \
-  run_placeholder_detector:=true
+SUBWAY_MAPPING_RESET_DATABASE=false \
+  ./ros_ws/src/metro_sim/scripts/open_subway_tunnel_v2_mapping.sh
 ```
 
-A real detector must publish `vision_msgs/msg/Detection2DArray` on
-`/damage_detections`. Keep the placeholder disabled while that detector is running.
+A loop constraint can only be created after the robot physically revisits a
+previously mapped area. A one-way recording proves the odometry, graph, map and
+save chain, but it does not prove that a loop closure occurred.
 
-`localization_evaluator` and `damage_semantic_mapper` are disabled by default.
-Their ground-truth and tunnel-chainage constants belong to the teammate demo world
-and must be configured for the current tunnel before use.
+## Hardware boundary
 
-The fusion profile uses the supplied 1600x1296 Odin1 calibration (`fx=736.9688`,
-`fy=737.0365`, `skew=0.2058`, `cx=766.6570`, `cy=642.9091`). Gazebo Classic's
-camera plugin cannot publish distinct `fx`/`fy` or nonzero skew in `CameraInfo`,
-so its approximate message is retained on `/odin1/rgb/camera_info_gazebo` and
-`camera_info_calibrator` publishes the authoritative matrix on
-`/odin1/rgb/camera_info`. No distortion coefficients were supplied; both the
-rendered image and published calibration therefore use zero distortion.
+For a real robot, keep the same topic and TF contract but use wall time:
 
-The default timestamp tolerance is `0.08 s`. In this Gazebo profile the measured
-nearest image/cloud timestamp differences are normally `0` or `0.1 s`. Increasing
-the value may raise the fusion output rate, but it also permits more motion error;
-do not tune it only to make `topic hz` look higher.
+```bash
+ros2 launch metro_pointcloud_mapping graph_slam.launch.py \
+  use_sim_time:=false \
+  ekf_frequency:=50.0 \
+  ekf_transform_time_offset:=0.0 \
+  reset_database:=true \
+  database_path:=$PWD/results/maps/real_rtabmap.db \
+  pcd_path:=$PWD/results/maps/real_optimized.pcd
+```
+
+Before trusting a real map, calibrate lidar/IMU extrinsics and time sync, verify
+wheel and IMU covariances, tune the point-cloud gate and ICP against recorded
+data, and drive repeated out-and-back loops to reject false closures.
+
+The imported `metro_closed_loop` package remains only an adapter for 2D-to-3D
+damage localization. Do not run its teammate demo world together with
+`subway_v2`; that would create a second Gazebo world and duplicate sensors.

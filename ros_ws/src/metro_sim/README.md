@@ -24,7 +24,7 @@ cd ~/my-project/metro-inspection/ros_ws/src/metro_sim
 ./scripts/open_subway_tunnel.sh
 ```
 
-## V6 完整传感器与建图模式
+## V2 完整传感器与三维建图模式
 
 四种 V2 场景都在 `x=19.2、yaw=pi` 放置车辆，使 Pitch 相机端朝隧道
 巡检前进方向。正 `linear.x` 沿车头行驶时，世界坐标 `x` 会减小。
@@ -45,10 +45,22 @@ cd ~/my-project/metro-inspection
 
 点云建图模式从同一份 `subway_v2/model.sdf` 临时派生，只关闭六路
 RGB 相机并默认不启动 Gazebo GUI；雷达的 `240 x 180` 分辨率、FOV、
-量程、噪声和 10 Hz 请求值保持不变。该入口还会启动
-`metro_pointcloud_mapping`，把带时间戳的 `/odin1/cloud_raw` 变换到
-`odom`，以 5 cm 体素累计并发布 `/mapping/cloud_map`。默认端口为
-`11372`：
+量程、噪声和 10 Hz 请求值保持不变。首次使用前安装运行依赖并构建：
+
+```bash
+sudo apt update
+sudo apt install ros-humble-robot-localization ros-humble-rtabmap-ros
+
+cd ~/my-project/metro-inspection/ros_ws
+source /opt/ros/humble/setup.bash
+colcon build --symlink-install \
+  --packages-up-to metro_localization metro_pointcloud_mapping
+source install/setup.bash
+```
+
+建图入口会同时启动点云质量门控、ICP 激光里程计、轮速/IMU/ICP EKF、
+RTAB-Map 位姿图与回环检测、优化点云重组和 PCD 保存。默认 Gazebo 端口
+为 `11372`：
 
 ```bash
 cd ~/my-project/metro-inspection
@@ -61,7 +73,27 @@ cd ~/my-project/metro-inspection
 ./ros_ws/src/metro_sim/scripts/open_subway_tunnel_v2_mapping.sh gui:=true
 ```
 
-另开终端保存或清空当前累计地图：
+第二个终端打开建图专用 RViz：
+
+```bash
+cd ~/my-project/metro-inspection
+./ros_ws/src/metro_sim/scripts/open_subway_v2_mapping_rviz.sh
+```
+
+第三个终端以 10 Hz 发布安全速度。需要停止时先按 `Ctrl+C`，再发布一次
+零速度：
+
+```bash
+source /opt/ros/humble/setup.bash
+source ~/my-project/metro-inspection/ros_ws/install/setup.bash
+export ROS_DOMAIN_ID=70
+
+ros2 topic pub --rate 10 /cmd_vel_safe geometry_msgs/msg/Twist \
+  '{linear: {x: 0.2}, angular: {z: 0.0}}'
+ros2 topic pub --once /cmd_vel_safe geometry_msgs/msg/Twist '{}'
+```
+
+保存当前优化地图并执行自动验收：
 
 ```bash
 source /opt/ros/humble/setup.bash
@@ -69,14 +101,26 @@ source ~/my-project/metro-inspection/ros_ws/install/setup.bash
 export ROS_DOMAIN_ID=70
 
 ros2 service call /mapping/save_map std_srvs/srv/Trigger '{}'
-ros2 service call /mapping/reset_map std_srvs/srv/Trigger '{}'
+cd ~/my-project/metro-inspection
+./ros_ws/src/metro_sim/scripts/check_subway_v2_slam.sh
 ```
 
-默认 PCD 文件为 `results/maps/subway_v2_accumulated.pcd`，也可在启动前
-通过 `SUBWAY_MAPPING_PCD_PATH` 指定其他位置。当前阶段使用轮式里程计与
-IMU 的本地 EKF 提供 `odom` 坐标变换，是三维建图数据链基线；它能降低
-局部姿态噪声，但不包含扫描匹配、回环或全局漂移修正，不能等同于最终
-LiDAR/IMU SLAM 地图。
+默认结果是 `results/maps/subway_v2_optimized.pcd` 和
+`results/maps/subway_v2_rtabmap.db`。PCD 是按优化后位姿重组的点云；数据库
+保存关键帧、约束和图状态。通过 `SUBWAY_MAPPING_PCD_PATH` 与
+`SUBWAY_MAPPING_DB_PATH` 可改保存位置。默认每次新建图；需要基于旧数据库
+续建时使用：
+
+```bash
+SUBWAY_MAPPING_RESET_DATABASE=false \
+  ./ros_ws/src/metro_sim/scripts/open_subway_tunnel_v2_mapping.sh
+```
+
+当前仿真录包存在大量空点云，因此门控默认要求每帧至少 5000 点。该数值
+只针对当前仿真数据，迁移真机后必须按真实雷达有效点数重新统计和调参。
+ICP 失配时 EKF 会退回轮速与 IMU，不会把全零姿态送入融合器。只有车辆
+确实回到旧区域才可能形成回环边；单向行驶只能验收数据链，不能证明回环
+已经发生。
 
 完整 sensors 仿真和融合节点运行后，使用统一入口查看 Odin1 原始图像、
 带检测框/点云投影/定位十字的识别调试图、三维点云和病害位置标记：

@@ -13,7 +13,9 @@ SCALE_FILE="${METRO_SIM_DIR}/config/subway_v2_model_scale.txt"
 SCALE_SCRIPT="${SCRIPT_DIR}/scale_subway_v2_urdf.py"
 MAPPING_MODEL_SCRIPT="${SCRIPT_DIR}/prepare_subway_v2_mapping_model.py"
 SOURCE_MODEL_SDF="${METRO_SIM_DIR}/models/subway_v2/model.sdf"
-MAPPING_PCD_PATH="${SUBWAY_MAPPING_PCD_PATH:-${REPOSITORY_DIR}/results/maps/subway_v2_accumulated.pcd}"
+MAPPING_PCD_PATH="${SUBWAY_MAPPING_PCD_PATH:-${REPOSITORY_DIR}/results/maps/subway_v2_optimized.pcd}"
+MAPPING_DB_PATH="${SUBWAY_MAPPING_DB_PATH:-${REPOSITORY_DIR}/results/maps/subway_v2_rtabmap.db}"
+MAPPING_RESET_DATABASE="${SUBWAY_MAPPING_RESET_DATABASE:-true}"
 WATCHDOG_SCRIPT="${SCRIPT_DIR}/cmd_vel_watchdog.py"
 WATCHDOG_PARAMS="${METRO_SIM_DIR}/config/tunnel_guard_production.yaml"
 
@@ -21,17 +23,21 @@ if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
   cat <<'EOF'
 Usage: open_subway_tunnel_v2_mapping.sh [gazebo_ros launch arguments]
 
-Starts the lidar/IMU mapping profile and the odometry-based point-cloud
-accumulator without the six RGB camera sensors. Gazebo GUI is disabled by
-default. Pass gui:=true only when visual inspection is needed; it reduces the
-high-density GPU lidar publication rate.
+Starts the lidar/IMU mapping profile, ICP odometry, local EKF, RTAB-Map pose
+graph, loop closure, optimized cloud assembler, and PCD saver. The six RGB
+cameras are disabled. Gazebo GUI is disabled by default; pass gui:=true only
+when visual inspection is needed.
 
 Environment overrides:
   ROS_DOMAIN_ID                         ROS 2 discovery domain (default: 70)
   SUBWAY_TUNNEL_V2_GAZEBO_MASTER_URI  Gazebo master URI
                                        (default: http://127.0.0.1:11372)
   SUBWAY_MAPPING_PCD_PATH              save_map output path
-                                       (default: results/maps/subway_v2_accumulated.pcd)
+                                       (default: results/maps/subway_v2_optimized.pcd)
+  SUBWAY_MAPPING_DB_PATH               persistent RTAB-Map graph database
+                                       (default: results/maps/subway_v2_rtabmap.db)
+  SUBWAY_MAPPING_RESET_DATABASE        true starts a new graph; false resumes
+                                       the database (default: true)
 
 Examples:
   ./ros_ws/src/metro_sim/scripts/open_subway_tunnel_v2_mapping.sh
@@ -71,13 +77,27 @@ for required_command in python3 check_urdf ros2 gz; do
 done
 
 for required_package in \
-  metro_localization metro_pointcloud_mapping robot_localization; do
+  metro_localization \
+  metro_pointcloud_mapping \
+  robot_localization \
+  rtabmap_odom \
+  rtabmap_slam \
+  rtabmap_util; do
   if ! ros2 pkg prefix "${required_package}" >/dev/null 2>&1; then
     echo "Required ROS package not found: ${required_package}" >&2
-    echo "Build the workspace and install ros-humble-robot-localization." >&2
+    echo "Build the workspace and install runtime dependencies:" >&2
+    echo "  sudo apt install ros-humble-robot-localization ros-humble-rtabmap-ros" >&2
     exit 1
   fi
 done
+
+case "${MAPPING_RESET_DATABASE,,}" in
+  true|false|1|0|yes|no|on|off) ;;
+  *)
+    echo "SUBWAY_MAPPING_RESET_DATABASE must be true or false." >&2
+    exit 1
+    ;;
+esac
 
 export ROS_DOMAIN_ID="${ROS_DOMAIN_ID:-70}"
 export GAZEBO_MASTER_URI="${SUBWAY_TUNNEL_V2_GAZEBO_MASTER_URI:-http://127.0.0.1:11372}"
@@ -97,16 +117,14 @@ RUN_DIR="$(mktemp -d)"
 SCALED_URDF="${RUN_DIR}/subway_v2_scaled.urdf"
 MAPPING_MODEL_DIR="${RUN_DIR}/subway_v2_mapping"
 ROBOT_STATE_PUBLISHER_PID=""
-POINTCLOUD_MAPPING_PID=""
+GRAPH_SLAM_PID=""
 CMD_VEL_WATCHDOG_PID=""
-ODOMETRY_FUSION_PID=""
 
 cleanup() {
   local exit_code=$?
   trap - EXIT INT TERM
   for child_pid in \
-    "${POINTCLOUD_MAPPING_PID}" \
-    "${ODOMETRY_FUSION_PID}" \
+    "${GRAPH_SLAM_PID}" \
     "${CMD_VEL_WATCHDOG_PID}" \
     "${ROBOT_STATE_PUBLISHER_PID}"; do
     if [[ -n "${child_pid}" ]] && kill -0 "${child_pid}" 2>/dev/null; then
@@ -126,16 +144,22 @@ ROBOT_SCALE="$(tr -d '[:space:]' < "${SCALE_FILE}")"
 python3 "${SCALE_SCRIPT}" \
   "${URDF_FILE}" "${SCALED_URDF}" --scale "${ROBOT_SCALE}"
 check_urdf "${SCALED_URDF}" >/dev/null
+install -d -- "$(dirname -- "${MAPPING_PCD_PATH}")"
+install -d -- "$(dirname -- "${MAPPING_DB_PATH}")"
 
 export GAZEBO_MODEL_PATH="${RUN_DIR}:${METRO_SIM_DIR}/models${GAZEBO_MODEL_PATH:+:${GAZEBO_MODEL_PATH}}"
 
 echo "ROS_DOMAIN_ID=${ROS_DOMAIN_ID}"
 echo "GAZEBO_MASTER_URI=${GAZEBO_MASTER_URI}"
 echo "Mapping profile: Odin1 lidar + IMU, cameras disabled, gui=false"
-echo "Accumulated map topic: /mapping/cloud_map"
+echo "SLAM: 3D ICP + robust pose graph + proximity loop closure"
+echo "Optimized map topic: /mapping/cloud_map"
+echo "Fused odometry: /wheel/odom_raw + /odin1/imu + /lidar/odom"
+echo "TF owners: EKF odom -> base_footprint; RTAB-Map map -> odom"
 echo "PCD save path: ${MAPPING_PCD_PATH}"
+echo "RTAB-Map database: ${MAPPING_DB_PATH}"
+echo "Reset database: ${MAPPING_RESET_DATABASE}"
 echo "Temporary model directory: ${MAPPING_MODEL_DIR}"
-echo "Odometry: /wheel/odom_raw + /odin1/imu -> /odometry/filtered"
 echo "Drive safety: /cmd_vel_safe -> watchdog -> /cmd_vel_drive"
 
 ros2 run robot_state_publisher robot_state_publisher \
@@ -147,13 +171,12 @@ python3 "${WATCHDOG_SCRIPT}" \
   --ros-args --params-file "${WATCHDOG_PARAMS}" &
 CMD_VEL_WATCHDOG_PID=$!
 
-ros2 launch metro_localization odometry_fusion.launch.py \
-  use_sim_time:=true &
-ODOMETRY_FUSION_PID=$!
-
-ros2 launch metro_pointcloud_mapping accumulated_map.launch.py \
-  pcd_path:="${MAPPING_PCD_PATH}" &
-POINTCLOUD_MAPPING_PID=$!
+ros2 launch metro_pointcloud_mapping graph_slam.launch.py \
+  use_sim_time:=true \
+  database_path:="${MAPPING_DB_PATH}" \
+  pcd_path:="${MAPPING_PCD_PATH}" \
+  reset_database:="${MAPPING_RESET_DATABASE}" &
+GRAPH_SLAM_PID=$!
 
 ros2 launch gazebo_ros gazebo.launch.py \
   world:="${WORLD_FILE}" \

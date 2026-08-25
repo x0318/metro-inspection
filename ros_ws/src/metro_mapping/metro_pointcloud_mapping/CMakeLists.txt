@@ -51,7 +51,25 @@ ament_target_dependencies(cloud_accumulator
   tf2_ros
 )
 
-install(TARGETS cloud_accumulator
+add_executable(optimized_cloud_saver src/optimized_cloud_saver_node.cpp)
+target_include_directories(optimized_cloud_saver PRIVATE ${PCL_INCLUDE_DIRS})
+target_link_libraries(optimized_cloud_saver voxel_map pcl_common)
+ament_target_dependencies(optimized_cloud_saver
+  pcl_conversions
+  rcl_interfaces
+  rclcpp
+  sensor_msgs
+  std_srvs
+)
+
+add_executable(cloud_gate src/cloud_gate_node.cpp)
+ament_target_dependencies(cloud_gate
+  rcl_interfaces
+  rclcpp
+  sensor_msgs
+)
+
+install(TARGETS cloud_accumulator cloud_gate optimized_cloud_saver
   DESTINATION lib/${PROJECT_NAME}
 )
 install(DIRECTORY include/
@@ -63,6 +81,7 @@ install(DIRECTORY config launch
 
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
+  find_package(ament_cmake_pytest REQUIRED)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
 
@@ -71,6 +90,10 @@ if(BUILD_TESTING)
 
   ament_add_gtest(test_pcd_writer test/test_pcd_writer.cpp)
   target_link_libraries(test_pcd_writer voxel_map)
+
+  ament_add_pytest_test(
+    test_graph_slam_config test/test_graph_slam_config.py
+  )
 endif()
 
 ament_package()

@@ -1,24 +1,33 @@
 # Metro localization
 
-This ROS 2 package projects lidar points into a camera image, selects points inside
-a 2D damage detection, and publishes the estimated 3D position in the camera and
-`odom` frames.
+This package has two responsibilities: 2D-to-3D damage localization and local
+robot odometry fusion.
 
-It also owns the local odometry fusion configuration for the inspection robot:
+## Local odometry fusion
+
+The base configuration fuses wheel forward velocity, wheel yaw rate and IMU yaw
+rate with `robot_localization`:
 
 ```text
 /wheel/odom_raw + /odin1/imu
-        -> robot_localization EKF
-        -> /odometry/filtered + odom -> base_footprint
+  -> /odometry/filtered + odom -> base_footprint
 ```
 
-The Gazebo wheel plugin must keep `publish_odom_tf=false`; the EKF is the only
-publisher allowed to own `odom -> base_footprint`. The baseline intentionally
-fuses wheel `vx`, wheel yaw rate, and IMU yaw rate. Absolute IMU orientation is
-excluded because the current simulated message reports zero orientation
-covariance.
+Absolute IMU orientation is excluded because the current simulated message has
+zero orientation covariance. In graph-mapping mode, the launch also enables
+differential x/y/yaw input from `/lidar/odom`:
 
-Install the runtime dependency and build the package:
+```text
+/wheel/odom_raw + /odin1/imu + /lidar/odom
+  -> local EKF
+```
+
+This separation is intentional. The EKF supplies a continuous local estimate;
+RTAB-Map owns only the global `map -> odom` correction. ICP does not publish TF,
+and the Gazebo differential-drive plugin must keep `publish_odom_tf=false`, so
+there is exactly one owner for each transform.
+
+Install and build:
 
 ```bash
 sudo apt install ros-humble-robot-localization
@@ -28,54 +37,50 @@ colcon build --symlink-install --packages-select metro_localization
 source install/setup.bash
 ```
 
-The V2 simulation entry scripts start this launch file automatically. For an
-already running compatible robot or bag playback, start it directly with:
+Run the base wheel/IMU fusion in simulation:
 
 ```bash
 ros2 launch metro_localization odometry_fusion.launch.py use_sim_time:=true
 ```
 
-The simulation launch defaults to `frequency:=10.0` because Gazebo publishes
-`/clock` at 10 Hz. It also future-dates the local TF by `0.05 s` so timestamped
-point clouds do not occasionally arrive just ahead of the latest EKF transform.
-For hardware, use wall time, the 50 Hz configuration, and no time offset unless
-measurements show that one is needed:
+For hardware, use wall time and start from these timing values:
 
 ```bash
 ros2 launch metro_localization odometry_fusion.launch.py \
   use_sim_time:=false frequency:=50.0 transform_time_offset:=0.0
 ```
 
-For the current `subway_v2` simulation, start the adapter from
-`metro_closed_loop` instead of launching the teammate demo world:
+The graph-SLAM launch sets `fuse_lidar_odometry:=true` automatically. Do not
+enable it unless `/lidar/odom` is being published. If scan matching is lost, the
+EKF continues on wheel and IMU inputs instead of receiving a null ICP pose.
+
+## 2D-to-3D damage localization
+
+The localization node projects lidar points into a calibrated camera image,
+selects points inside each 2D detection, and publishes a 3D damage location.
+The validated simulation defaults are:
+
+```text
+image:       /odin1/rgb/image_raw
+camera info: /odin1/rgb/camera_info
+cloud:       /odin1/cloud_raw
+detections:  /damage_detections
+global TF:   odom
+```
+
+Important outputs are `/damage_point_camera`, `/damage_point_global`,
+`/localization/debug_projection`, and `/localization/estimated_marker`.
+
+For the current `subway_v2` sensor simulation, use the adapter rather than the
+teammate demo world:
 
 ```bash
-ros2 launch metro_closed_loop subway_v2_fusion.launch.py
+ros2 launch metro_closed_loop subway_v2_fusion.launch.py \
+  run_camera_info_calibrator:=false \
+  run_placeholder_detector:=false
 ```
 
-Inputs used by the validated default configuration:
-
-```text
-/odin1/rgb/image_raw       sensor_msgs/msg/Image
-/odin1/rgb/camera_info     sensor_msgs/msg/CameraInfo
-/odin1/cloud_raw           sensor_msgs/msg/PointCloud2
-/damage_detections         vision_msgs/msg/Detection2DArray
-/damage_mask               sensor_msgs/msg/Image (optional)
-/tf and /tf_static         lidar/camera/odom transforms
-/wheel/odom_raw            unfiltered wheel odometry; never a TF source
-/odin1/imu                 raw IMU measurement
-/odometry/filtered         local EKF odometry
-```
-
-Important outputs:
-
-```text
-/damage_point_camera            geometry_msgs/msg/PointStamped
-/damage_point_global            geometry_msgs/msg/PointStamped
-/localization/debug_projection  sensor_msgs/msg/Image
-/localization/estimated_marker  visualization_msgs/msg/Marker
-```
-
-`localization.launch.py` starts only the algorithm package. Its evaluator and
-semantic mapper are off by default because their ground-truth and tunnel-chainage
-constants must be configured for the current tunnel before use.
+The placeholder red detector is only a wiring test. A real detector should
+publish `vision_msgs/msg/Detection2DArray` on `/damage_detections`. Verify camera
+and lidar field-of-view overlap, extrinsic calibration and timestamp alignment
+before interpreting the output as a physical 3D location.
