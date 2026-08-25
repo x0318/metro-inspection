@@ -246,6 +246,23 @@ def validate_wheel_drive(model: ET.Element) -> None:
     plugin = plugins[0]
     if plugin.get("filename") != "libgazebo_ros_diff_drive.so":
         raise ValueError("subway_v2_diff_drive must use libgazebo_ros_diff_drive.so")
+    remappings = {
+        (element.text or "").strip() for element in plugin.findall("ros/remapping")
+    }
+    expected_remappings = {
+        "cmd_vel:=cmd_vel_drive",
+        "odom:=wheel/odom_raw",
+    }
+    if remappings != expected_remappings:
+        raise ValueError(
+            "subway_v2_diff_drive must expose the safe drive input and raw "
+            f"wheel odometry, found {sorted(remappings)}"
+        )
+    publish_odom_tf = (plugin.findtext("publish_odom_tf") or "").strip().lower()
+    if publish_odom_tf not in {"false", "0"}:
+        raise ValueError(
+            "Raw wheel odometry must not publish odom -> base_footprint TF"
+        )
     if (plugin.findtext("num_wheel_pairs") or "").strip() != "2":
         raise ValueError("subway_v2_diff_drive must control two wheel pairs")
     left = tuple(

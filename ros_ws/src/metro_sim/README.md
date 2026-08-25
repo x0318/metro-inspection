@@ -38,7 +38,10 @@ cd ~/my-project/metro-inspection
 
 该入口同时把 Gazebo Classic 的近似 Odin1 标定从
 `/odin1/rgb/camera_info_gazebo` 转换为真实标定
-`/odin1/rgb/camera_info`，与融合模式使用同一个接口。
+`/odin1/rgb/camera_info`，与融合模式使用同一个接口。三个 V2 运行入口
+都会自动启动速度 watchdog 和本地 EKF：差速插件只发布
+`/wheel/odom_raw` 且不发布 TF，EKF 融合 `/odin1/imu` 后发布
+`/odometry/filtered`，并独占 `odom -> base_footprint`。
 
 点云建图模式从同一份 `subway_v2/model.sdf` 临时派生，只关闭六路
 RGB 相机并默认不启动 Gazebo GUI；雷达的 `240 x 180` 分辨率、FOV、
@@ -70,9 +73,10 @@ ros2 service call /mapping/reset_map std_srvs/srv/Trigger '{}'
 ```
 
 默认 PCD 文件为 `results/maps/subway_v2_accumulated.pcd`，也可在启动前
-通过 `SUBWAY_MAPPING_PCD_PATH` 指定其他位置。当前阶段使用轮式 `/odom`
-进行累计，是三维建图数据链基线，不包含回环和漂移修正，不能等同于
-最终 LiDAR/IMU SLAM 地图。
+通过 `SUBWAY_MAPPING_PCD_PATH` 指定其他位置。当前阶段使用轮式里程计与
+IMU 的本地 EKF 提供 `odom` 坐标变换，是三维建图数据链基线；它能降低
+局部姿态噪声，但不包含扫描匹配、回环或全局漂移修正，不能等同于最终
+LiDAR/IMU SLAM 地图。
 
 完整 sensors 仿真和融合节点运行后，使用统一入口查看 Odin1 原始图像、
 带检测框/点云投影/定位十字的识别调试图、三维点云和病害位置标记：
@@ -123,7 +127,9 @@ Nav2 /cmd_vel
 `subway_v2_diff_drive`，车轮会按轮轨接触真实旋转。
 
 - `/scan`：前向障碍与雷达存活输入。
-- `/odom`：车辆当前位置和相对导航目标基准。
+- `/wheel/odom_raw`：差速插件的原始轮式里程计，只作为 EKF 输入。
+- `/odometry/filtered`：轮速与 IMU 融合后的本地里程计。
+- `odom -> base_footprint`：只由 `odometry_ekf` 发布。
 - `/cmd_vel`：Nav2 原始速度，不允许底盘直接订阅。
 - `/cmd_vel_safe`：守卫审核后的正向直行速度。
 - `/cmd_vel_drive`：watchdog 输出的最终底盘速度，底盘唯一软件入口。

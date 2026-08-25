@@ -66,11 +66,14 @@ collisions: a native radius `0.060 m`, length `0.019 m` tread and a native
 radius `0.0775 m`, length `0.013 m` flange. The runtime values are uniformly
 scaled with the vehicle.
 
-`libgazebo_ros_diff_drive.so` drives all four wheel joints in two pairs and
-keeps the established `/cmd_vel_drive`, `/odom`, and `odom -> base_footprint`
-interfaces. The previous `planar_move` pose driver is not used by `subway_v2`;
-the vehicle now advances through wheel joint motion and wheel/rail contact.
-`tunnel_obstacle_guard.py` continues to remove lateral and yaw commands.
+`libgazebo_ros_diff_drive.so` drives all four wheel joints in two pairs. It
+accepts `/cmd_vel_drive` and publishes raw wheel measurements on
+`/wheel/odom_raw`, but it no longer publishes TF. The local
+`robot_localization` EKF combines wheel velocity with Odin1 angular velocity,
+publishes `/odometry/filtered`, and is the only owner of
+`odom -> base_footprint`. The previous `planar_move` pose driver is not used by
+`subway_v2`; the vehicle now advances through wheel joint motion and wheel/rail
+contact. `tunnel_obstacle_guard.py` continues to remove lateral and yaw commands.
 The physical Pitch-camera end defines `base_footprint +X`, so a positive
 `linear.x` command moves toward that visible robot front. The importer validates
 this convention and assigns wheels to the left/right drive pairs after applying

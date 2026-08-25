@@ -10,6 +10,8 @@ WORLD_FILE="${METRO_SIM_DIR}/worlds/subway_tunnel_v2_sensors.world"
 URDF_FILE="${DESCRIPTION_DIR}/urdf/subway_v2.urdf"
 SCALE_FILE="${METRO_SIM_DIR}/config/subway_v2_model_scale.txt"
 SCALE_SCRIPT="${SCRIPT_DIR}/scale_subway_v2_urdf.py"
+WATCHDOG_SCRIPT="${SCRIPT_DIR}/cmd_vel_watchdog.py"
+WATCHDOG_PARAMS="${METRO_SIM_DIR}/config/tunnel_guard_production.yaml"
 
 if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
   cat <<'EOF'
@@ -34,6 +36,8 @@ for required_file in \
   "${URDF_FILE}" \
   "${SCALE_FILE}" \
   "${SCALE_SCRIPT}" \
+  "${WATCHDOG_SCRIPT}" \
+  "${WATCHDOG_PARAMS}" \
   "${METRO_SIM_DIR}/models/subway_tunnel_v2/model.sdf" \
   "${METRO_SIM_DIR}/models/subway_v2/model.sdf"; do
   if [[ ! -f "${required_file}" ]]; then
@@ -49,11 +53,13 @@ if [[ -f "${ROS_WS_DIR}/install/setup.bash" ]]; then
 fi
 set -u
 
-if ! ros2 pkg prefix metro_closed_loop >/dev/null 2>&1; then
-  echo "metro_closed_loop is not built in ${ROS_WS_DIR}." >&2
-  echo "Build it with colcon before starting the full sensor profile." >&2
-  exit 1
-fi
+for required_package in metro_closed_loop metro_localization robot_localization; do
+  if ! ros2 pkg prefix "${required_package}" >/dev/null 2>&1; then
+    echo "Required ROS package not found: ${required_package}" >&2
+    echo "Build the workspace and install ros-humble-robot-localization." >&2
+    exit 1
+  fi
+done
 
 for required_command in python3 check_urdf ros2; do
   if ! command -v "${required_command}" >/dev/null 2>&1; then
@@ -83,12 +89,16 @@ RUN_DIR="$(mktemp -d)"
 SCALED_URDF="${RUN_DIR}/subway_v2_scaled.urdf"
 ROBOT_STATE_PUBLISHER_PID=""
 CAMERA_INFO_CALIBRATOR_PID=""
+CMD_VEL_WATCHDOG_PID=""
+ODOMETRY_FUSION_PID=""
 
 cleanup() {
   local exit_code=$?
   trap - EXIT INT TERM
   for child_pid in \
+    "${ODOMETRY_FUSION_PID}" \
     "${CAMERA_INFO_CALIBRATOR_PID}" \
+    "${CMD_VEL_WATCHDOG_PID}" \
     "${ROBOT_STATE_PUBLISHER_PID}"; do
     if [[ -n "${child_pid}" ]] && kill -0 "${child_pid}" 2>/dev/null; then
       kill "${child_pid}" 2>/dev/null || true
@@ -109,6 +119,8 @@ echo "ROS_DOMAIN_ID=${ROS_DOMAIN_ID}"
 echo "GAZEBO_MASTER_URI=${GAZEBO_MASTER_URI}"
 echo "Robot scale=${ROBOT_SCALE}"
 echo "Starting robot_state_publisher with ${SCALED_URDF}"
+echo "Odometry: /wheel/odom_raw + /odin1/imu -> /odometry/filtered"
+echo "Drive safety: /cmd_vel_safe -> watchdog -> /cmd_vel_drive"
 
 ros2 run robot_state_publisher robot_state_publisher \
   "${SCALED_URDF}" \
@@ -118,6 +130,14 @@ ROBOT_STATE_PUBLISHER_PID=$!
 ros2 run metro_closed_loop camera_info_calibrator \
   --ros-args -p use_sim_time:=true &
 CAMERA_INFO_CALIBRATOR_PID=$!
+
+python3 "${WATCHDOG_SCRIPT}" \
+  --ros-args --params-file "${WATCHDOG_PARAMS}" &
+CMD_VEL_WATCHDOG_PID=$!
+
+ros2 launch metro_localization odometry_fusion.launch.py \
+  use_sim_time:=true &
+ODOMETRY_FUSION_PID=$!
 
 echo "Opening ${WORLD_FILE}"
 ros2 launch gazebo_ros gazebo.launch.py \

@@ -14,6 +14,8 @@ SCALE_SCRIPT="${SCRIPT_DIR}/scale_subway_v2_urdf.py"
 MAPPING_MODEL_SCRIPT="${SCRIPT_DIR}/prepare_subway_v2_mapping_model.py"
 SOURCE_MODEL_SDF="${METRO_SIM_DIR}/models/subway_v2/model.sdf"
 MAPPING_PCD_PATH="${SUBWAY_MAPPING_PCD_PATH:-${REPOSITORY_DIR}/results/maps/subway_v2_accumulated.pcd}"
+WATCHDOG_SCRIPT="${SCRIPT_DIR}/cmd_vel_watchdog.py"
+WATCHDOG_PARAMS="${METRO_SIM_DIR}/config/tunnel_guard_production.yaml"
 
 if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
   cat <<'EOF'
@@ -45,6 +47,8 @@ for required_file in \
   "${SCALE_SCRIPT}" \
   "${MAPPING_MODEL_SCRIPT}" \
   "${SOURCE_MODEL_SDF}" \
+  "${WATCHDOG_SCRIPT}" \
+  "${WATCHDOG_PARAMS}" \
   "${METRO_SIM_DIR}/models/subway_tunnel_v2/model.sdf"; do
   if [[ ! -f "${required_file}" ]]; then
     echo "Required file not found: ${required_file}" >&2
@@ -66,13 +70,14 @@ for required_command in python3 check_urdf ros2 gz; do
   fi
 done
 
-if ! ros2 pkg prefix metro_pointcloud_mapping >/dev/null 2>&1; then
-  echo "ROS package metro_pointcloud_mapping is not built in ${ROS_WS_DIR}." >&2
-  echo "Build it with:" >&2
-  echo "  cd ${ROS_WS_DIR}" >&2
-  echo "  colcon build --symlink-install --packages-select metro_pointcloud_mapping" >&2
-  exit 1
-fi
+for required_package in \
+  metro_localization metro_pointcloud_mapping robot_localization; do
+  if ! ros2 pkg prefix "${required_package}" >/dev/null 2>&1; then
+    echo "Required ROS package not found: ${required_package}" >&2
+    echo "Build the workspace and install ros-humble-robot-localization." >&2
+    exit 1
+  fi
+done
 
 export ROS_DOMAIN_ID="${ROS_DOMAIN_ID:-70}"
 export GAZEBO_MASTER_URI="${SUBWAY_TUNNEL_V2_GAZEBO_MASTER_URI:-http://127.0.0.1:11372}"
@@ -93,20 +98,22 @@ SCALED_URDF="${RUN_DIR}/subway_v2_scaled.urdf"
 MAPPING_MODEL_DIR="${RUN_DIR}/subway_v2_mapping"
 ROBOT_STATE_PUBLISHER_PID=""
 POINTCLOUD_MAPPING_PID=""
+CMD_VEL_WATCHDOG_PID=""
+ODOMETRY_FUSION_PID=""
 
 cleanup() {
   local exit_code=$?
   trap - EXIT INT TERM
-  if [[ -n "${ROBOT_STATE_PUBLISHER_PID}" ]] && \
-      kill -0 "${ROBOT_STATE_PUBLISHER_PID}" 2>/dev/null; then
-    kill "${ROBOT_STATE_PUBLISHER_PID}" 2>/dev/null || true
-    wait "${ROBOT_STATE_PUBLISHER_PID}" 2>/dev/null || true
-  fi
-  if [[ -n "${POINTCLOUD_MAPPING_PID}" ]] && \
-      kill -0 "${POINTCLOUD_MAPPING_PID}" 2>/dev/null; then
-    kill "${POINTCLOUD_MAPPING_PID}" 2>/dev/null || true
-    wait "${POINTCLOUD_MAPPING_PID}" 2>/dev/null || true
-  fi
+  for child_pid in \
+    "${POINTCLOUD_MAPPING_PID}" \
+    "${ODOMETRY_FUSION_PID}" \
+    "${CMD_VEL_WATCHDOG_PID}" \
+    "${ROBOT_STATE_PUBLISHER_PID}"; do
+    if [[ -n "${child_pid}" ]] && kill -0 "${child_pid}" 2>/dev/null; then
+      kill "${child_pid}" 2>/dev/null || true
+      wait "${child_pid}" 2>/dev/null || true
+    fi
+  done
   rm -rf -- "${RUN_DIR}"
   exit "${exit_code}"
 }
@@ -128,11 +135,21 @@ echo "Mapping profile: Odin1 lidar + IMU, cameras disabled, gui=false"
 echo "Accumulated map topic: /mapping/cloud_map"
 echo "PCD save path: ${MAPPING_PCD_PATH}"
 echo "Temporary model directory: ${MAPPING_MODEL_DIR}"
+echo "Odometry: /wheel/odom_raw + /odin1/imu -> /odometry/filtered"
+echo "Drive safety: /cmd_vel_safe -> watchdog -> /cmd_vel_drive"
 
 ros2 run robot_state_publisher robot_state_publisher \
   "${SCALED_URDF}" \
   --ros-args -p use_sim_time:=true &
 ROBOT_STATE_PUBLISHER_PID=$!
+
+python3 "${WATCHDOG_SCRIPT}" \
+  --ros-args --params-file "${WATCHDOG_PARAMS}" &
+CMD_VEL_WATCHDOG_PID=$!
+
+ros2 launch metro_localization odometry_fusion.launch.py \
+  use_sim_time:=true &
+ODOMETRY_FUSION_PID=$!
 
 ros2 launch metro_pointcloud_mapping accumulated_map.launch.py \
   pcd_path:="${MAPPING_PCD_PATH}" &

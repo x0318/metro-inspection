@@ -473,7 +473,7 @@
     <plugin name="subway_v2_diff_drive" filename="libgazebo_ros_diff_drive.so">
       <ros>
         <remapping>cmd_vel:=cmd_vel_drive</remapping>
-        <remapping>odom:=odom</remapping>
+        <remapping>odom:=wheel/odom_raw</remapping>
       </ros>
       <update_rate>100</update_rate>
       <num_wheel_pairs>2</num_wheel_pairs>
@@ -488,7 +488,7 @@
       <max_wheel_torque>40</max_wheel_torque>
       <max_wheel_acceleration>1.0</max_wheel_acceleration>
       <publish_odom>true</publish_odom>
-      <publish_odom_tf>true</publish_odom_tf>
+      <publish_odom_tf>false</publish_odom_tf>
       <publish_wheel_tf>false</publish_wheel_tf>
       <odometry_frame>odom</odometry_frame>
       <robot_base_frame>base_footprint</robot_base_frame>

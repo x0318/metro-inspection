@@ -12,6 +12,8 @@ SCALE_FILE="${METRO_SIM_DIR}/config/subway_v2_model_scale.txt"
 SCALE_SCRIPT="${SCRIPT_DIR}/scale_subway_v2_urdf.py"
 FUSION_MODEL_SCRIPT="${SCRIPT_DIR}/prepare_subway_v2_fusion_model.py"
 SOURCE_MODEL_SDF="${METRO_SIM_DIR}/models/subway_v2/model.sdf"
+WATCHDOG_SCRIPT="${SCRIPT_DIR}/cmd_vel_watchdog.py"
+WATCHDOG_PARAMS="${METRO_SIM_DIR}/config/tunnel_guard_production.yaml"
 
 if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
   cat <<'EOF'
@@ -40,6 +42,8 @@ for required_file in \
   "${SCALE_SCRIPT}" \
   "${FUSION_MODEL_SCRIPT}" \
   "${SOURCE_MODEL_SDF}" \
+  "${WATCHDOG_SCRIPT}" \
+  "${WATCHDOG_PARAMS}" \
   "${METRO_SIM_DIR}/models/subway_tunnel_v2/model.sdf"; do
   if [[ ! -f "${required_file}" ]]; then
     echo "Required file not found: ${required_file}" >&2
@@ -60,11 +64,13 @@ for required_command in python3 check_urdf ros2 gz; do
     exit 1
   fi
 done
-if ! ros2 pkg prefix metro_closed_loop >/dev/null 2>&1; then
-  echo "metro_closed_loop is not built in ${ROS_WS_DIR}." >&2
-  echo "Build it with colcon before starting fusion." >&2
-  exit 1
-fi
+for required_package in metro_closed_loop metro_localization robot_localization; do
+  if ! ros2 pkg prefix "${required_package}" >/dev/null 2>&1; then
+    echo "Required ROS package not found: ${required_package}" >&2
+    echo "Build the workspace and install ros-humble-robot-localization." >&2
+    exit 1
+  fi
+done
 
 export ROS_DOMAIN_ID="${ROS_DOMAIN_ID:-70}"
 export GAZEBO_MASTER_URI="${SUBWAY_TUNNEL_V2_GAZEBO_MASTER_URI:-http://127.0.0.1:11374}"
@@ -104,11 +110,17 @@ SCALED_URDF="${RUN_DIR}/subway_v2_scaled.urdf"
 FUSION_MODEL_DIR="${RUN_DIR}/subway_v2_fusion"
 ROBOT_STATE_PUBLISHER_PID=""
 FUSION_LAUNCH_PID=""
+CMD_VEL_WATCHDOG_PID=""
+ODOMETRY_FUSION_PID=""
 
 cleanup() {
   local exit_code=$?
   trap - EXIT INT TERM
-  for child_pid in "${FUSION_LAUNCH_PID}" "${ROBOT_STATE_PUBLISHER_PID}"; do
+  for child_pid in \
+    "${FUSION_LAUNCH_PID}" \
+    "${ODOMETRY_FUSION_PID}" \
+    "${CMD_VEL_WATCHDOG_PID}" \
+    "${ROBOT_STATE_PUBLISHER_PID}"; do
     if [[ -n "${child_pid}" ]] && kill -0 "${child_pid}" 2>/dev/null; then
       kill "${child_pid}" 2>/dev/null || true
       wait "${child_pid}" 2>/dev/null || true
@@ -133,11 +145,21 @@ echo "ROS_DOMAIN_ID=${ROS_DOMAIN_ID}"
 echo "GAZEBO_MASTER_URI=${GAZEBO_MASTER_URI}"
 echo "Fusion profile: Odin1 RGB + lidar + IMU, other cameras disabled"
 echo "Temporary model directory: ${FUSION_MODEL_DIR}"
+echo "Odometry: /wheel/odom_raw + /odin1/imu -> /odometry/filtered"
+echo "Drive safety: /cmd_vel_safe -> watchdog -> /cmd_vel_drive"
 
 ros2 run robot_state_publisher robot_state_publisher \
   "${SCALED_URDF}" \
   --ros-args -p use_sim_time:=true &
 ROBOT_STATE_PUBLISHER_PID=$!
+
+python3 "${WATCHDOG_SCRIPT}" \
+  --ros-args --params-file "${WATCHDOG_PARAMS}" &
+CMD_VEL_WATCHDOG_PID=$!
+
+ros2 launch metro_localization odometry_fusion.launch.py \
+  use_sim_time:=true &
+ODOMETRY_FUSION_PID=$!
 
 ros2 launch metro_closed_loop subway_v2_fusion.launch.py \
   run_placeholder_detector:=false &

@@ -12,8 +12,11 @@ cd /home/jo/my-project/metro-inspection
 ```
 
 Its `/mapping/cloud_map` output and PCD save service validate the accumulation
-pipeline. This baseline does not perform scan registration or loop closure; a
-LiDAR/IMU SLAM source must later replace wheel odometry for a drift-corrected map.
+pipeline. The V2 entry scripts now start a local EKF that publishes
+`/odometry/filtered` and owns `odom -> base_footprint`, using
+`/wheel/odom_raw` plus `/odin1/imu`. This improves local motion stability but
+does not perform scan registration or loop closure; a LiDAR/IMU SLAM source must
+still provide global drift correction for the final map.
 
 The current simulation remains owned by `metro_sim`. Do not use the teammate demo
 `closed_loop.launch.py`: it starts a second Gazebo world, robot, camera, and lidar.
@@ -25,6 +28,7 @@ Build the two packages:
 ```bash
 cd /home/jo/my-project/metro-inspection/ros_ws
 source /opt/ros/humble/setup.bash
+sudo apt install ros-humble-robot-localization
 colcon build --symlink-install \
   --packages-select metro_localization metro_closed_loop
 source install/setup.bash

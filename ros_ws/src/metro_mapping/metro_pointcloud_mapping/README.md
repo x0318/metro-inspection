@@ -1,8 +1,9 @@
 # Metro point-cloud mapping
 
 This package implements the first mapping stage: timestamped Odin1 clouds are
-transformed into `odom`, filtered, and accumulated in a bounded voxel map. It is
-an odometry-based baseline, not loop-closing 3D SLAM.
+transformed into `odom`, filtered, and accumulated in a bounded voxel map. The
+`odom -> base_footprint` transform comes from the wheel/IMU local EKF. It is a
+locally fused odometry baseline, not loop-closing 3D SLAM.
 
 ## Interfaces
 
