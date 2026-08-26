@@ -3,7 +3,7 @@
   <!-- Hardware geometry imported from feature/hardware:hardware/simple_v6@37ce04e; ROS 2 sensor plugins and calibrated sensor frames are preserved. -->
   <link name="base_footprint" />
   <joint name="base_footprint_to_base_link" type="fixed">
-    <origin xyz="-0.010904028627 -0.003428939952 0.214499211212" rpy="-1.570796326795 0 1.570796326795" />
+    <origin xyz="0.010904028627 0.003428939952 0.214499211212" rpy="-1.570796326795 0 -1.570796326795" />
     <parent link="base_footprint" />
     <child link="base_link" />
   </joint>
@@ -22,6 +22,12 @@
         <color rgba="0.898039215686275 0.917647058823529 0.929411764705882 1" />
       </material>
     </visual>
+    <collision name="base_link_collision">
+      <origin xyz="0.003428936005 0.032983805984 -0.038154035807" rpy="0 0 0" />
+      <geometry>
+        <box size="0.475999981165 0.276014514267 0.464500010014" />
+      </geometry>
+    </collision>
     <visual name="w1_fixed_mount_visual">
       <origin xyz="0.152328939951822 0.103 0.134095970953207" rpy="1.57079632679489 -0.16843576907617 1.5707963267949" />
       <geometry>
@@ -58,12 +64,6 @@
         <color rgba="1 1 1 1" />
       </material>
     </visual>
-    <collision name="base_link_collision">
-      <origin xyz="0.003428936005 0.032983805984 -0.038154035807" rpy="0 0 0" />
-      <geometry>
-        <box size="0.475999981165 0.276014514267 0.464500010014" />
-      </geometry>
-    </collision>
   </link>
   <link name="w1">
     <inertial>
@@ -82,18 +82,22 @@
     </visual>
     <collision name="w1_tread_collision">
       <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry><cylinder radius="0.060" length="0.019" /></geometry>
+      <geometry>
+        <cylinder radius="0.060" length="0.019" />
+      </geometry>
     </collision>
     <collision name="w1_flange_collision">
       <origin xyz="0 0 -0.016" rpy="0 0 0" />
-      <geometry><cylinder radius="0.0775" length="0.013" /></geometry>
+      <geometry>
+        <cylinder radius="0.0775" length="0.013" />
+      </geometry>
     </collision>
   </link>
   <joint name="w1_joint" type="continuous">
     <origin xyz="0.254228939952 0.136999998856323 0.134095974152992" rpy="1.57079632679489 -0.16843576907617 1.5707963267949" />
     <parent link="base_link" />
     <child link="w1" />
-    <axis xyz="0 0 1" />
+    <axis xyz="0 0 -1" />
     <dynamics damping="0.2" friction="0.05" />
   </joint>
   <link name="w2">
@@ -113,18 +117,22 @@
     </visual>
     <collision name="w2_tread_collision">
       <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry><cylinder radius="0.060" length="0.019" /></geometry>
+      <geometry>
+        <cylinder radius="0.060" length="0.019" />
+      </geometry>
     </collision>
     <collision name="w2_flange_collision">
       <origin xyz="0 0 -0.016" rpy="0 0 0" />
-      <geometry><cylinder radius="0.0775" length="0.013" /></geometry>
+      <geometry>
+        <cylinder radius="0.0775" length="0.013" />
+      </geometry>
     </collision>
   </link>
   <joint name="w2_joint" type="continuous">
     <origin xyz="-0.247371060048 0.136999998934387 0.134095970636500" rpy="1.57079632679489 0.16843576907617 -1.5707963267949" />
     <parent link="base_link" />
     <child link="w2" />
-    <axis xyz="0 0 -1" />
+    <axis xyz="0 0 1" />
     <dynamics damping="0.2" friction="0.05" />
   </joint>
   <link name="w3">
@@ -144,18 +152,22 @@
     </visual>
     <collision name="w3_tread_collision">
       <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry><cylinder radius="0.060" length="0.019" /></geometry>
+      <geometry>
+        <cylinder radius="0.060" length="0.019" />
+      </geometry>
     </collision>
     <collision name="w3_flange_collision">
       <origin xyz="0 0 -0.016" rpy="0 0 0" />
-      <geometry><cylinder radius="0.0775" length="0.013" /></geometry>
+      <geometry>
+        <cylinder radius="0.0775" length="0.013" />
+      </geometry>
     </collision>
   </link>
   <joint name="w3_joint" type="continuous">
     <origin xyz="-0.247371060048 0.136999999067289 -0.155904029760880" rpy="1.57079632679489 1.06806361303278 -1.5707963267949" />
     <parent link="base_link" />
     <child link="w3" />
-    <axis xyz="0 0 -1" />
+    <axis xyz="0 0 1" />
     <dynamics damping="0.2" friction="0.05" />
   </joint>
   <link name="w4">
@@ -175,18 +187,22 @@
     </visual>
     <collision name="w4_tread_collision">
       <origin xyz="0 0 0" rpy="0 0 0" />
-      <geometry><cylinder radius="0.060" length="0.019" /></geometry>
+      <geometry>
+        <cylinder radius="0.060" length="0.019" />
+      </geometry>
     </collision>
     <collision name="w4_flange_collision">
       <origin xyz="0 0 -0.016" rpy="0 0 0" />
-      <geometry><cylinder radius="0.0775" length="0.013" /></geometry>
+      <geometry>
+        <cylinder radius="0.0775" length="0.013" />
+      </geometry>
     </collision>
   </link>
   <joint name="w4_joint" type="continuous">
     <origin xyz="0.254228939952 0.136999999516020 -0.155904029536466" rpy="1.57079632679489 -1.06806361303278 1.5707963267949" />
     <parent link="base_link" />
     <child link="w4" />
-    <axis xyz="0 0 1" />
+    <axis xyz="0 0 -1" />
     <dynamics damping="0.2" friction="0.05" />
   </joint>
   <link name="yuntai">
@@ -477,10 +493,10 @@
       </ros>
       <update_rate>100</update_rate>
       <num_wheel_pairs>2</num_wheel_pairs>
-      <left_joint>w1_joint</left_joint>
-      <right_joint>w2_joint</right_joint>
-      <left_joint>w4_joint</left_joint>
-      <right_joint>w3_joint</right_joint>
+      <left_joint>w2_joint</left_joint>
+      <right_joint>w1_joint</right_joint>
+      <left_joint>w3_joint</left_joint>
+      <right_joint>w4_joint</right_joint>
       <wheel_separation>0.5016</wheel_separation>
       <wheel_separation>0.5016</wheel_separation>
       <wheel_diameter>0.12</wheel_diameter>
@@ -635,8 +651,6 @@
       -0.00208004 -0.00610004 -0.01139042
     </pose>
       <camera name="odin1_rgb">
-        <!-- Calibrated 1600x1296 mode for Odin1 O1-P070100024. The published
-             129-degree product FOV is not compatible with this camera matrix. -->
         <horizontal_fov>1.6527705344413242</horizontal_fov>
         <image>
           <width>1600</width>
@@ -647,8 +661,6 @@
           <near>0.10</near>
           <far>100.0</far>
         </clip>
-        <!-- No distortion coefficients were supplied, so the simulated image
-             remains ideal/undistorted until the complete calibration is available. -->
         <lens>
           <intrinsics>
             <fx>736.9688</fx>
@@ -662,16 +674,10 @@
       <plugin name="odin1_rgb_camera_plugin" filename="libgazebo_ros_camera.so">
         <ros>
           <namespace>/odin1</namespace>
-          <!-- Gazebo Classic cannot represent fy != fx or nonzero skew in K.
-               Preserve its diagnostic output separately; the fusion launch
-               republishes the calibrated CameraInfo on the standard topic. -->
           <remapping>rgb/camera_info:=rgb/camera_info_gazebo</remapping>
         </ros>
         <camera_name>rgb</camera_name>
         <frame_name>odin1_rgb_optical_frame</frame_name>
-        <!-- Gazebo Classic serializes HFOV with limited precision before the
-             plugin sees it. Let the diagnostic topic derive its focal length
-             from that HFOV; the calibrated topic below is authoritative. -->
         <cx>766.6570</cx>
         <cy>642.9091</cy>
         <border_crop>false</border_crop>

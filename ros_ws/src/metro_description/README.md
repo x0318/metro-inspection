@@ -74,18 +74,18 @@ publishes `/odometry/filtered`, and is the only owner of
 `odom -> base_footprint`. The previous `planar_move` pose driver is not used by
 `subway_v2`; the vehicle now advances through wheel joint motion and wheel/rail
 contact. `tunnel_obstacle_guard.py` continues to remove lateral and yaw commands.
-The physical Pitch-camera end defines `base_footprint +X`, so a positive
-`linear.x` command moves toward that visible robot front. The importer validates
+The physical Odin1/nose end defines `base_footprint +X`, so a positive
+`linear.x` command moves toward the visible robot front. The importer validates
 this convention and assigns wheels to the left/right drive pairs after applying
-the CAD-to-REP-103 root rotation. The Odin1 scan axis faces `base_footprint -X`
-on this hardware assembly.
+the CAD-to-REP-103 root rotation. The Pitch camera faces `base_footprint -X` on
+this hardware assembly.
 
 The V6 camera housings keep their CAD mounting translations, with inspection
 orientations restored explicitly: `xj1` and `xj2` look outward to the tunnel
 sides, while `xj3` and `xj4` look down toward the track. Camera body frames are
 placed at the previously validated lens-center offsets instead of each STL's
 link origin. The pitch camera frame is located on the camera geometry embedded
-in `pitch.STL`, points toward `base_footprint +X`, and remains upright; Odin1's
+in `pitch.STL`, points toward `base_footprint -X`, and remains upright; Odin1's
 calibrated internal transform is unchanged.
 
 After changing the URDF or meshes, regenerate the Gazebo model from the

@@ -34,13 +34,13 @@ ODIN1_CAMERA_CALIBRATION = {
     "s": 0.2058,
 }
 WHEEL_NAMES = ("w1", "w2", "w3", "w4")
-LEFT_WHEEL_JOINTS = ("w1_joint", "w4_joint")
-RIGHT_WHEEL_JOINTS = ("w2_joint", "w3_joint")
+LEFT_WHEEL_JOINTS = ("w2_joint", "w3_joint")
+RIGHT_WHEEL_JOINTS = ("w1_joint", "w4_joint")
 WHEEL_AXES = {
-    "w1": (0.0, 0.0, 1.0),
-    "w2": (0.0, 0.0, -1.0),
-    "w3": (0.0, 0.0, -1.0),
-    "w4": (0.0, 0.0, 1.0),
+    "w1": (0.0, 0.0, -1.0),
+    "w2": (0.0, 0.0, 1.0),
+    "w3": (0.0, 0.0, 1.0),
+    "w4": (0.0, 0.0, -1.0),
 }
 
 
@@ -420,12 +420,12 @@ def validate_generated_model(model: ET.Element, urdf_root: ET.Element) -> None:
     )
     pitch_forward_error = max(
         abs(pitch_camera_forward[index] - expected)
-        for index, expected in enumerate((1.0, 0.0, 0.0))
+        for index, expected in enumerate((-1.0, 0.0, 0.0))
     )
     if pitch_forward_error > 0.002:
         raise ValueError(
-            "Pitch camera optical axis must point toward the robot front "
-            "(base_footprint +X), "
+            "Pitch camera optical axis must point rearward "
+            "(base_footprint -X), "
             f"found {pitch_camera_forward}"
         )
     pitch_camera_up = rotate_vector(pitch_camera_rotation, (0.0, 0.0, 1.0))
@@ -480,11 +480,12 @@ def validate_generated_model(model: ET.Element, urdf_root: ET.Element) -> None:
         )
     base_forward_error = max(
         abs(sdf_forward[index] - expected)
-        for index, expected in enumerate((-1.0, 0.0, 0.0))
+        for index, expected in enumerate((1.0, 0.0, 0.0))
     )
     if base_forward_error > AXIS_TOLERANCE:
         raise ValueError(
-            "Odin1 scan axis must point rearward (base_footprint -X), "
+            "Odin1 scan axis must point toward the robot front "
+            "(base_footprint +X), "
             f"found {sdf_forward}"
         )
 

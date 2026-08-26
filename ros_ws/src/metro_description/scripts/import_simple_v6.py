@@ -146,11 +146,13 @@ WHEEL_VISUAL_ORIGINS = {
     "w4": "-0.016381944871 0.029793151047 -0.101900000000",
 }
 WHEEL_AXIS_BY_NAME = {
-    "w1_joint": "0 0 1",
-    "w2_joint": "0 0 -1",
-    "w3_joint": "0 0 -1",
-    "w4_joint": "0 0 1",
+    "w1_joint": "0 0 -1",
+    "w2_joint": "0 0 1",
+    "w3_joint": "0 0 1",
+    "w4_joint": "0 0 -1",
 }
+LEFT_WHEEL_JOINTS = ("w2_joint", "w3_joint")
+RIGHT_WHEEL_JOINTS = ("w1_joint", "w4_joint")
 WHEEL_MASS = "0.5"
 WHEEL_INERTIA_TRANSVERSE = "0.000812421666667"
 WHEEL_INERTIA_AXIAL = "0.0015015625"
@@ -199,11 +201,11 @@ PRESERVED_JOINT_ORIGINS = {
     ),
 }
 
-# Rz(+90 deg) * Rx(-90 deg) maps CAD Y-up into REP-103 and makes the physical
-# Pitch-camera end point along base_footprint +X. Translation centers the wheel
+# Rz(-90 deg) * Rx(-90 deg) maps CAD Y-up into REP-103 and makes the physical
+# Odin1/nose end point along base_footprint +X. Translation centers the wheel
 # pairs on the track and puts the lowest V6 tire vertex on base_footprint z=0.
-ROOT_XYZ = "-0.010904028627 -0.003428939952 0.214499211212"
-ROOT_RPY = "-1.570796326795 0 1.570796326795"
+ROOT_XYZ = "0.010904028627 0.003428939952 0.214499211212"
+ROOT_RPY = "-1.570796326795 0 -1.570796326795"
 
 PRESERVED_SENSOR_LINKS = (
     "lidar_link",
@@ -590,11 +592,23 @@ def copy_gazebo_configuration(root: ET.Element, template: ET.Element) -> None:
     for gazebo in template.findall("gazebo"):
         copied = copy.deepcopy(gazebo)
         for plugin in copied.findall(".//plugin"):
-            if plugin.get("name") != "subway_v2_joint_state":
-                continue
-            for joint_name in list(plugin.findall("joint_name")):
-                if (joint_name.text or "").strip() == "pitch_joint":
-                    plugin.remove(joint_name)
+            if plugin.get("name") == "subway_v2_joint_state":
+                for joint_name in list(plugin.findall("joint_name")):
+                    if (joint_name.text or "").strip() == "pitch_joint":
+                        plugin.remove(joint_name)
+            if plugin.get("name") == "subway_v2_diff_drive":
+                left = plugin.findall("left_joint")
+                right = plugin.findall("right_joint")
+                if len(left) != len(LEFT_WHEEL_JOINTS) or len(right) != len(
+                    RIGHT_WHEEL_JOINTS
+                ):
+                    raise ValueError(
+                        "subway_v2_diff_drive must define two left and two right wheels"
+                    )
+                for element, joint_name in zip(left, LEFT_WHEEL_JOINTS):
+                    element.text = joint_name
+                for element, joint_name in zip(right, RIGHT_WHEEL_JOINTS):
+                    element.text = joint_name
         root.append(copied)
 
     camera_sensors = {
