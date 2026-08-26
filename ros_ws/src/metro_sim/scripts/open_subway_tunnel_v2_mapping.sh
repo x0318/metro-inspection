@@ -69,7 +69,7 @@ if [[ -f "${ROS_WS_DIR}/install/setup.bash" ]]; then
 fi
 set -u
 
-for required_command in python3 check_urdf ros2 gz; do
+for required_command in python3 check_urdf ros2 gz ldd; do
   if ! command -v "${required_command}" >/dev/null 2>&1; then
     echo "Required command not found: ${required_command}" >&2
     exit 1
@@ -90,6 +90,23 @@ for required_package in \
     exit 1
   fi
 done
+
+# The Hikvision MVS SDK ships an older libusb in /opt/MVS. If MVS appears first
+# in LD_LIBRARY_PATH, PCL fails at startup because libusb_set_option is missing.
+# Mapping mode disables the cameras, so prefer Ubuntu system libraries only for
+# the graph-SLAM process while leaving the caller's environment unchanged.
+MAPPING_LD_LIBRARY_PATH="/lib/x86_64-linux-gnu:/usr/lib/x86_64-linux-gnu${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
+ICP_ODOMETRY_BINARY="$(ros2 pkg prefix rtabmap_odom)/lib/rtabmap_odom/icp_odometry"
+LINKAGE_ERRORS="$(
+  env LD_LIBRARY_PATH="${MAPPING_LD_LIBRARY_PATH}" \
+    ldd -r "${ICP_ODOMETRY_BINARY}" 2>&1 | \
+    grep -E 'not found|undefined symbol' || true
+)"
+if [[ -n "${LINKAGE_ERRORS}" ]]; then
+  echo "RTAB-Map runtime dependency check failed:" >&2
+  echo "${LINKAGE_ERRORS}" >&2
+  exit 1
+fi
 
 case "${MAPPING_RESET_DATABASE,,}" in
   true|false|1|0|yes|no|on|off) ;;
@@ -159,6 +176,7 @@ echo "TF owners: EKF odom -> base_footprint; RTAB-Map map -> odom"
 echo "PCD save path: ${MAPPING_PCD_PATH}"
 echo "RTAB-Map database: ${MAPPING_DB_PATH}"
 echo "Reset database: ${MAPPING_RESET_DATABASE}"
+echo "RTAB-Map runtime: Ubuntu system libraries take priority over MVS"
 echo "Temporary model directory: ${MAPPING_MODEL_DIR}"
 echo "Drive safety: /cmd_vel_safe -> watchdog -> /cmd_vel_drive"
 
@@ -171,7 +189,8 @@ python3 "${WATCHDOG_SCRIPT}" \
   --ros-args --params-file "${WATCHDOG_PARAMS}" &
 CMD_VEL_WATCHDOG_PID=$!
 
-ros2 launch metro_pointcloud_mapping graph_slam.launch.py \
+env LD_LIBRARY_PATH="${MAPPING_LD_LIBRARY_PATH}" \
+  ros2 launch metro_pointcloud_mapping graph_slam.launch.py \
   use_sim_time:=true \
   database_path:="${MAPPING_DB_PATH}" \
   pcd_path:="${MAPPING_PCD_PATH}" \
