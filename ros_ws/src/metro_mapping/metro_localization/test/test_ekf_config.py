@@ -1,9 +1,11 @@
 from pathlib import Path
+import runpy
 
 import yaml
 
 
 CONFIG_PATH = Path(__file__).parents[1] / "config" / "ekf_odom.yaml"
+LAUNCH_PATH = Path(__file__).parents[1] / "launch" / "odometry_fusion.launch.py"
 
 
 def load_parameters():
@@ -37,3 +39,18 @@ def test_ekf_uses_only_valid_baseline_measurements():
         11
     ]
     assert len(params["process_noise_covariance"]) == 225
+
+
+def test_lidar_pose_anchors_planar_drift_without_differentiating_noise():
+    launch_globals = runpy.run_path(str(LAUNCH_PATH))
+    params = launch_globals["LIDAR_ODOMETRY_PARAMETERS"]
+
+    assert params["odom1"] == "lidar/odom"
+    assert [index for index, enabled in enumerate(params["odom1_config"]) if enabled] == [
+        0,
+        1,
+        5,
+    ]
+    assert params["odom1_differential"] is False
+    assert params["odom1_relative"] is True
+    assert params["odom1_pose_rejection_threshold"] == 5.0

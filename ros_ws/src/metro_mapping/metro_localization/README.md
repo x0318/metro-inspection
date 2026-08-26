@@ -15,7 +15,7 @@ rate with `robot_localization`:
 
 Absolute IMU orientation is excluded because the current simulated message has
 zero orientation covariance. In graph-mapping mode, the launch also enables
-differential x/y/yaw input from `/lidar/odom`:
+relative-origin absolute x/y/yaw input from `/lidar/odom`:
 
 ```text
 /wheel/odom_raw + /odin1/imu + /lidar/odom
@@ -52,7 +52,9 @@ ros2 launch metro_localization odometry_fusion.launch.py \
 
 The graph-SLAM launch sets `fuse_lidar_odometry:=true` automatically. Do not
 enable it unless `/lidar/odom` is being published. If scan matching is lost, the
-EKF continues on wheel and IMU inputs instead of receiving a null ICP pose.
+EKF continues on wheel and IMU inputs instead of receiving a null ICP pose. The
+lidar pose is relative to its first valid sample, so it anchors lateral drift
+without importing the simulation world's absolute spawn position.
 
 ## 2D-to-3D damage localization
 

@@ -7,6 +7,32 @@ from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
 
+LIDAR_ODOMETRY_PARAMETERS = {
+    "odom1": "lidar/odom",
+    "odom1_config": [
+        True,
+        True,
+        False,
+        False,
+        False,
+        True,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+        False,
+    ],
+    "odom1_differential": False,
+    "odom1_relative": True,
+    "odom1_queue_size": 10,
+    "odom1_pose_rejection_threshold": 5.0,
+}
+
+
 def _is_true(value):
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
@@ -22,32 +48,7 @@ def _launch_ekf(context):
         "transform_time_offset": LaunchConfiguration("transform_time_offset"),
     }
     if fuse_lidar_odometry:
-        parameter_overrides.update(
-            {
-                "odom1": "lidar/odom",
-                "odom1_config": [
-                    True,
-                    True,
-                    False,
-                    False,
-                    False,
-                    True,
-                    False,
-                    False,
-                    False,
-                    False,
-                    False,
-                    False,
-                    False,
-                    False,
-                    False,
-                ],
-                "odom1_differential": True,
-                "odom1_relative": False,
-                "odom1_queue_size": 10,
-                "odom1_pose_rejection_threshold": 5.0,
-            }
-        )
+        parameter_overrides.update(LIDAR_ODOMETRY_PARAMETERS)
 
     return [
         Node(
@@ -105,8 +106,8 @@ def generate_launch_description():
                 "fuse_lidar_odometry",
                 default_value="false",
                 description=(
-                    "Fuse differential x/y/yaw from lidar odometry. Enable only "
-                    "when a scan-matching odometry node is running."
+                    "Fuse relative-origin absolute x/y/yaw from lidar odometry. "
+                    "Enable only when a scan-matching odometry node is running."
                 ),
             ),
             OpaqueFunction(function=_launch_ekf),
