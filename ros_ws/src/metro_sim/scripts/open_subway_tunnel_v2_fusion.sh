@@ -19,9 +19,10 @@ if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
   cat <<'EOF'
 Usage: open_subway_tunnel_v2_fusion.sh [gazebo_ros launch arguments]
 
-Starts one subway_v2 robot with Odin1 RGB, lidar, and IMU. The five unrelated
-RGB cameras are removed from a temporary runtime SDF. The script also starts the
-damage-fusion adapter; no second Gazebo world or robot is created.
+Starts one subway_v2 robot with Odin1 RGB/lidar/IMU and the upward Pitch camera.
+The four unrelated xj cameras are removed from a temporary runtime SDF. The
+script also starts the damage-fusion adapter; no second Gazebo world or robot
+is created.
 
 Environment overrides:
   ROS_DOMAIN_ID                         ROS 2 discovery domain (default: 70)
@@ -143,7 +144,7 @@ export GAZEBO_MODEL_PATH="${RUN_DIR}:${METRO_SIM_DIR}/models${GAZEBO_MODEL_PATH:
 
 echo "ROS_DOMAIN_ID=${ROS_DOMAIN_ID}"
 echo "GAZEBO_MASTER_URI=${GAZEBO_MASTER_URI}"
-echo "Fusion profile: Odin1 RGB + lidar + IMU, other cameras disabled"
+echo "Fusion profile: forward Odin1 + ceiling Pitch + lidar + IMU"
 echo "Temporary model directory: ${FUSION_MODEL_DIR}"
 echo "Odometry: /wheel/odom_raw + /odin1/imu -> /odometry/filtered"
 echo "Drive safety: /cmd_vel_safe -> watchdog -> /cmd_vel_drive"

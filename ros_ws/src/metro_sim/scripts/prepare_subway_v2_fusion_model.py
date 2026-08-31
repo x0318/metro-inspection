@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Create a temporary subway_v2 model for Odin1 RGB/lidar fusion."""
+"""Create a temporary subway_v2 model for front/ceiling damage fusion."""
 
 import argparse
 import copy
@@ -12,12 +12,12 @@ REMOVED_CAMERA_SENSOR_NAMES = {
     "xj2_camera_sensor",
     "xj3_camera_sensor",
     "xj4_camera_sensor",
-    "pitch_camera_sensor",
 }
 RETAINED_SENSOR_NAMES = {
     "odin1_lidar",
     "odin1_imu",
     "odin1_rgb_camera",
+    "pitch_camera_sensor",
 }
 EXPECTED_FULL_SENSOR_NAMES = REMOVED_CAMERA_SENSOR_NAMES | RETAINED_SENSOR_NAMES
 
@@ -25,7 +25,7 @@ EXPECTED_FULL_SENSOR_NAMES = REMOVED_CAMERA_SENSOR_NAMES | RETAINED_SENSOR_NAMES
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
-            "Derive an Odin1 RGB/lidar fusion model without copying runtime meshes."
+            "Derive an Odin1/pitch-camera fusion model without copying runtime meshes."
         )
     )
     parser.add_argument("source_sdf", type=Path)
@@ -82,7 +82,7 @@ def main() -> None:
     author = ET.SubElement(config, "author")
     ET.SubElement(author, "name").text = "metro-inspection"
     ET.SubElement(config, "description").text = (
-        "Temporary Odin1 RGB/lidar fusion profile derived from subway_v2."
+        "Temporary front and ceiling camera fusion profile derived from subway_v2."
     )
     config_tree = ET.ElementTree(copy.deepcopy(config))
     ET.indent(config_tree, space="  ")
@@ -92,7 +92,7 @@ def main() -> None:
 
     print(
         f"Prepared {output_dir}: removed {len(removed)} non-fusion cameras; "
-        "retained Odin1 RGB, lidar, and IMU"
+        "retained Odin1 RGB/lidar/IMU and the ceiling Pitch camera"
     )
 
 

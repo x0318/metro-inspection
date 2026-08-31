@@ -194,6 +194,12 @@ PRESERVED_JOINT_ORIGINS = {
         "0 0 0.077",
         "-1.5707963267949 -1.5707963267949 0",
     ),
+    # Articulate the pitch assembly 75 degrees above the robot +X axis. Its
+    # 34.5-degree vertical FOV then includes the tunnel crown at 90 degrees.
+    "pitch_joint": (
+        "0 0.01 0",
+        "-1.83259571459394 1.5707963267949 0",
+    ),
     "pitch_camera_joint": ("0 0 0", "0 0 0"),
     "pitch_camera_sensor_joint": (
         "-0.077300002798 0.003299999982 0.087818765",

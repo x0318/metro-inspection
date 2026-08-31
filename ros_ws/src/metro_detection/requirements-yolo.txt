@@ -1,0 +1,4 @@
+# Keep the Python ABI compatible with ROS 2 Humble's cv_bridge extension.
+numpy>=1.23.5,<2
+opencv-python>=4.6,<4.12
+ultralytics>=8.3,<9

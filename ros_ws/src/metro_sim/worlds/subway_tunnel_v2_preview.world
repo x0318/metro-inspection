@@ -53,7 +53,7 @@
       <uri>model://subway_v2_collision_preview</uri>
       <name>subway_v2</name>
       <!-- Treads settle onto rail-top z=0.574; flanges guide inside each rail. -->
-      <pose>19.2 0 0.5214 0 0 3.141592653589793</pose>
+      <pose>1.4 0 0.5214 0 0 0</pose>
       <static>false</static>
     </include>
   </world>

@@ -33,6 +33,8 @@ ODIN1_CAMERA_CALIBRATION = {
     "cy": 642.9091,
     "s": 0.2058,
 }
+PITCH_CAMERA_FORWARD = (0.258819045102521, 0.0, 0.965925826289068)
+PITCH_CAMERA_UP = (-0.965925826289068, 0.0, 0.258819045102521)
 WHEEL_NAMES = ("w1", "w2", "w3", "w4")
 LEFT_WHEEL_JOINTS = ("w2_joint", "w3_joint")
 RIGHT_WHEEL_JOINTS = ("w1_joint", "w4_joint")
@@ -420,23 +422,23 @@ def validate_generated_model(model: ET.Element, urdf_root: ET.Element) -> None:
     )
     pitch_forward_error = max(
         abs(pitch_camera_forward[index] - expected)
-        for index, expected in enumerate((-1.0, 0.0, 0.0))
+        for index, expected in enumerate(PITCH_CAMERA_FORWARD)
     )
     if pitch_forward_error > 0.002:
         raise ValueError(
-            "Pitch camera optical axis must point rearward "
-            "(base_footprint -X), "
+            "Pitch camera optical axis must point 75 degrees upward from "
+            "base_footprint +X, "
             f"found {pitch_camera_forward}"
         )
     pitch_camera_up = rotate_vector(pitch_camera_rotation, (0.0, 0.0, 1.0))
     pitch_up_error = max(
         abs(pitch_camera_up[index] - expected)
-        for index, expected in enumerate((0.0, 0.0, 1.0))
+        for index, expected in enumerate(PITCH_CAMERA_UP)
     )
     if pitch_up_error > 0.002:
         raise ValueError(
-            "Pitch camera image must be upright (camera +Z toward "
-            "base_footprint +Z), "
+            "Pitch camera image-up axis must match the 75-degree ceiling "
+            "inspection pose, "
             f"found {pitch_camera_up}"
         )
 

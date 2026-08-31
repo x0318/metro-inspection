@@ -32,7 +32,7 @@
     <include>
       <uri>model://subway_v2_mapping</uri>
       <name>subway_v2</name>
-      <pose>19.2 0 0.5214 0 0 3.141592653589793</pose>
+      <pose>1.4 0 0.5214 0 0 0</pose>
       <static>false</static>
     </include>
   </world>

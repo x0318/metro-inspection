@@ -85,7 +85,8 @@ orientations restored explicitly: `xj1` and `xj2` look outward to the tunnel
 sides, while `xj3` and `xj4` look down toward the track. Camera body frames are
 placed at the previously validated lens-center offsets instead of each STL's
 link origin. The pitch camera frame is located on the camera geometry embedded
-in `pitch.STL`, points toward `base_footprint -X`, and remains upright; Odin1's
+in `pitch.STL`; the complete Pitch assembly is articulated 75 degrees above
+`base_footprint +X`, so its vertical FOV includes the tunnel crown. Odin1's
 calibrated internal transform is unchanged.
 
 After changing the URDF or meshes, regenerate the Gazebo model from the
