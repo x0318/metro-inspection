@@ -1,0 +1,80 @@
+yolo_coverage_detector:
+  ros__parameters:
+    use_sim_time: true
+    camera_names: [xj1, xj2, xj3, xj4, pitch]
+    image_topics:
+      - /subway_v2/xj1/image_raw
+      - /subway_v2/xj2/image_raw
+      - /subway_v2/xj3/image_raw
+      - /subway_v2/xj4/image_raw
+      - /subway_v2/pitch_camera/image_raw
+    detections_topics:
+      - /damage_detections/xj1
+      - /damage_detections/xj2
+      - /damage_detections/xj3
+      - /damage_detections/xj4
+      - /damage_detections/pitch
+    annotated_image_topics:
+      - /damage_detection/xj1/annotated_image
+      - /damage_detection/xj2/annotated_image
+      - /damage_detection/xj3/annotated_image
+      - /damage_detection/xj4/annotated_image
+      - /damage_detection/pitch/annotated_image
+    confidence_threshold: 0.35
+    iou_threshold: 0.45
+    image_size: 640
+    device: auto
+    use_half_precision: false
+    fallback_to_cpu: true
+    max_inference_rate_hz: 3.0
+    publish_annotated_image: true
+    status_period_sec: 5.0
+
+simulation_coverage_evaluator:
+  ros__parameters:
+    use_sim_time: true
+    odometry_topic: /wheel/odom_raw
+    camera_names: [xj1, xj2, xj3, xj4, pitch]
+    detection_topics:
+      - /damage_detections/xj1
+      - /damage_detections/xj2
+      - /damage_detections/xj3
+      - /damage_detections/xj4
+      - /damage_detections/pitch
+    # Longitudinal sensor offsets from base_footprint. Pitch looks roughly
+    # 1 m ahead at the tunnel crown, so its effective coverage point is +1 m.
+    camera_offsets_m: [0.0, 0.0, -0.656894, -0.656894, 1.0]
+    image_widths: [1440, 1440, 1440, 1440, 1440]
+    image_heights: [1080, 1080, 1080, 1080, 1080]
+    defect_ids:
+      - sim_defect_01
+      - sim_defect_02
+      - sim_defect_03
+      - sim_defect_04
+      - sim_defect_05
+      - sim_defect_06
+      - sim_defect_07
+      - sim_defect_08
+      - sim_defect_09
+      - sim_defect_10
+    defect_chainages_m: [1.8, 6.6, 9.0, 10.2, 13.8, 16.51, 18.6, 23.4, 28.2, 30.6]
+    match_tolerance_m: 0.9
+    confirmation_hits: 3
+    coverage_topic: /simulation/defect_coverage
+    event_topic: /simulation/defect_events
+    publish_events: true
+    event_republish_period_sec: 5.0
+    status_period_sec: 2.0
+    model_name: yolov8n_sim_demo_best(1).pt
+
+simulation_coverage_driver:
+  ros__parameters:
+    use_sim_time: true
+    odometry_topic: /wheel/odom_raw
+    coverage_topic: /simulation/defect_coverage
+    command_topic: /cmd_vel_safe
+    speed_mps: 0.2
+    target_chainage_m: 31.0
+    startup_delay_sec: 2.0
+    timeout_sec: 240.0
+    command_rate_hz: 10.0

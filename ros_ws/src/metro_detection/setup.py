@@ -28,6 +28,10 @@ setup(
     tests_require=["pytest"],
     entry_points={
         "console_scripts": [
+            "simulation_coverage_evaluator = "
+            "metro_detection.simulation_coverage_evaluator:main",
+            "simulation_coverage_driver = "
+            "metro_detection.simulation_coverage_driver:main",
             "yolo_detector = metro_detection.yolo_detector:main",
         ],
     },

@@ -3,8 +3,10 @@
 import os
 import time
 import warnings
+from dataclasses import dataclass
+from functools import partial
 from pathlib import Path
-from typing import Mapping
+from typing import Mapping, Sequence
 
 import rclpy
 from cv_bridge import CvBridge
@@ -17,8 +19,27 @@ from vision_msgs.msg import Detection2DArray
 from .detection_conversion import DetectionBox, to_detection_array
 
 
+@dataclass
+class CameraStream:
+    """ROS interfaces and counters for one camera using the shared model."""
+
+    name: str
+    image_topic: str
+    detections_topic: str
+    annotated_image_topic: str
+    detection_pub: object = None
+    annotated_pub: object = None
+    image_sub: object = None
+    last_inference_monotonic: float = 0.0
+    received_frames: int = 0
+    processed_frames: int = 0
+    dropped_frames: int = 0
+    published_boxes: int = 0
+    inference_seconds: float = 0.0
+
+
 class YoloDetector(Node):
-    """Run YOLO on the newest available camera frame and publish 2D boxes."""
+    """Run one shared YOLO model on one or more camera image streams."""
 
     def __init__(self):
         super().__init__("yolo_detector")
@@ -28,6 +49,10 @@ class YoloDetector(Node):
         self.declare_parameter(
             "annotated_image_topic", "/damage_detection/annotated_image"
         )
+        self.declare_parameter("camera_names", [""])
+        self.declare_parameter("image_topics", [""])
+        self.declare_parameter("detections_topics", [""])
+        self.declare_parameter("annotated_image_topics", [""])
         self.declare_parameter("confidence_threshold", 0.35)
         self.declare_parameter("iou_threshold", 0.45)
         self.declare_parameter("image_size", 640)
@@ -69,29 +94,24 @@ class YoloDetector(Node):
         )
         self.cpu_fallback_used = False
         self.bridge = CvBridge()
-        self.last_inference_monotonic = 0.0
-        self.received_frames = 0
-        self.processed_frames = 0
-        self.dropped_frames = 0
-        self.published_boxes = 0
-        self.inference_seconds = 0.0
-
-        self.detection_pub = self.create_publisher(
-            Detection2DArray,
-            str(self.get_parameter("detections_topic").value),
-            qos_profile_sensor_data,
-        )
-        self.annotated_pub = self.create_publisher(
-            Image,
-            str(self.get_parameter("annotated_image_topic").value),
-            qos_profile_sensor_data,
-        )
-        self.image_sub = self.create_subscription(
-            Image,
-            str(self.get_parameter("image_topic").value),
-            self.on_image,
-            qos_profile_sensor_data,
-        )
+        self.streams = self.configure_streams()
+        for stream in self.streams:
+            stream.detection_pub = self.create_publisher(
+                Detection2DArray,
+                stream.detections_topic,
+                qos_profile_sensor_data,
+            )
+            stream.annotated_pub = self.create_publisher(
+                Image,
+                stream.annotated_image_topic,
+                qos_profile_sensor_data,
+            )
+            stream.image_sub = self.create_subscription(
+                Image,
+                stream.image_topic,
+                partial(self.on_image, stream),
+                qos_profile_sensor_data,
+            )
         status_period = max(
             1.0, float(self.get_parameter("status_period_sec").value)
         )
@@ -104,15 +124,73 @@ class YoloDetector(Node):
         self.get_logger().info(
             f"Device={self.device}; classes=[{class_labels}]"
         )
-        self.get_logger().info(
-            "Pipeline: "
-            f"{self.get_parameter('image_topic').value} -> "
-            f"{self.get_parameter('detections_topic').value}"
+        for stream in self.streams:
+            self.get_logger().info(
+                f"Pipeline[{stream.name}]: {stream.image_topic} -> "
+                f"{stream.detections_topic}"
+            )
+
+    @staticmethod
+    def _nonempty_strings(values: Sequence[object]) -> list[str]:
+        return [str(value).strip() for value in values if str(value).strip()]
+
+    def configure_streams(self) -> list[CameraStream]:
+        """Use array parameters when configured, otherwise retain legacy mode."""
+        names = self._nonempty_strings(
+            self.get_parameter("camera_names").value
         )
+        if not names:
+            return [
+                CameraStream(
+                    name="camera",
+                    image_topic=str(
+                        self.get_parameter("image_topic").value
+                    ).strip(),
+                    detections_topic=str(
+                        self.get_parameter("detections_topic").value
+                    ).strip(),
+                    annotated_image_topic=str(
+                        self.get_parameter("annotated_image_topic").value
+                    ).strip(),
+                )
+            ]
+
+        parameter_names = (
+            "image_topics",
+            "detections_topics",
+            "annotated_image_topics",
+        )
+        values = {
+            parameter_name: self._nonempty_strings(
+                self.get_parameter(parameter_name).value
+            )
+            for parameter_name in parameter_names
+        }
+        for parameter_name, configured in values.items():
+            if len(configured) != len(names):
+                raise ValueError(
+                    f"camera_names has {len(names)} entries, but "
+                    f"{parameter_name} has {len(configured)}"
+                )
+        if len(set(names)) != len(names):
+            raise ValueError("camera_names must be unique")
+        if len(set(values["image_topics"])) != len(names):
+            raise ValueError("image_topics must be unique")
+        if len(set(values["detections_topics"])) != len(names):
+            raise ValueError("detections_topics must be unique")
+
+        return [
+            CameraStream(
+                name=name,
+                image_topic=values["image_topics"][index],
+                detections_topic=values["detections_topics"][index],
+                annotated_image_topic=values["annotated_image_topics"][index],
+            )
+            for index, name in enumerate(names)
+        ]
 
     def resolve_device(self, requested: str) -> str:
         """Resolve `auto` and retain explicit Ultralytics device syntax."""
-
         normalized = requested.strip().lower()
         if normalized in ("", "auto"):
             return "0" if self.torch.cuda.is_available() else "cpu"
@@ -129,20 +207,18 @@ class YoloDetector(Node):
             )
         return normalized
 
-    def should_process_frame(self) -> bool:
-        """Limit inference rate without queuing old high-resolution images."""
-
+    def should_process_frame(self, stream: CameraStream) -> bool:
+        """Limit each camera independently without queuing old images."""
         max_rate = float(self.get_parameter("max_inference_rate_hz").value)
         now = time.monotonic()
-        if max_rate > 0.0 and self.last_inference_monotonic > 0.0:
-            if now - self.last_inference_monotonic < 1.0 / max_rate:
+        if max_rate > 0.0 and stream.last_inference_monotonic > 0.0:
+            if now - stream.last_inference_monotonic < 1.0 / max_rate:
                 return False
-        self.last_inference_monotonic = now
+        stream.last_inference_monotonic = now
         return True
 
     def predict(self, bgr_image):
         """Run inference and retry once on CPU after a CUDA runtime failure."""
-
         kwargs = {
             "source": bgr_image,
             "conf": float(self.get_parameter("confidence_threshold").value),
@@ -179,7 +255,6 @@ class YoloDetector(Node):
     @staticmethod
     def result_boxes(result):
         """Detach Ultralytics tensors before creating ROS messages."""
-
         if result.boxes is None or len(result.boxes) == 0:
             return []
         xyxy = result.boxes.xyxy.detach().cpu().tolist()
@@ -199,39 +274,43 @@ class YoloDetector(Node):
             )
         ]
 
-    def publish_empty(self, image: Image):
-        self.detection_pub.publish(
+    def publish_empty(self, stream: CameraStream, image: Image):
+        stream.detection_pub.publish(
             to_detection_array(image.header, [], self.model.names)
         )
 
-    def on_image(self, image: Image):
-        self.received_frames += 1
-        if not self.should_process_frame():
-            self.dropped_frames += 1
+    def on_image(self, stream: CameraStream, image: Image):
+        stream.received_frames += 1
+        if not self.should_process_frame(stream):
+            stream.dropped_frames += 1
             return
 
         try:
             bgr = self.bridge.imgmsg_to_cv2(image, desired_encoding="bgr8")
         except Exception as exc:
-            self.get_logger().error(f"Cannot convert input image: {exc}")
-            self.publish_empty(image)
+            self.get_logger().error(
+                f"Cannot convert input image from {stream.name}: {exc}"
+            )
+            self.publish_empty(stream, image)
             return
 
         started = time.perf_counter()
         try:
             result = self.predict(bgr)
         except Exception as exc:
-            self.get_logger().error(f"YOLO inference failed: {exc}")
-            self.publish_empty(image)
+            self.get_logger().error(
+                f"YOLO inference failed for {stream.name}: {exc}"
+            )
+            self.publish_empty(stream, image)
             return
         elapsed = time.perf_counter() - started
 
         boxes = self.result_boxes(result)
         output = to_detection_array(image.header, boxes, self.model.names)
-        self.detection_pub.publish(output)
-        self.processed_frames += 1
-        self.published_boxes += len(output.detections)
-        self.inference_seconds += elapsed
+        stream.detection_pub.publish(output)
+        stream.processed_frames += 1
+        stream.published_boxes += len(output.detections)
+        stream.inference_seconds += elapsed
 
         if bool(self.get_parameter("publish_annotated_image").value):
             try:
@@ -239,26 +318,29 @@ class YoloDetector(Node):
                     result.plot(), encoding="bgr8"
                 )
                 annotated.header = image.header
-                self.annotated_pub.publish(annotated)
+                stream.annotated_pub.publish(annotated)
             except Exception as exc:
                 self.get_logger().warning(
-                    f"Cannot publish annotated image: {exc}"
+                    f"Cannot publish {stream.name} annotated image: {exc}"
                 )
 
     def log_status(self):
-        average_ms = (
-            1000.0 * self.inference_seconds / self.processed_frames
-            if self.processed_frames
-            else 0.0
-        )
+        summaries = []
+        for stream in self.streams:
+            average_ms = (
+                1000.0 * stream.inference_seconds / stream.processed_frames
+                if stream.processed_frames
+                else 0.0
+            )
+            summaries.append(
+                f"{stream.name}:received={stream.received_frames},"
+                f"processed={stream.processed_frames},"
+                f"rate_limited={stream.dropped_frames},"
+                f"boxes={stream.published_boxes},"
+                f"average={average_ms:.1f}ms"
+            )
         self.get_logger().info(
-            "YOLO status: "
-            f"received={self.received_frames}, "
-            f"processed={self.processed_frames}, "
-            f"rate_limited={self.dropped_frames}, "
-            f"boxes={self.published_boxes}, "
-            f"average_inference={average_ms:.1f} ms, "
-            f"device={self.device}"
+            f"YOLO status ({self.device}): " + "; ".join(summaries)
         )
 
 

@@ -28,7 +28,6 @@ ClassNames = Union[Sequence[str], Mapping[int, str]]
 
 def class_name(class_names: ClassNames, index: int) -> str:
     """Return a stable class label for list- or dict-based model metadata."""
-
     if isinstance(class_names, Mapping):
         return str(class_names.get(index, index))
     if 0 <= index < len(class_names):
@@ -42,7 +41,6 @@ def to_detection_array(
     class_names: ClassNames,
 ) -> Detection2DArray:
     """Create a standard Detection2DArray while preserving the image header."""
-
     output = Detection2DArray()
     output.header = header
 

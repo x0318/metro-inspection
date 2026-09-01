@@ -55,6 +55,61 @@ otherwise modify that environment.
 
 ## Build and run
 
+### Ten-site simulation coverage pass
+
+The coverage entry point uses one YOLO model instance for XJ1-XJ4 and Pitch.
+It starts a bounded drive at `0.2 m/s` and stops when all ten reference sites
+are confirmed or the robot reaches `x=31 m`:
+
+```bash
+cd /home/jo/my-project/metro-inspection
+./ros_ws/src/metro_sim/scripts/open_subway_tunnel_v2_yolo_coverage.sh gui:=true
+```
+
+Each site requires boxes from three unique source-image timestamps. Reference
+positions are used only to match and score real YOLO output; they never create
+a box. The result is therefore marked `truth_assisted` and is published on a
+simulation-only interface:
+
+```text
+/simulation/defect_coverage  std_msgs/msg/String
+/simulation/defect_events    metro_inspection_interfaces/msg/DefectEvent
+```
+
+Inspect the complete result in another terminal:
+
+```bash
+source /opt/ros/humble/setup.bash
+source /home/jo/my-project/metro-inspection/ros_ws/install/setup.bash
+export ROS_DOMAIN_ID=70
+
+ros2 topic echo /simulation/defect_coverage --once --full-length
+```
+
+To show the ten stable simulation events in the dashboard, select the explicit
+simulation topic. Confirmed events are periodically republished with stable
+IDs, so starting the dashboard after the pass does not increase the stored
+count beyond ten:
+
+```bash
+cd /home/jo/my-project/metro-inspection
+METRO_DASHBOARD_DEFECT_TOPIC=/simulation/defect_events \
+  ./scripts/open_defect_dashboard.sh
+```
+
+Disable automatic movement when checking camera placement manually:
+
+```bash
+METRO_COVERAGE_AUTO_DRIVE=false \
+  ./ros_ws/src/metro_sim/scripts/open_subway_tunnel_v2_yolo_coverage.sh gui:=true
+```
+
+This pass measures coverage of the current simulation, not detector accuracy.
+A `10/10` result does not replace an independently labeled validation set, and
+the truth-assisted event topic must not be used as a production detector feed.
+
+### Existing two-camera profile
+
 Start the full fusion simulation and both YOLO detectors together:
 
 ```bash

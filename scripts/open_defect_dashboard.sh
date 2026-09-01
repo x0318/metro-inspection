@@ -23,9 +23,12 @@ export METRO_DASHBOARD_DIR="${PROJECT_DIR}/dashboard"
 export METRO_DASHBOARD_BIND_ADDRESS="${METRO_DASHBOARD_BIND_ADDRESS:-127.0.0.1}"
 export METRO_DASHBOARD_PORT="${METRO_DASHBOARD_PORT:-8088}"
 export ROS_DOMAIN_ID="${ROS_DOMAIN_ID:-70}"
+DEFECT_TOPIC="${METRO_DASHBOARD_DEFECT_TOPIC:-defect_events}"
 
 echo "病害巡检平台：http://${METRO_DASHBOARD_BIND_ADDRESS}:${METRO_DASHBOARD_PORT}"
 echo "ROS_DOMAIN_ID=${ROS_DOMAIN_ID}"
+echo "病害话题=${DEFECT_TOPIC}"
 echo "按 Ctrl+C 停止服务"
 
-exec ros2 run metro_dashboard_bridge defect_event_bridge
+exec ros2 run metro_dashboard_bridge defect_event_bridge \
+  --ros-args -p defect_topic:="${DEFECT_TOPIC}"
