@@ -1,5 +1,6 @@
 import threading
 from functools import partial
+from pathlib import Path
 from typing import Dict, List
 
 import rclpy
@@ -51,9 +52,25 @@ class DefectEventBridgeNode(Node):
             "maximum_records",
             500,
             ParameterDescriptor(
-                description="Maximum number of defect events retained in memory.",
+                description="Maximum number of defect events retained per session.",
                 read_only=True,
                 integer_range=[IntegerRange(from_value=1, to_value=100000, step=1)],
+            ),
+        )
+        self.declare_parameter(
+            "database_path",
+            str(Path.home() / ".local/share/metro-inspection/defects.sqlite3"),
+            ParameterDescriptor(
+                description="SQLite database used for persistent defect events.",
+                read_only=True,
+            ),
+        )
+        self.declare_parameter(
+            "inspection_session_id",
+            "simulation",
+            ParameterDescriptor(
+                description="Session namespace used to isolate defect event records.",
+                read_only=True,
             ),
         )
         for camera_id, _, topic in DEFAULT_CAMERAS:
@@ -130,7 +147,15 @@ class DefectEventBridgeNode(Node):
         if not topic:
             raise ValueError("defect_topic must not be empty")
         maximum_records = int(self.get_parameter("maximum_records").value)
-        self.store = DefectStore(maximum_records=maximum_records)
+        database_path = str(self.get_parameter("database_path").value).strip()
+        inspection_session_id = str(
+            self.get_parameter("inspection_session_id").value
+        ).strip()
+        self.store = DefectStore(
+            maximum_records=maximum_records,
+            database_path=database_path,
+            session_id=inspection_session_id,
+        )
         self._statistics_lock = threading.Lock()
         self._accepted_count = 0
         self._rejected_count = 0
@@ -190,6 +215,11 @@ class DefectEventBridgeNode(Node):
             )
         self.get_logger().info(
             f"Defect event bridge listening on '{topic}' with reliable QoS"
+        )
+        self.get_logger().info(
+            "Persistent defect store: "
+            f"database='{self.store.database_path}', "
+            f"session='{self.store.session_id}', records={self.store.count()}"
         )
         self.get_logger().info(
             "Camera bridge listening on: "
@@ -253,6 +283,7 @@ def main(args=None) -> None:
     except (KeyboardInterrupt, ExternalShutdownException):
         pass
     finally:
+        node.store.close()
         node.destroy_node()
         if rclpy.ok():
             rclpy.shutdown()

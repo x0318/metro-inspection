@@ -17,7 +17,8 @@
 
 同一个 `event_id` 可以先发布二维结果，随后由三维定位或工程语义节点发布包含更多字段的
 更新结果。存储层会替换该事件，而不是重复生成多条病害记录。默认最多保留 500 条记录，
-当前阶段为进程内存储，服务重启后清空。
+并持久化到 `~/.local/share/metro-inspection/defects.sqlite3`；服务重启后仍会加载原记录。
+`inspection_session_id` 用于隔离不同巡检批次，同一数据库中的不同会话不会互相覆盖。
 
 ```text
 /subway_v2/{xj1,xj2,xj3,xj4,pitch_camera}/image_raw/compressed
@@ -68,16 +69,26 @@ ROS domain: 70
 打开 HTTP 根路径即可进入巡检工作台。当前页面只使用真实存在的健康状态、相机和病害
 查询接口；导航和病害截图模块将在后续步骤单独迁移。
 
-一键启动脚本默认使用与完整传感器仿真一致的 `ROS_DOMAIN_ID=70`。可以使用环境变量修改
-ROS domain 和 HTTP 地址，使用 ROS 参数或 remap 修改话题：
+一键启动脚本默认使用与完整传感器仿真一致的 `ROS_DOMAIN_ID=70`。脚本参数可以通过环境
+变量覆盖，例如为一次新巡检使用独立的会话名称：
 
 ```bash
 ROS_DOMAIN_ID=70 \
 METRO_DASHBOARD_BIND_ADDRESS=0.0.0.0 \
 METRO_DASHBOARD_PORT=8089 \
+METRO_DASHBOARD_DATABASE_PATH=~/.local/share/metro-inspection/defects.sqlite3 \
+METRO_INSPECTION_SESSION_ID=inspection-2026-09-02 \
+bash scripts/open_defect_dashboard.sh
+```
+
+直接使用 `ros2 run` 时，应通过 ROS 参数修改数据库、会话、话题和相机配置：
+
+```bash
 ros2 run metro_dashboard_bridge defect_event_bridge \
   --ros-args \
   -p defect_topic:=inspection/defect_events \
+  -p database_path:=/home/jo/.local/share/metro-inspection/defects.sqlite3 \
+  -p inspection_session_id:=inspection-2026-09-02 \
   -p camera_topics.xj1:=/robot/xj1/image/compressed \
   -p camera_preview_jpeg_quality:=55 \
   -p camera_stream_default_fps:=6.0
@@ -100,10 +111,12 @@ GET /api/cameras/{camera_id}/stream.mjpg?fps=6
 相机流只允许访问节点参数中明确配置的五路相机，`fps` 最终不会超过
 `camera_stream_max_fps`。
 
-## 默认相机参数
+## 主要参数
 
 | 参数 | 默认值 |
 |---|---|
+| `database_path` | `~/.local/share/metro-inspection/defects.sqlite3` |
+| `inspection_session_id` | `simulation` |
 | `camera_topics.xj1` | `/subway_v2/xj1/image_raw/compressed` |
 | `camera_topics.xj2` | `/subway_v2/xj2/image_raw/compressed` |
 | `camera_topics.xj3` | `/subway_v2/xj3/image_raw/compressed` |
