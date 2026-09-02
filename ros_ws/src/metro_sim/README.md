@@ -58,9 +58,9 @@ colcon build --symlink-install \
 source install/setup.bash
 ```
 
-建图入口会同时启动点云质量门控、ICP 激光里程计、轮速/IMU/ICP EKF、
-RTAB-Map 位姿图与回环检测、优化点云重组和 PCD 保存。默认 Gazebo 端口
-为 `11372`：
+建图入口会同时启动点云质量门控、运动关键帧门控、ICP 激光里程计、
+轮速/IMU/ICP EKF、RTAB-Map 位姿图与回环检测、优化点云重组和 PCD 保存。
+默认 Gazebo 端口为 `11372`：
 
 ```bash
 cd ~/my-project/metro-inspection
@@ -105,6 +105,20 @@ cd ~/my-project/metro-inspection
 ./ros_ws/src/metro_sim/scripts/check_subway_v2_slam.sh
 ```
 
+自动验收默认还会检查 `/mapping/mapGraph` 中累计的空间回环约束。车辆应先离开
+起点至少 `5 m`，再返回起点附近；只有节点、话题、TF 和保存链路正常，但没有
+有效回环时，验收仍会失败。仅排查启动链路时可显式跳过回环检查：
+
+```bash
+SUBWAY_MAPPING_REQUIRE_LOOP_CLOSURE=false \
+  ./ros_ws/src/metro_sim/scripts/check_subway_v2_slam.sh
+```
+
+回环验收阈值可通过 `SUBWAY_MAPPING_MIN_PROXIMITY_LINKS`、
+`SUBWAY_MAPPING_MIN_REVISIT_LINKS`、`SUBWAY_MAPPING_MAX_REVISIT_TRANSLATION_M`
+和 `SUBWAY_MAPPING_MIN_TRAJECTORY_EXTENT_M` 调整。默认要求至少一条空间回环边、
+至少一条相对位移不超过 `0.5 m` 的重访边，以及至少 `5 m` 的轨迹范围。
+
 默认结果是 `results/maps/subway_v2_optimized.pcd` 和
 `results/maps/subway_v2_rtabmap.db`。PCD 是按优化后位姿重组的点云；数据库
 保存关键帧、约束和图状态。通过 `SUBWAY_MAPPING_PCD_PATH` 与
@@ -115,6 +129,19 @@ cd ~/my-project/metro-inspection
 SUBWAY_MAPPING_RESET_DATABASE=false \
   ./ros_ws/src/metro_sim/scripts/open_subway_tunnel_v2_mapping.sh
 ```
+
+地图拼接器复用 RTAB-Map 已随关键帧保存的 `5 cm` 局部栅格，并按优化后位姿
+重新组合它们；不会把临时当前帧节点反复加入累计点云，也会释放无人订阅的地图
+缓存。ICP 始终使用 `/mapping/cloud_valid` 的全部有效帧，`motion_cloud_gate`
+则根据 `/odometry/filtered` 只把累计平移达到 `0.35 m` 或旋转达到 `0.10 rad`
+的点云送入 `/mapping/cloud_keyframe` 和 RTAB-Map，避免车辆静止时仍反复生成临时
+节点。关键帧扫描入库前按 `5 cm` 体素化，与最终地图分辨率一致。
+`map_data_gate` 还会过滤位置不变、只有临时节点 ID 变化的重复图消息；
+累计平移达到 `1 cm`、旋转达到 `0.005 rad`，或者稳定关键帧集合发生变化时会
+立即放行。因此车辆静止时不会重复解压原始雷达帧和重新生成局部栅格。拼接器异常
+退出后，启动文件默认等待 `15 s` 并仅自动重启一次；若再次失败，核心 SLAM
+位姿图继续运行，避免在内存压力下无限重启。高级排障时可通过启动参数
+`map_assembler_max_restarts` 和 `map_assembler_restart_delay` 覆盖这两个默认值。
 
 当前仿真录包存在大量空点云，因此门控默认要求每帧至少 5000 点。该数值
 只针对当前仿真数据，迁移真机后必须按真实雷达有效点数重新统计和调参。

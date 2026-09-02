@@ -19,8 +19,12 @@ from launch.actions import (
     DeclareLaunchArgument,
     GroupAction,
     IncludeLaunchDescription,
+    LogInfo,
     OpaqueFunction,
+    RegisterEventHandler,
+    TimerAction,
 )
+from launch.event_handlers import OnProcessExit
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch_ros.actions import Node
@@ -31,18 +35,61 @@ def _is_true(value):
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
+class _RestartBudget:
+    def __init__(self, limit):
+        if limit < 0:
+            raise ValueError("restart limit must be non-negative")
+        self.limit = limit
+        self.used = 0
+
+    def take(self, return_code):
+        if return_code == 0 or self.used >= self.limit:
+            return False
+        self.used += 1
+        return True
+
+
+def _non_negative_int(context, name):
+    value = LaunchConfiguration(name).perform(context)
+    try:
+        parsed = int(value)
+    except ValueError as error:
+        raise ValueError(f"{name} must be a non-negative integer") from error
+    if parsed < 0:
+        raise ValueError(f"{name} must be a non-negative integer")
+    return parsed
+
+
+def _non_negative_float(context, name):
+    value = LaunchConfiguration(name).perform(context)
+    try:
+        parsed = float(value)
+    except ValueError as error:
+        raise ValueError(f"{name} must be a non-negative number") from error
+    if parsed < 0.0:
+        raise ValueError(f"{name} must be a non-negative number")
+    return parsed
+
+
 def _launch_mapping(context):
     config_file = LaunchConfiguration("config_file")
     ekf_config_file = LaunchConfiguration("ekf_config_file")
     use_sim_time = LaunchConfiguration("use_sim_time")
     cloud_topic = LaunchConfiguration("cloud_topic")
     validated_cloud_topic = LaunchConfiguration("validated_cloud_topic")
+    keyframe_cloud_topic = LaunchConfiguration("keyframe_cloud_topic")
     raw_odom_topic = LaunchConfiguration("raw_odom_topic")
     imu_topic = LaunchConfiguration("imu_topic")
     lidar_odom_topic = LaunchConfiguration("lidar_odom_topic")
     filtered_odom_topic = LaunchConfiguration("filtered_odom_topic")
     database_path = LaunchConfiguration("database_path")
     pcd_path = LaunchConfiguration("pcd_path")
+    map_assembler_restart_delay = _non_negative_float(
+        context, "map_assembler_restart_delay"
+    )
+    map_assembler_restart_budget = _RestartBudget(
+        _non_negative_int(context, "map_assembler_max_restarts")
+    )
 
     rtabmap_arguments = []
     if _is_true(LaunchConfiguration("reset_database").perform(context)):
@@ -78,6 +125,57 @@ def _launch_mapping(context):
         ],
     )
 
+    def make_map_assembler():
+        return Node(
+            package="rtabmap_util",
+            executable="map_assembler",
+            namespace="mapping",
+            name="map_assembler",
+            output="screen",
+            parameters=[config_file, {"use_sim_time": use_sim_time}],
+            remappings=[("mapData", "mapData_significant")],
+        )
+
+    def on_map_assembler_exit(event, _context):
+        if not map_assembler_restart_budget.take(event.returncode):
+            if event.returncode != 0:
+                return [
+                    LogInfo(
+                        msg=(
+                            "map_assembler restart budget exhausted; "
+                            "leaving the rest of the SLAM pipeline online"
+                        )
+                    )
+                ]
+            return []
+
+        replacement = make_map_assembler()
+        return [
+            LogInfo(
+                msg=(
+                    "map_assembler exited with code "
+                    f"{event.returncode}; restart "
+                    f"{map_assembler_restart_budget.used}/"
+                    f"{map_assembler_restart_budget.limit} after "
+                    f"{map_assembler_restart_delay:.1f} seconds"
+                )
+            ),
+            TimerAction(
+                period=map_assembler_restart_delay,
+                actions=[
+                    RegisterEventHandler(
+                        OnProcessExit(
+                            target_action=replacement,
+                            on_exit=on_map_assembler_exit,
+                        )
+                    ),
+                    replacement,
+                ],
+            ),
+        ]
+
+    map_assembler = make_map_assembler()
+
     return [
         Node(
             package="metro_pointcloud_mapping",
@@ -106,6 +204,19 @@ def _launch_mapping(context):
         ),
         odometry_fusion,
         Node(
+            package="metro_pointcloud_mapping",
+            executable="motion_cloud_gate",
+            namespace="mapping",
+            name="motion_cloud_gate",
+            output="screen",
+            parameters=[config_file, {"use_sim_time": use_sim_time}],
+            remappings=[
+                ("cloud_in", validated_cloud_topic),
+                ("odom", filtered_odom_topic),
+                ("cloud_out", keyframe_cloud_topic),
+            ],
+        ),
+        Node(
             package="rtabmap_slam",
             executable="rtabmap",
             namespace="mapping",
@@ -119,20 +230,31 @@ def _launch_mapping(context):
                 },
             ],
             remappings=[
-                ("scan_cloud", validated_cloud_topic),
+                ("scan_cloud", keyframe_cloud_topic),
                 ("odom", filtered_odom_topic),
                 ("imu", "/mapping/imu_not_used"),
             ],
             arguments=rtabmap_arguments,
         ),
         Node(
-            package="rtabmap_util",
-            executable="map_assembler",
+            package="metro_pointcloud_mapping",
+            executable="map_data_gate",
             namespace="mapping",
-            name="map_assembler",
+            name="map_data_gate",
             output="screen",
             parameters=[config_file, {"use_sim_time": use_sim_time}],
+            remappings=[
+                ("map_data_in", "mapData"),
+                ("map_data_out", "mapData_significant"),
+            ],
         ),
+        RegisterEventHandler(
+            OnProcessExit(
+                target_action=map_assembler,
+                on_exit=on_map_assembler_exit,
+            )
+        ),
+        map_assembler,
         Node(
             package="metro_pointcloud_mapping",
             executable="optimized_cloud_saver",
@@ -171,6 +293,9 @@ def generate_launch_description():
                 "validated_cloud_topic", default_value="/mapping/cloud_valid"
             ),
             DeclareLaunchArgument(
+                "keyframe_cloud_topic", default_value="/mapping/cloud_keyframe"
+            ),
+            DeclareLaunchArgument(
                 "raw_odom_topic", default_value="/wheel/odom_raw"
             ),
             DeclareLaunchArgument("imu_topic", default_value="/odin1/imu"),
@@ -200,6 +325,16 @@ def generate_launch_description():
                 "ekf_transform_time_offset",
                 default_value="0.05",
                 description="Future offset for odom TF in simulation.",
+            ),
+            DeclareLaunchArgument(
+                "map_assembler_max_restarts",
+                default_value="1",
+                description="Maximum automatic restarts after an abnormal exit.",
+            ),
+            DeclareLaunchArgument(
+                "map_assembler_restart_delay",
+                default_value="15.0",
+                description="Delay before the bounded map assembler restart.",
             ),
             OpaqueFunction(function=_launch_mapping),
         ]
