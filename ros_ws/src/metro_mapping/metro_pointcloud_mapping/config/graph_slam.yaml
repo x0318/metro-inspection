@@ -37,6 +37,12 @@
     "OdomF2M/ScanMaxSize": "30000"
     "OdomF2M/BundleAdjustment": "false"
 
+/mapping/motion_cloud_gate:
+  ros__parameters:
+    translation_threshold_m: 0.35
+    rotation_threshold_rad: 0.10
+    maximum_odom_age_s: 0.25
+
 /mapping/rtabmap:
   ros__parameters:
     subscribe_depth: false
@@ -61,8 +67,9 @@
     "Mem/InitWMWithAllNodes": "false"
     "Mem/NotLinkedNodesKept": "false"
     "Mem/STMSize": "30"
+    "Mem/LaserScanVoxelSize": "0.05"
     "Rtabmap/DetectionRate": "2.0"
-    "RGBD/LinearUpdate": "0.15"
+    "RGBD/LinearUpdate": "0.30"
     "RGBD/AngularUpdate": "0.08"
     "RGBD/NeighborLinkRefining": "true"
     "RGBD/ProximityBySpace": "true"
@@ -102,10 +109,10 @@
 /mapping/map_assembler:
   ros__parameters:
     rtabmap: rtabmap
-    regenerate_local_grids: true
+    regenerate_local_grids: false
     latch: true
-    map_cleanup: false
-    map_always_update: true
+    map_cleanup: true
+    map_always_update: false
     cloud_output_voxelized: true
     "Grid/Sensor": "0"
     "Grid/3D": "true"
@@ -117,6 +124,11 @@
     "Grid/FootprintHeight": "1.5"
     "Grid/NoiseFilteringRadius": "0.10"
     "Grid/NoiseFilteringMinNeighbors": "2"
+
+/mapping/map_data_gate:
+  ros__parameters:
+    translation_threshold_m: 0.01
+    rotation_threshold_rad: 0.005
 
 /mapping/optimized_cloud_saver:
   ros__parameters:

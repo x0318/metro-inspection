@@ -10,6 +10,7 @@ input:   /odin1/cloud_raw       sensor_msgs/msg/PointCloud2
 input:   /wheel/odom_raw        nav_msgs/msg/Odometry
 input:   /odin1/imu             sensor_msgs/msg/Imu
 output:  /mapping/cloud_valid   sensor_msgs/msg/PointCloud2
+output:  /mapping/cloud_keyframe sensor_msgs/msg/PointCloud2
 output:  /lidar/odom            nav_msgs/msg/Odometry
 output:  /odometry/filtered     nav_msgs/msg/Odometry
 output:  /mapping/cloud_map     sensor_msgs/msg/PointCloud2
@@ -23,6 +24,14 @@ recorded baseline contained 617 empty frames out of 718, and only 64 frames had
 more than 5000 points. This value is a dataset-specific guardrail. For hardware,
 measure the normal valid point count first, then set `minimum_points` below the
 lower tail of valid scans so real geometry is not discarded.
+
+`motion_cloud_gate` leaves `/mapping/cloud_valid` unchanged for 10 Hz ICP, but
+only forwards a cloud to `/mapping/cloud_keyframe` after the fused odometry has
+moved `0.35 m` or rotated `0.10 rad`. This prevents RTAB-Map from repeatedly
+creating and discarding temporary nodes while the robot is stationary. RTAB-Map
+also voxel-filters the scan stored in each signature at `0.05 m`, equal to the
+final map cell size, so memory is reduced without making the exported map
+coarser than its configured resolution.
 
 ICP adds short-range scan constraints and uses the EKF transform as its motion
 guess. If ICP loses registration it publishes no invalid odometry; the EKF keeps
