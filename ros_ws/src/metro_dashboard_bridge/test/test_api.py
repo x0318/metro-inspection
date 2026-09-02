@@ -67,6 +67,7 @@ def test_dashboard_is_served_without_shadowing_api(tmp_path) -> None:
     page = client.get("/")
     assert page.status_code == 200
     assert "Metro dashboard" in page.text
+    assert page.headers["cache-control"] == "no-store"
     assert client.get("/api/health").status_code == 200
 
 

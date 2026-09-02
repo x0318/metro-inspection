@@ -35,6 +35,14 @@ def create_app(
         else None
     )
 
+    @app.middleware("http")
+    async def disable_dashboard_asset_cache(request, call_next):
+        response = await call_next(request)
+        path = request.url.path
+        if path == "/" or path.endswith(".html") or path.startswith("/assets/"):
+            response.headers["Cache-Control"] = "no-store"
+        return response
+
     @app.get("/api/health")
     async def health() -> JSONResponse:
         statistics = (

@@ -324,9 +324,9 @@ button.camera-media { cursor: zoom-in; }
 
 @media print {
   @page { size: A4 landscape; margin: 12mm; }
-  body { background: white; }
-  #app { display: none !important; }
-  #print-report { display: block; color: #111; font-family: Arial, "Microsoft YaHei", sans-serif; }
+  html, body, #app { background: white !important; }
+  #app > .app-header, #app > .page-shell { display: none !important; }
+  #print-report { display: block !important; color: #111; font-family: Arial, "Microsoft YaHei", sans-serif; }
   #print-report header { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 2px solid #111; }
   #print-report h1 { margin: 0 0 8px; font-size: 20px; }
   #print-report p { margin: 0; font-size: 11px; }

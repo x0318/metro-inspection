@@ -11,6 +11,8 @@
   <exec_depend>metro_inspection_interfaces</exec_depend>
   <exec_depend>python3-numpy</exec_depend>
   <exec_depend>python3-opencv</exec_depend>
+  <exec_depend>python3-pyqt5</exec_depend>
+  <exec_depend>python3-pyqt5.qtwebengine</exec_depend>
   <exec_depend>python3-fastapi</exec_depend>
   <exec_depend>python3-uvicorn</exec_depend>
   <exec_depend>rcl_interfaces</exec_depend>

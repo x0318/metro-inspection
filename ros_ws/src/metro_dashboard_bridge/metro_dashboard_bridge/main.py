@@ -66,6 +66,7 @@ def main(args=None) -> None:
         uvicorn.Server(config).run()
     finally:
         executor.shutdown()
+        node.store.close()
         node.destroy_node()
         if rclpy.ok():
             rclpy.shutdown()
