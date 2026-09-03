@@ -24,13 +24,6 @@ CAMERA_SENSOR_NAMES = {
     "xj4_camera_sensor",
     "pitch_camera_sensor",
 }
-INSPECTION_CAMERA_SENSOR_NAMES = (
-    "xj1_camera_sensor",
-    "xj2_camera_sensor",
-    "xj3_camera_sensor",
-    "xj4_camera_sensor",
-    "pitch_camera_sensor",
-)
 ODIN1_CAMERA_CALIBRATION = {
     "width": 1600.0,
     "height": 1296.0,
@@ -40,22 +33,52 @@ ODIN1_CAMERA_CALIBRATION = {
     "cy": 642.9091,
     "s": 0.2058,
 }
-# Simulation-only wide-angle experiment. These values are scaled from the
-# original Hikrobot calibration and are not a replacement for bench calibration.
-INSPECTION_CAMERA_CALIBRATION = {
+INSPECTION_CAMERA_COMMON = {
     "width": 1440.0,
     "height": 1080.0,
-    # Gazebo Classic stores camera HFOV at six-decimal precision.
-    "horizontal_fov": 0.959931,
-    "fx": 1383.107281011723,
-    "fy": 1383.1940097211066,
     "cx": 696.2963,
     "cy": 547.75936,
     "s": 0.0,
-    "P_fx": 1363.000326863712,
-    "P_fy": 1370.0028058793007,
     "P_cx": 693.56983,
     "P_cy": 545.3029,
+}
+# Simulation-only side-wall coverage. Values are scaled from the Hikrobot
+# calibration; the real cameras still require individual bench calibration.
+SIDE_WALL_CAMERA_CALIBRATION = {
+    **INSPECTION_CAMERA_COMMON,
+    # Gazebo Classic stores camera HFOV at six-decimal precision.
+    "horizontal_fov": 1.22173,
+    "fx": 1028.2670861548688,
+    "fy": 1028.3315643616631,
+    "P_fx": 1013.3186295621878,
+    "P_fy": 1018.5246022239418,
+}
+TRACK_CAMERA_CALIBRATION = {
+    **INSPECTION_CAMERA_COMMON,
+    "horizontal_fov": 0.784537,
+    "fx": 1740.3529088647258,
+    "fy": 1740.4620389110569,
+    "P_fx": 1715.0524881234628,
+    "P_fy": 1723.8636518642318,
+}
+PITCH_CAMERA_CALIBRATION = {
+    **INSPECTION_CAMERA_COMMON,
+    "horizontal_fov": 0.959931,
+    "fx": 1383.107281011723,
+    "fy": 1383.1940097211066,
+    "P_fx": 1363.000326863712,
+    "P_fy": 1370.0028058793007,
+}
+INSPECTION_CAMERA_CALIBRATIONS = {
+    "xj1_camera_sensor": SIDE_WALL_CAMERA_CALIBRATION,
+    "xj2_camera_sensor": SIDE_WALL_CAMERA_CALIBRATION,
+    "xj3_camera_sensor": TRACK_CAMERA_CALIBRATION,
+    "xj4_camera_sensor": TRACK_CAMERA_CALIBRATION,
+    "pitch_camera_sensor": PITCH_CAMERA_CALIBRATION,
+}
+SIDE_CAMERA_FORWARDS = {
+    "xj1_camera_link": (0.0, -0.90630778703665, 0.422618261740699),
+    "xj2_camera_link": (0.0, 0.90630778703665, 0.422618261740699),
 }
 PITCH_CAMERA_FORWARD = (0.258819045102521, 0.0, 0.965925826289068)
 PITCH_CAMERA_UP = (-0.965925826289068, 0.0, 0.258819045102521)
@@ -262,8 +285,7 @@ def validate_odin1_camera(model: ET.Element) -> None:
 
 
 def validate_inspection_cameras(model: ET.Element) -> None:
-    calibration = INSPECTION_CAMERA_CALIBRATION
-    for sensor_name in INSPECTION_CAMERA_SENSOR_NAMES:
+    for sensor_name, calibration in INSPECTION_CAMERA_CALIBRATIONS.items():
         sensor = model.find(f".//sensor[@name='{sensor_name}']")
         if sensor is None:
             raise ValueError(f"SDF is missing inspection camera {sensor_name}")
@@ -291,6 +313,21 @@ def validate_inspection_cameras(model: ET.Element) -> None:
             ("P_cy", "P_cy"),
         ):
             require_float(plugin, path, calibration[key], f"{label} ROS plugin")
+
+
+def validate_side_camera_mounts(urdf_root: ET.Element) -> None:
+    for link_name, expected_forward in SIDE_CAMERA_FORWARDS.items():
+        _, rotation = urdf_transform_to_link(urdf_root, link_name)
+        actual_forward = rotate_vector(rotation, (1.0, 0.0, 0.0))
+        axis_error = max(
+            abs(actual_forward[index] - expected)
+            for index, expected in enumerate(expected_forward)
+        )
+        if axis_error > AXIS_TOLERANCE:
+            raise ValueError(
+                f"{link_name} must face its side wall and 25 degrees upward, "
+                f"found {actual_forward}"
+            )
 
 
 def validate_wheel_drive(model: ET.Element) -> None:
@@ -469,6 +506,7 @@ def validate_generated_model(model: ET.Element, urdf_root: ET.Element) -> None:
 
     validate_odin1_camera(model)
     validate_inspection_cameras(model)
+    validate_side_camera_mounts(urdf_root)
     validate_wheel_drive(model)
 
     _, pitch_camera_rotation = urdf_transform_to_link(

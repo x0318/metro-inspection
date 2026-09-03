@@ -193,7 +193,7 @@
         <visualize>0</visualize>
         <update_rate>30</update_rate>
         <camera name="xj1_camera">
-          <horizontal_fov>0.959931</horizontal_fov>
+          <horizontal_fov>1.22173</horizontal_fov>
           <image>
             <width>1440</width>
             <height>1080</height>
@@ -218,8 +218,8 @@
           </distortion>
           <lens>
             <intrinsics>
-              <fx>1383.107281011723</fx>
-              <fy>1383.1940097211066</fy>
+              <fx>1028.2670861548688</fx>
+              <fy>1028.3315643616631</fy>
               <cx>696.2963</cx>
               <cy>547.75936</cy>
               <s>0</s>
@@ -234,24 +234,24 @@
           </ros>
           <camera_name>xj1</camera_name>
           <frame_name>xj1_optical_frame</frame_name>
-          <focal_length>1383.107281011723</focal_length>
+          <focal_length>1028.2670861548688</focal_length>
           <cx>696.2963</cx>
           <cy>547.75936</cy>
           <border_crop>0</border_crop>
           <rectification_matrix>1 0 0 0 1 0 0 0 1</rectification_matrix>
-          <P_fx>1363.000326863712</P_fx>
-          <P_fy>1370.0028058793007</P_fy>
+          <P_fx>1013.3186295621878</P_fx>
+          <P_fy>1018.5246022239418</P_fy>
           <P_cx>693.56983</P_cx>
           <P_cy>545.3029</P_cy>
         </plugin>
-        <pose>-0 -0.536573 0.685452 -0 -0 -1.5708</pose>
+        <pose>-0 -0.536573 0.685452 -0 -0.436332 -1.5708</pose>
       </sensor>
       <sensor name="xj2_camera_sensor" type="camera">
         <always_on>1</always_on>
         <visualize>0</visualize>
         <update_rate>30</update_rate>
         <camera name="xj2_camera">
-          <horizontal_fov>0.959931</horizontal_fov>
+          <horizontal_fov>1.22173</horizontal_fov>
           <image>
             <width>1440</width>
             <height>1080</height>
@@ -276,8 +276,8 @@
           </distortion>
           <lens>
             <intrinsics>
-              <fx>1383.107281011723</fx>
-              <fy>1383.1940097211066</fy>
+              <fx>1028.2670861548688</fx>
+              <fy>1028.3315643616631</fy>
               <cx>696.2963</cx>
               <cy>547.75936</cy>
               <s>0</s>
@@ -292,24 +292,24 @@
           </ros>
           <camera_name>xj2</camera_name>
           <frame_name>xj2_optical_frame</frame_name>
-          <focal_length>1383.107281011723</focal_length>
+          <focal_length>1028.2670861548688</focal_length>
           <cx>696.2963</cx>
           <cy>547.75936</cy>
           <border_crop>0</border_crop>
           <rectification_matrix>1 0 0 0 1 0 0 0 1</rectification_matrix>
-          <P_fx>1363.000326863712</P_fx>
-          <P_fy>1370.0028058793007</P_fy>
+          <P_fx>1013.3186295621878</P_fx>
+          <P_fy>1018.5246022239418</P_fy>
           <P_cx>693.56983</P_cx>
           <P_cy>545.3029</P_cy>
         </plugin>
-        <pose>-0 0.536573 0.685452 0 -0 1.5708</pose>
+        <pose>-0 0.536573 0.685452 0 -0.436332 1.5708</pose>
       </sensor>
       <sensor name="xj3_camera_sensor" type="camera">
         <always_on>1</always_on>
         <visualize>0</visualize>
         <update_rate>30</update_rate>
         <camera name="xj3_camera">
-          <horizontal_fov>0.959931</horizontal_fov>
+          <horizontal_fov>0.784537</horizontal_fov>
           <image>
             <width>1440</width>
             <height>1080</height>
@@ -334,8 +334,8 @@
           </distortion>
           <lens>
             <intrinsics>
-              <fx>1383.107281011723</fx>
-              <fy>1383.1940097211066</fy>
+              <fx>1740.3529088647258</fx>
+              <fy>1740.4620389110569</fy>
               <cx>696.2963</cx>
               <cy>547.75936</cy>
               <s>0</s>
@@ -350,13 +350,13 @@
           </ros>
           <camera_name>xj3</camera_name>
           <frame_name>xj3_optical_frame</frame_name>
-          <focal_length>1383.107281011723</focal_length>
+          <focal_length>1740.3529088647258</focal_length>
           <cx>696.2963</cx>
           <cy>547.75936</cy>
           <border_crop>0</border_crop>
           <rectification_matrix>1 0 0 0 1 0 0 0 1</rectification_matrix>
-          <P_fx>1363.000326863712</P_fx>
-          <P_fy>1370.0028058793007</P_fy>
+          <P_fx>1715.0524881234628</P_fx>
+          <P_fy>1723.8636518642318</P_fy>
           <P_cx>693.56983</P_cx>
           <P_cy>545.3029</P_cy>
         </plugin>
@@ -367,7 +367,7 @@
         <visualize>0</visualize>
         <update_rate>30</update_rate>
         <camera name="xj4_camera">
-          <horizontal_fov>0.959931</horizontal_fov>
+          <horizontal_fov>0.784537</horizontal_fov>
           <image>
             <width>1440</width>
             <height>1080</height>
@@ -392,8 +392,8 @@
           </distortion>
           <lens>
             <intrinsics>
-              <fx>1383.107281011723</fx>
-              <fy>1383.1940097211066</fy>
+              <fx>1740.3529088647258</fx>
+              <fy>1740.4620389110569</fy>
               <cx>696.2963</cx>
               <cy>547.75936</cy>
               <s>0</s>
@@ -408,13 +408,13 @@
           </ros>
           <camera_name>xj4</camera_name>
           <frame_name>xj4_optical_frame</frame_name>
-          <focal_length>1383.107281011723</focal_length>
+          <focal_length>1740.3529088647258</focal_length>
           <cx>696.2963</cx>
           <cy>547.75936</cy>
           <border_crop>0</border_crop>
           <rectification_matrix>1 0 0 0 1 0 0 0 1</rectification_matrix>
-          <P_fx>1363.000326863712</P_fx>
-          <P_fy>1370.0028058793007</P_fy>
+          <P_fx>1715.0524881234628</P_fx>
+          <P_fy>1723.8636518642318</P_fy>
           <P_cx>693.56983</P_cx>
           <P_cy>545.3029</P_cy>
         </plugin>
