@@ -24,6 +24,13 @@ CAMERA_SENSOR_NAMES = {
     "xj4_camera_sensor",
     "pitch_camera_sensor",
 }
+INSPECTION_CAMERA_SENSOR_NAMES = (
+    "xj1_camera_sensor",
+    "xj2_camera_sensor",
+    "xj3_camera_sensor",
+    "xj4_camera_sensor",
+    "pitch_camera_sensor",
+)
 ODIN1_CAMERA_CALIBRATION = {
     "width": 1600.0,
     "height": 1296.0,
@@ -32,6 +39,23 @@ ODIN1_CAMERA_CALIBRATION = {
     "cx": 766.6570,
     "cy": 642.9091,
     "s": 0.2058,
+}
+# Simulation-only wide-angle experiment. These values are scaled from the
+# original Hikrobot calibration and are not a replacement for bench calibration.
+INSPECTION_CAMERA_CALIBRATION = {
+    "width": 1440.0,
+    "height": 1080.0,
+    # Gazebo Classic stores camera HFOV at six-decimal precision.
+    "horizontal_fov": 0.959931,
+    "fx": 1383.107281011723,
+    "fy": 1383.1940097211066,
+    "cx": 696.2963,
+    "cy": 547.75936,
+    "s": 0.0,
+    "P_fx": 1363.000326863712,
+    "P_fy": 1370.0028058793007,
+    "P_cx": 693.56983,
+    "P_cy": 545.3029,
 }
 PITCH_CAMERA_FORWARD = (0.258819045102521, 0.0, 0.965925826289068)
 PITCH_CAMERA_UP = (-0.965925826289068, 0.0, 0.258819045102521)
@@ -237,6 +261,38 @@ def validate_odin1_camera(model: ET.Element) -> None:
         require_float(plugin, path, calibration[key], "Odin1 ROS camera plugin")
 
 
+def validate_inspection_cameras(model: ET.Element) -> None:
+    calibration = INSPECTION_CAMERA_CALIBRATION
+    for sensor_name in INSPECTION_CAMERA_SENSOR_NAMES:
+        sensor = model.find(f".//sensor[@name='{sensor_name}']")
+        if sensor is None:
+            raise ValueError(f"SDF is missing inspection camera {sensor_name}")
+        camera = sensor.find("camera")
+        plugin = sensor.find("plugin")
+        if camera is None or plugin is None:
+            raise ValueError(
+                f"Inspection camera {sensor_name} is missing camera or ROS plugin settings"
+            )
+        label = f"Inspection camera {sensor_name}"
+        require_float(camera, "image/width", calibration["width"], label)
+        require_float(camera, "image/height", calibration["height"], label)
+        require_float(
+            camera, "horizontal_fov", calibration["horizontal_fov"], label
+        )
+        for key in ("fx", "fy", "cx", "cy", "s"):
+            require_float(camera, f"lens/intrinsics/{key}", calibration[key], label)
+        for path, key in (
+            ("focal_length", "fx"),
+            ("cx", "cx"),
+            ("cy", "cy"),
+            ("P_fx", "P_fx"),
+            ("P_fy", "P_fy"),
+            ("P_cx", "P_cx"),
+            ("P_cy", "P_cy"),
+        ):
+            require_float(plugin, path, calibration[key], f"{label} ROS plugin")
+
+
 def validate_wheel_drive(model: ET.Element) -> None:
     if model.find("./plugin[@name='subway_v2_planar_move']") is not None:
         raise ValueError("subway_v2 must not use the pose-based planar_move plugin")
@@ -412,6 +468,7 @@ def validate_generated_model(model: ET.Element, urdf_root: ET.Element) -> None:
             raise ValueError(f"SDF sensor {name} must remain always on")
 
     validate_odin1_camera(model)
+    validate_inspection_cameras(model)
     validate_wheel_drive(model)
 
     _, pitch_camera_rotation = urdf_transform_to_link(
