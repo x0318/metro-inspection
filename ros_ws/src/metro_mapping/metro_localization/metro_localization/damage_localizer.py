@@ -6,10 +6,12 @@ import numpy as np
 import rclpy
 from cv_bridge import CvBridge
 from geometry_msgs.msg import PointStamped
+from metro_inspection_interfaces.msg import DefectEvent
+from pathlib import Path
 from rclpy.duration import Duration
 from rclpy.executors import ExternalShutdownException, MultiThreadedExecutor
 from rclpy.node import Node
-from rclpy.qos import qos_profile_sensor_data
+from rclpy.qos import QoSProfile, ReliabilityPolicy, qos_profile_sensor_data
 from rclpy.time import Time
 from sensor_msgs.msg import CameraInfo, Image, PointCloud2
 from tf2_ros import Buffer, TransformException, TransformListener
@@ -25,6 +27,8 @@ from .cloud_projector import (
     select_mask_points,
 )
 from .geometry_utils import transform_point, transform_points
+from .semantic_geometry import Point3D, TunnelSemanticProjector
+from .spatial_event_tracking import SpatialEventTracker
 
 
 class DamageLocalizer(Node):
@@ -57,6 +61,21 @@ class DamageLocalizer(Node):
         self.declare_parameter("dbscan_eps_m", 0.15)
         self.declare_parameter("dbscan_min_samples", 3)
         self.declare_parameter("max_debug_points", 1800)
+        self.declare_parameter("publish_events", False)
+        self.declare_parameter("event_topic", "/localized/defect_events")
+        self.declare_parameter("camera_name", "odin1")
+        self.declare_parameter("model_name", "")
+        self.declare_parameter("event_confirmation_hits", 3)
+        self.declare_parameter("event_dedup_distance_m", 0.5)
+        self.declare_parameter("event_republish_period_sec", 2.0)
+        self.declare_parameter("chainage_start_m", 12000.0)
+        self.declare_parameter("chainage_axis", "x")
+        self.declare_parameter("chainage_sign", 1.0)
+        self.declare_parameter("segment_start_id", 1000)
+        self.declare_parameter("segment_length_m", 1.2)
+        self.declare_parameter("segment_name", "仿真环号")
+        self.declare_parameter("clock_center_y_m", 0.0)
+        self.declare_parameter("clock_center_z_m", 1.75)
 
         self.bridge = CvBridge()
         self.camera_info = None
@@ -72,6 +91,7 @@ class DamageLocalizer(Node):
         self.camera_point_count = 0
         self.global_tf_failure_count = 0
         self.global_point_count = 0
+        self.event_count = 0
         self.latest_mask_msg = None
         self.tf_buffer = Buffer(cache_time=Duration(seconds=15.0))
         self.tf_listener = TransformListener(self.tf_buffer, self)
@@ -106,6 +126,49 @@ class DamageLocalizer(Node):
         self.marker_pub = self.create_publisher(
             Marker, self.get_parameter("marker_topic").value, 10
         )
+        self.event_pub = None
+        self.event_tracker = None
+        self.semantic_projector = None
+        if bool(self.get_parameter("publish_events").value):
+            event_qos = QoSProfile(depth=50)
+            event_qos.reliability = ReliabilityPolicy.RELIABLE
+            self.event_pub = self.create_publisher(
+                DefectEvent,
+                str(self.get_parameter("event_topic").value),
+                event_qos,
+            )
+            self.event_tracker = SpatialEventTracker(
+                distance_threshold_m=float(
+                    self.get_parameter("event_dedup_distance_m").value
+                ),
+                confirmation_hits=int(
+                    self.get_parameter("event_confirmation_hits").value
+                ),
+                republish_period_sec=float(
+                    self.get_parameter("event_republish_period_sec").value
+                ),
+                event_prefix=str(self.get_parameter("camera_name").value),
+            )
+            self.semantic_projector = TunnelSemanticProjector(
+                chainage_start_m=float(
+                    self.get_parameter("chainage_start_m").value
+                ),
+                chainage_axis=str(self.get_parameter("chainage_axis").value),
+                chainage_sign=float(self.get_parameter("chainage_sign").value),
+                segment_start_id=int(
+                    self.get_parameter("segment_start_id").value
+                ),
+                segment_length_m=float(
+                    self.get_parameter("segment_length_m").value
+                ),
+                segment_name=str(self.get_parameter("segment_name").value),
+                clock_center_y_m=float(
+                    self.get_parameter("clock_center_y_m").value
+                ),
+                clock_center_z_m=float(
+                    self.get_parameter("clock_center_z_m").value
+                ),
+            )
 
         detections_sub = message_filters.Subscriber(
             self,
@@ -134,7 +197,8 @@ class DamageLocalizer(Node):
         self.synchronizer.registerCallback(self.on_synced_data)
         self.status_timer = self.create_timer(2.0, self.log_pipeline_status)
         self.get_logger().info(
-            "Damage localizer started: Detection2DArray + optional mask + PointCloud2 -> camera/global 3D point."
+            "Damage localizer started: Detection2DArray + optional mask + "
+            "PointCloud2 -> camera/global 3D point."
         )
 
     def on_camera_info(self, msg: CameraInfo):
@@ -155,7 +219,10 @@ class DamageLocalizer(Node):
         if mask_msg is None:
             self.mask_missing_count += 1
             return None, "missing"
-        dt = abs(self.stamp_to_sec(mask_msg.header.stamp) - self.stamp_to_sec(image_msg.header.stamp))
+        dt = abs(
+            self.stamp_to_sec(mask_msg.header.stamp)
+            - self.stamp_to_sec(image_msg.header.stamp)
+        )
         tolerance = float(self.get_parameter("mask_time_tolerance_sec").value)
         if dt > tolerance:
             self.mask_missing_count += 1
@@ -176,7 +243,11 @@ class DamageLocalizer(Node):
                 mask = mask * 255.0
             mask = np.clip(mask, 0, 255).astype(np.uint8)
         if mask.shape[0] != int(image_height) or mask.shape[1] != int(image_width):
-            mask = cv2.resize(mask, (int(image_width), int(image_height)), interpolation=cv2.INTER_NEAREST)
+            mask = cv2.resize(
+                mask,
+                (int(image_width), int(image_height)),
+                interpolation=cv2.INTER_NEAREST,
+            )
         return mask
 
     @staticmethod
@@ -199,7 +270,6 @@ class DamageLocalizer(Node):
         if now_ns - self.last_status_log_ns > 2_000_000_000:
             self.get_logger().warn(message)
             self.last_status_log_ns = now_ns
-
 
     def estimate_damage_point(self, roi_points):
         """Select the 3D point estimator according to ROS parameters."""
@@ -237,6 +307,7 @@ class DamageLocalizer(Node):
             "published(camera/global)="
             f"{self.camera_point_count}/{self.global_point_count}, "
             f"global_tf_failed={self.global_tf_failure_count}"
+            f", platform_events={self.event_count}"
         )
 
     def publish_debug_image(
@@ -381,8 +452,106 @@ class DamageLocalizer(Node):
         )
         self.marker_pub.publish(label)
 
+    @staticmethod
+    def best_hypothesis(detection: Detection2D):
+        if not detection.results:
+            return None
+        return max(
+            detection.results,
+            key=lambda result: float(result.hypothesis.score),
+        ).hypothesis
+
+    @staticmethod
+    def localization_quality(inlier_count: int, roi_count: int) -> float:
+        """Return a bounded geometric support score, not a learned probability."""
+
+        if inlier_count <= 0 or roi_count <= 0:
+            return 0.0
+        inlier_ratio = min(1.0, float(inlier_count) / float(roi_count))
+        point_support = min(1.0, float(inlier_count) / 12.0)
+        return float(np.sqrt(inlier_ratio * point_support))
+
+    def publish_defect_event(
+        self,
+        *,
+        detections: Detection2DArray,
+        detection: Detection2D,
+        image: Image,
+        global_point: PointStamped,
+        inlier_count: int,
+        roi_count: int,
+    ) -> None:
+        if self.event_pub is None or self.event_tracker is None:
+            return
+
+        hypothesis = self.best_hypothesis(detection)
+        if hypothesis is None:
+            return
+        stamp = detections.header.stamp
+        stamp_sec = self.stamp_to_sec(stamp)
+        track, should_publish = self.event_tracker.observe(
+            class_name=hypothesis.class_id,
+            position=(
+                global_point.point.x,
+                global_point.point.y,
+                global_point.point.z,
+            ),
+            frame_key=(int(stamp.sec), int(stamp.nanosec)),
+            stamp_sec=stamp_sec,
+        )
+        if not should_publish:
+            return
+
+        event = DefectEvent()
+        event.header = detections.header
+        event.event_id = track.event_id
+        event.detection_id = (
+            f"{track.event_id}:{int(stamp.sec)}.{int(stamp.nanosec):09d}"
+        )
+        event.camera_name = str(self.get_parameter("camera_name").value)
+        event.class_name = str(hypothesis.class_id)
+        event.confidence = float(hypothesis.score)
+        event.severity = DefectEvent.SEVERITY_UNKNOWN
+        event.bbox = detection.bbox
+        event.image_width = int(image.width)
+        event.image_height = int(image.height)
+
+        event.has_3d_position = True
+        event.position.header = global_point.header
+        event.position.point.x = track.position[0]
+        event.position.point.y = track.position[1]
+        event.position.point.z = track.position[2]
+        event.localization_method = DefectEvent.LOCALIZATION_CURRENT_CLOUD
+        event.localization_confidence = self.localization_quality(
+            inlier_count, roi_count
+        )
+        configured_model = str(self.get_parameter("model_name").value).strip()
+        event.model_name = Path(configured_model).name if configured_model else ""
+        event.snapshot_uri = ""
+
+        semantic = self.semantic_projector.project(
+            Point3D(
+                x=track.position[0],
+                y=track.position[1],
+                z=track.position[2],
+            )
+        )
+        event.has_semantic_location = True
+        event.chainage_m = semantic.chainage_m
+        event.chainage = semantic.chainage
+        event.segment_name = semantic.segment_name
+        event.segment_id = semantic.segment_id
+        event.segment_offset_m = semantic.segment_offset_m
+        event.clock_position_hours = semantic.clock_position_hours
+        event.structure_area = semantic.structure_area
+        self.event_pub.publish(event)
+        self.event_count += 1
+
     def on_synced_data(self, detections, cloud, image):
         self.sync_count += 1
+        if not detections.detections:
+            self.empty_detection_count += 1
+            return
         if self.camera_info is None:
             self.warn_throttled("Waiting for CameraInfo before projecting lidar points.")
             return
@@ -406,15 +575,6 @@ class DamageLocalizer(Node):
         except (TransformException, ValueError) as exc:
             self.projection_failure_count += 1
             self.warn_throttled(f"Projection skipped: {exc}")
-            return
-
-        if not detections.detections:
-            self.empty_detection_count += 1
-            self.publish_debug_image(
-                image,
-                projected_uv,
-                status_text=f"cloud={len(points_camera)}; no detection",
-            )
             return
 
         self.nonempty_detection_count += 1
@@ -443,7 +603,10 @@ class DamageLocalizer(Node):
                 roi_points = np.empty((0, 3), dtype=np.float64)
                 roi_uv = np.empty((0, 2), dtype=np.float64)
 
-            if len(roi_points) < min_points and bool(self.get_parameter("mask_fallback_to_bbox").value):
+            fallback_to_bbox = bool(
+                self.get_parameter("mask_fallback_to_bbox").value
+            )
+            if len(roi_points) < min_points and fallback_to_bbox:
                 self.mask_fallback_count += 1
                 roi_points, roi_uv = select_bbox_points(
                     points_camera,
@@ -468,10 +631,14 @@ class DamageLocalizer(Node):
                 detection=detection,
                 roi_uv=roi_uv,
                 mask_image=mask_image,
-                status_text=f"{selection_mode} ROI {len(roi_points)}/{min_points}; mask={mask_status}",
+                status_text=(
+                    f"{selection_mode} ROI {len(roi_points)}/{min_points}; "
+                    f"mask={mask_status}"
+                ),
             )
             self.warn_throttled(
-                f"Detection has only {len(roi_points)} projected lidar points with {selection_mode}; "
+                f"Detection has only {len(roi_points)} projected lidar points "
+                f"with {selection_mode}; "
                 f"need {min_points}. mask={mask_status}"
             )
             return
@@ -531,6 +698,14 @@ class DamageLocalizer(Node):
         )
         self.global_point_count += 1
         self.publish_estimated_marker(global_point)
+        self.publish_defect_event(
+            detections=detections,
+            detection=detection,
+            image=image,
+            global_point=global_point,
+            inlier_count=len(inlier_points),
+            roi_count=len(roi_points),
+        )
 
 
 def main():

@@ -3,15 +3,15 @@
   <model name="subway_v2">
     <link name="base_footprint">
       <inertial>
-        <pose>0.002599 0.046882 0.505445 0 -0 0</pose>
+        <pose>0.002048 0.000164 0.512032 0 -0 0</pose>
         <mass>18.7872</mass>
         <inertia>
-          <ixx>1.95687</ixx>
-          <ixy>-0.0489826</ixy>
-          <ixz>-0.0610905</ixz>
-          <iyy>2.86504</iyy>
-          <iyz>-0.446041</iyz>
-          <izz>3.19757</izz>
+          <ixx>1.70375</ixx>
+          <ixy>-0.000441698</ixy>
+          <ixz>-0.0267002</ixz>
+          <iyy>3.00706</iyy>
+          <iyz>-0.000699807</iyz>
+          <izz>2.85367</izz>
         </inertia>
       </inertial>
       <collision name="base_footprint_fixed_joint_lump__base_link_collision_collision">
@@ -74,7 +74,7 @@
         </geometry>
       </collision>
       <collision name="base_footprint_fixed_joint_lump__yuntai_collision_collision_6">
-        <pose>-0 0 0.949654 1.5708 -0 3.14159</pose>
+        <pose>0.132241 0 0.949654 1.5708 0 -0</pose>
         <geometry>
           <box>
             <size>0.420893 0.657679 0.577225</size>
@@ -82,7 +82,7 @@
         </geometry>
       </collision>
       <collision name="base_footprint_fixed_joint_lump__pitch_collision_collision_7">
-        <pose>0.09414 0.464786 1.08044 -0.261799 0 -1.5708</pose>
+        <pose>0.066121 0 1.05892 -1.57188 -0 -1.5708</pose>
         <geometry>
           <box>
             <size>0.582035 0.369785 0.705747</size>
@@ -171,7 +171,7 @@
         </geometry>
       </visual>
       <visual name="base_footprint_fixed_joint_lump__yuntai_visual_9">
-        <pose>-0 0.232393 1.14393 1.5708 -0 3.14159</pose>
+        <pose>0.132241 -0.232393 1.14393 1.5708 0 -0</pose>
         <geometry>
           <mesh>
             <scale>3.00638 3.00638 3.00638</scale>
@@ -180,7 +180,7 @@
         </geometry>
       </visual>
       <visual name="base_footprint_fixed_joint_lump__pitch_visual_10">
-        <pose>-0 0.232393 1.17399 -0.261799 0 -1.5708</pose>
+        <pose>0.132241 -0.232393 1.17399 -1.57188 -0 -1.5708</pose>
         <geometry>
           <mesh>
             <scale>3.00638 3.00638 3.00638</scale>
@@ -476,7 +476,7 @@
           <P_cx>693.56983</P_cx>
           <P_cy>545.3029</P_cy>
         </plugin>
-        <pose>0.077916 0.464786 1.42644 0 -1.309 -0</pose>
+        <pose>0.396247 0 1.16378 0 -1.309 -0</pose>
       </sensor>
     </link>
     <joint name="lidar_joint" type="fixed">

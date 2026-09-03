@@ -35,6 +35,8 @@ ODIN1_CAMERA_CALIBRATION = {
 }
 PITCH_CAMERA_FORWARD = (0.258819045102521, 0.0, 0.965925826289068)
 PITCH_CAMERA_UP = (-0.965925826289068, 0.0, 0.258819045102521)
+GIMBAL_FORWARD_YAW_RPY = (3.14159265358979, -1.5707963267949, 0.0)
+PITCH_CAD_RPY = (3.14050535389669, -1.5707963267949, 0.0)
 WHEEL_NAMES = ("w1", "w2", "w3", "w4")
 LEFT_WHEEL_JOINTS = ("w2_joint", "w3_joint")
 RIGHT_WHEEL_JOINTS = ("w1_joint", "w4_joint")
@@ -414,9 +416,50 @@ def validate_generated_model(model: ET.Element, urdf_root: ET.Element) -> None:
     validate_odin1_camera(model)
     validate_wheel_drive(model)
 
-    _, pitch_camera_rotation = urdf_transform_to_link(
+    yaw_joint = urdf_root.find("./joint[@name='yaw_joint']")
+    yaw_origin = yaw_joint.find("origin") if yaw_joint is not None else None
+    if yaw_origin is None:
+        raise ValueError("URDF must contain yaw_joint with an origin")
+    yaw_rpy = parse_values(yaw_origin.get("rpy", ""), 3, "yaw_joint rpy")
+    yaw_pose_error = max(
+        abs(value - expected)
+        for value, expected in zip(yaw_rpy, GIMBAL_FORWARD_YAW_RPY)
+    )
+    if yaw_pose_error > CALIBRATION_TOLERANCE:
+        raise ValueError(
+            "Visible gimbal must use the forward-facing V6 yaw correction"
+        )
+
+    pitch_joint = urdf_root.find("./joint[@name='pitch_joint']")
+    pitch_origin = pitch_joint.find("origin") if pitch_joint is not None else None
+    if pitch_origin is None:
+        raise ValueError("URDF must contain pitch_joint with an origin")
+    pitch_rpy = parse_values(pitch_origin.get("rpy", ""), 3, "pitch_joint rpy")
+    pitch_pose_error = max(
+        abs(value - expected) for value, expected in zip(pitch_rpy, PITCH_CAD_RPY)
+    )
+    if pitch_pose_error > CALIBRATION_TOLERANCE:
+        raise ValueError(
+            "Visible Pitch assembly must remain at the V6 CAD zero pose; "
+            "aim the camera with pitch_camera_sensor_joint"
+        )
+
+    _, pitch_rotation = urdf_transform_to_link(urdf_root, "pitch")
+    pitch_housing_forward = rotate_vector(pitch_rotation, (0.0, 0.0, 1.0))
+    if pitch_housing_forward[0] < 0.999 or abs(pitch_housing_forward[1]) > 0.002:
+        raise ValueError(
+            "Visible Pitch camera housing must face base_footprint +X, "
+            f"found {pitch_housing_forward}"
+        )
+
+    pitch_camera_xyz, pitch_camera_rotation = urdf_transform_to_link(
         urdf_root, "pitch_camera_sensor_link"
     )
+    if abs(pitch_camera_xyz[1]) > POSITION_TOLERANCE:
+        raise ValueError(
+            "Pitch camera lens center must remain on the robot centerline, "
+            f"found {pitch_camera_xyz}"
+        )
     pitch_camera_forward = rotate_vector(
         pitch_camera_rotation, (1.0, 0.0, 0.0)
     )
@@ -426,7 +469,7 @@ def validate_generated_model(model: ET.Element, urdf_root: ET.Element) -> None:
     )
     if pitch_forward_error > 0.002:
         raise ValueError(
-            "Pitch camera optical axis must point 75 degrees upward from "
+            "Pitch virtual sensor axis must point 75 degrees upward from "
             "base_footprint +X, "
             f"found {pitch_camera_forward}"
         )
@@ -437,7 +480,7 @@ def validate_generated_model(model: ET.Element, urdf_root: ET.Element) -> None:
     )
     if pitch_up_error > 0.002:
         raise ValueError(
-            "Pitch camera image-up axis must match the 75-degree ceiling "
+            "Pitch virtual sensor image-up axis must match the 75-degree ceiling "
             "inspection pose, "
             f"found {pitch_camera_up}"
         )

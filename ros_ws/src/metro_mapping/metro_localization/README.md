@@ -71,7 +71,13 @@ global TF:   odom
 ```
 
 Important outputs are `/damage_point_camera`, `/damage_point_global`,
-`/localization/debug_projection`, and `/localization/estimated_marker`.
+`/localization/debug_projection`, and `/localization/estimated_marker`. When
+`publish_events:=true`, the node also preserves the YOLO class, confidence and
+bbox in `metro_inspection_interfaces/msg/DefectEvent`, adds the current-cloud
+3D point plus tunnel engineering semantics, and publishes
+`/localized/defect_events` for the dashboard. Three unique frames are required
+before a new spatial event is accepted, and later observations within 0.5 m
+update the same event ID instead of filling the database once per video frame.
 
 For the current `subway_v2` sensor simulation, use the adapter rather than the
 teammate demo world:
@@ -86,3 +92,16 @@ The placeholder red detector is only a wiring test. A real detector should
 publish `vision_msgs/msg/Detection2DArray` on `/damage_detections`. Verify camera
 and lidar field-of-view overlap, extrinsic calibration and timestamp alignment
 before interpreting the output as a physical 3D location.
+
+The default chainage and ring settings are simulation placeholders:
+
+```text
+chainage start: K12+000
+ring start:     1000
+ring length:    1.2 m
+display name:   仿真环号
+```
+
+They make the coordinate-to-report path testable, but they are not surveyed
+metro line data. Update `config/localization.yaml` when the real tunnel origin,
+direction and ring spacing are available.

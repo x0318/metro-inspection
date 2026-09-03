@@ -202,7 +202,8 @@ button { color: inherit; }
 }
 .camera-state.online { background: var(--green-soft); color: var(--green); }
 .camera-media {
-  width: 100%; aspect-ratio: 16 / 9; display: grid; place-items: center; overflow: hidden;
+  width: 100%; height: min(18vw, 280px); min-height: 160px; aspect-ratio: 16 / 9;
+  display: grid; place-items: center; overflow: hidden;
   padding: 0; border: 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
   background: #12181d; color: white;
 }
@@ -230,7 +231,8 @@ button.camera-media { cursor: zoom-in; }
 }
 .close-camera-button:hover { border-color: var(--green); color: var(--green); }
 .camera-focus-frame {
-  width: min(100%, 1100px); aspect-ratio: 16 / 9; margin: 0 auto; display: grid; place-items: center;
+  width: min(100%, 1100px); height: min(56.25vw, 620px); min-height: 280px;
+  aspect-ratio: 16 / 9; margin: 0 auto; display: grid; place-items: center;
   overflow: hidden; background: #12181d;
 }
 .camera-focus > footer { justify-content: center; gap: 26px; border-top: 1px solid var(--line); }
@@ -267,6 +269,7 @@ button.camera-media { cursor: zoom-in; }
   .detail-panel { min-height: 0; }
   .detail-empty { min-height: 220px; }
   .camera-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .camera-media { height: min(28vw, 280px); }
 }
 
 @media (max-width: 720px) {
@@ -319,6 +322,9 @@ button.camera-media { cursor: zoom-in; }
   .camera-view-heading { min-height: 46px; }
   .camera-view-heading p { font-size: 10px; }
   .stream-profile { display: none; }
+  .camera-media, .camera-focus-frame {
+    height: min(52vw, 360px); min-height: 180px;
+  }
   .camera-tile-mobile > header small { max-width: 220px; }
 }
 

@@ -33,6 +33,10 @@ def test_launch_exposes_expected_controls() -> None:
         "project_dir",
         "gui",
         "rviz",
+        "detection",
+        "yolo_model_path",
+        "yolo_auto_drive",
+        "localization",
         "dashboard",
         "qt",
         "open_browser",
@@ -70,7 +74,30 @@ def test_default_project_directory_contains_runtime_assets() -> None:
         project_dir
         / "ros_ws/src/metro_sim/scripts/open_subway_tunnel_v2_sensors.sh"
     ).is_file()
+    assert (project_dir / "scripts/open_yolo_coverage.sh").is_file()
+    assert (
+        project_dir / "ros_ws/src/metro_sim/config/yolo_coverage.rviz"
+    ).is_file()
     assert (project_dir / "dashboard/index.html").is_file()
+
+
+def test_rviz_profiles_only_reference_topics_from_their_runtime_mode() -> None:
+    module = _load_launch_module()
+    project_dir = Path(module._default_project_dir())
+    sensor_config = (
+        project_dir / "ros_ws/src/metro_sim/config/odin1_pointcloud.rviz"
+    ).read_text(encoding="utf-8")
+    yolo_config = (
+        project_dir / "ros_ws/src/metro_sim/config/yolo_coverage.rviz"
+    ).read_text(encoding="utf-8")
+
+    assert "/odin1/rgb/image_raw" in sensor_config
+    assert "/localization/debug_projection" not in sensor_config
+    assert "/damage_mask" not in sensor_config
+    assert "Name: Selected YOLO Camera" in yolo_config
+    assert "/damage_detection/xj4/annotated_image" in yolo_config
+    assert yolo_config.count("Class: rviz_default_plugins/Image") == 1
+    assert yolo_config.count("Reliability Policy: Best Effort") == 1
 
 
 def test_runtime_actions_can_be_constructed_for_headless_mode() -> None:
@@ -81,10 +108,14 @@ def test_runtime_actions_can_be_constructed_for_headless_mode() -> None:
             "project_dir": module._default_project_dir(),
             "gui": "false",
             "rviz": "false",
+            "detection": "false",
+            "yolo_auto_drive": "false",
+            "localization": "true",
             "dashboard": "false",
             "qt": "false",
             "open_browser": "false",
             "rviz_config": "",
+            "defect_topic": "",
             "database_path": "",
             "dashboard_port": "8088",
             "ros_domain_id": "70",

@@ -1,25 +1,30 @@
 yolo_coverage_detector:
   ros__parameters:
     use_sim_time: true
-    camera_names: [xj1, xj2, xj3, xj4, pitch]
+    # XJ1-XJ4 and Pitch feed the five-camera monitor. Odin1 is an additional
+    # localization-only stream because it has calibrated overlap with the lidar.
+    camera_names: [xj1, xj2, xj3, xj4, pitch, odin1]
     image_topics:
       - /subway_v2/xj1/image_raw
       - /subway_v2/xj2/image_raw
       - /subway_v2/xj3/image_raw
       - /subway_v2/xj4/image_raw
       - /subway_v2/pitch_camera/image_raw
+      - /odin1/rgb/image_raw
     detections_topics:
       - /damage_detections/xj1
       - /damage_detections/xj2
       - /damage_detections/xj3
       - /damage_detections/xj4
       - /damage_detections/pitch
+      - /damage_detections/odin1
     annotated_image_topics:
       - /damage_detection/xj1/annotated_image
       - /damage_detection/xj2/annotated_image
       - /damage_detection/xj3/annotated_image
       - /damage_detection/xj4/annotated_image
       - /damage_detection/pitch/annotated_image
+      - /damage_detection/odin1/annotated_image
     confidence_threshold: 0.35
     iou_threshold: 0.45
     image_size: 640
@@ -28,7 +33,10 @@ yolo_coverage_detector:
     fallback_to_cpu: true
     max_inference_rate_hz: 3.0
     publish_annotated_image: true
+    annotated_jpeg_quality: 75
     status_period_sec: 5.0
+    image_reliability: reliable
+    readiness_topic: /yolo/ready
 
 simulation_coverage_evaluator:
   ros__parameters:
@@ -65,7 +73,7 @@ simulation_coverage_evaluator:
     publish_events: true
     event_republish_period_sec: 5.0
     status_period_sec: 2.0
-    model_name: yolov8n_sim_demo_best(1).pt
+    model_name: best.pt
 
 simulation_coverage_driver:
   ros__parameters:
@@ -73,6 +81,7 @@ simulation_coverage_driver:
     odometry_topic: /wheel/odom_raw
     coverage_topic: /simulation/defect_coverage
     command_topic: /cmd_vel_safe
+    detector_readiness_topic: /yolo/ready
     speed_mps: 0.2
     target_chainage_m: 31.0
     startup_delay_sec: 2.0

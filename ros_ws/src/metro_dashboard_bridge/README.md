@@ -1,6 +1,7 @@
 # metro_dashboard_bridge
 
-订阅 `metro_inspection_interfaces/msg/DefectEvent` 和五路压缩相机图像，托管巡检平台
+订阅 `metro_inspection_interfaces/msg/DefectEvent`、五路原始相机图像和五路 YOLO
+带框图像，托管巡检平台
 页面，并提供只读病害记录与相机流 API。本包不运行二维识别算法，也不会生成随机或演示
 病害。
 
@@ -22,13 +23,15 @@
 
 ```text
 /subway_v2/{xj1,xj2,xj3,xj4,pitch_camera}/image_raw/compressed
+以及 /damage_detection/{xj1,xj2,xj3,xj4,pitch}/annotated_image/compressed
   -> metro_dashboard_bridge（每路只保留最新压缩帧）
   -> 保持宽高比缩放、JPEG 质量和输出 FPS 限制
   -> GET /api/cameras/{camera_id}/stream.mjpg
   -> 桌面五画面 / 手机单画面
 ```
 
-相机图像不会写入病害存储。没有网页观看时不会进行 OpenCV 解码和二次 JPEG 编码。
+相机图像不会写入病害存储。原始画面和 YOLO 带框画面分别显示在“相机监控”和
+“YOLO 识别监控”页面；没有网页观看时不会进行 OpenCV 解码和二次 JPEG 编码。
 
 ## 启动
 
@@ -108,7 +111,7 @@ GET /api/cameras/{camera_id}/stream.mjpg?fps=6
 ```
 
 接口是只读的。真实病害只能由 ROS 2 `DefectEvent` 进入，避免网页端伪造检测结果。
-相机流只允许访问节点参数中明确配置的五路相机，`fps` 最终不会超过
+相机流只允许访问节点参数中明确配置的五路原始画面和五路 YOLO 画面，`fps` 最终不会超过
 `camera_stream_max_fps`。
 
 ## 主要参数

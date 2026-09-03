@@ -8,8 +8,13 @@ from geometry_msgs.msg import Twist
 from nav_msgs.msg import Odometry
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
-from rclpy.qos import qos_profile_sensor_data
-from std_msgs.msg import String
+from rclpy.qos import (
+    DurabilityPolicy,
+    QoSProfile,
+    ReliabilityPolicy,
+    qos_profile_sensor_data,
+)
+from std_msgs.msg import Bool, String
 
 
 class SimulationCoverageDriver(Node):
@@ -20,6 +25,7 @@ class SimulationCoverageDriver(Node):
         self.declare_parameter("odometry_topic", "/wheel/odom_raw")
         self.declare_parameter("coverage_topic", "/simulation/defect_coverage")
         self.declare_parameter("command_topic", "/cmd_vel_safe")
+        self.declare_parameter("detector_readiness_topic", "/yolo/ready")
         self.declare_parameter("speed_mps", 0.2)
         self.declare_parameter("target_chainage_m", 31.0)
         self.declare_parameter("startup_delay_sec", 2.0)
@@ -49,6 +55,7 @@ class SimulationCoverageDriver(Node):
         self.drive_started_monotonic = None
         self.stop_cycles_remaining = 0
         self.finished = False
+        self.detector_ready = False
 
         self.command_pub = self.create_publisher(
             Twist, str(self.get_parameter("command_topic").value), 10
@@ -65,10 +72,19 @@ class SimulationCoverageDriver(Node):
             self.on_coverage,
             10,
         )
+        readiness_qos = QoSProfile(depth=1)
+        readiness_qos.reliability = ReliabilityPolicy.RELIABLE
+        readiness_qos.durability = DurabilityPolicy.TRANSIENT_LOCAL
+        self.readiness_sub = self.create_subscription(
+            Bool,
+            str(self.get_parameter("detector_readiness_topic").value),
+            self.on_detector_readiness,
+            readiness_qos,
+        )
         self.timer = self.create_timer(1.0 / command_rate_hz, self.on_timer)
         self.get_logger().info(
             f"Automatic coverage pass armed: speed={self.speed_mps:.2f} m/s, "
-            f"stop x={self.target_chainage_m:.2f} m"
+            f"stop x={self.target_chainage_m:.2f} m; waiting for YOLO readiness"
         )
 
     def on_odometry(self, message: Odometry) -> None:
@@ -83,6 +99,12 @@ class SimulationCoverageDriver(Node):
             self.total_count = int(status["total"])
         except (KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
             self.get_logger().warning(f"Ignored invalid coverage status: {exc}")
+
+    def on_detector_readiness(self, message: Bool) -> None:
+        was_ready = self.detector_ready
+        self.detector_ready = bool(message.data)
+        if self.detector_ready and not was_ready:
+            self.get_logger().info("YOLO readiness received; drive can start")
 
     def begin_stop(self, reason: str) -> None:
         if self.finished:
@@ -102,6 +124,9 @@ class SimulationCoverageDriver(Node):
             return
 
         if self.robot_chainage_m is None or self.first_odom_monotonic is None:
+            return
+        if not self.detector_ready:
+            self.command_pub.publish(Twist())
             return
         now = time.monotonic()
         if now - self.first_odom_monotonic < self.startup_delay_sec:

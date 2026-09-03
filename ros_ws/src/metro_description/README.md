@@ -27,9 +27,10 @@ metro_sim/models/subway_tunnel_v2/
 ```
 
 The V6 CAD export contains the chassis, four wheels, yaw and pitch assemblies,
-Odin1 housing, and four fixed-camera housings. Their CAD mounting transforms
-are retained. Existing Odin1, IMU, and five camera ROS interfaces are preserved;
-camera optical origins remain provisional until measured extrinsics are added.
+Odin1 housing, and four fixed-camera housings. Its mounting transforms are
+retained except for the explicit inspection-facing camera corrections described
+below. Existing Odin1, IMU, and five camera ROS interfaces are preserved; camera
+optical origins remain provisional until measured extrinsics are added.
 
 In simple_v6, `base_link.STL` already contains the installed Odin1 housing and
 `leida.STL` exports the same housing again. Runtime visual ownership therefore
@@ -77,17 +78,21 @@ contact. `tunnel_obstacle_guard.py` continues to remove lateral and yaw commands
 The physical Odin1/nose end defines `base_footprint +X`, so a positive
 `linear.x` command moves toward the visible robot front. The importer validates
 this convention and assigns wheels to the left/right drive pairs after applying
-the CAD-to-REP-103 root rotation. The Pitch camera faces `base_footprint -X` on
-this hardware assembly.
+the CAD-to-REP-103 root rotation.
 
 The V6 camera housings keep their CAD mounting translations, with inspection
 orientations restored explicitly: `xj1` and `xj2` look outward to the tunnel
 sides, while `xj3` and `xj4` look down toward the track. Camera body frames are
 placed at the previously validated lens-center offsets instead of each STL's
-link origin. The pitch camera frame is located on the camera geometry embedded
-in `pitch.STL`; the complete Pitch assembly is articulated 75 degrees above
-`base_footprint +X`, so its vertical FOV includes the tunnel crown. Odin1's
-calibrated internal transform is unchanged.
+link origin. Because the V6 yaw zero points the Pitch camera toward the robot
+rear, the complete yaw-to-pitch assembly is turned 180 degrees around the robot
+vertical axis. Because the exported yaw origin is not at the assembly center,
+its translation is compensated so the combined yuntai/Pitch geometry and lens
+center remain on the robot centerline. The Pitch joint itself remains at its
+undeformed V6 CAD zero pose. Its invisible sensor frame points 75 degrees above
+`base_footprint +X`, so the vertical FOV includes the tunnel crown and stays
+aligned with the visible forward-facing housing. Odin1's calibrated internal
+transform is unchanged.
 
 After changing the URDF or meshes, regenerate the Gazebo model from the
 repository root:

@@ -47,9 +47,7 @@ class SimulationCoverageEvaluator(Node):
         self.declare_parameter("publish_events", True)
         self.declare_parameter("event_republish_period_sec", 5.0)
         self.declare_parameter("status_period_sec", 2.0)
-        self.declare_parameter(
-            "model_name", "yolov8n_sim_demo_best(1).pt"
-        )
+        self.declare_parameter("model_name", "best.pt")
 
         camera_names = self._strings("camera_names")
         detection_topics = self._strings("detection_topics")

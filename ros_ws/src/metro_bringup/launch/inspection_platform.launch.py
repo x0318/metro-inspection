@@ -1,6 +1,7 @@
-"""Start the sensor simulation, RViz, and inspection dashboard together."""
+"""Start simulation, YOLO, 3D localization, RViz, and the dashboard."""
 
 import os
+from datetime import datetime
 from pathlib import Path
 
 from launch import LaunchDescription
@@ -48,13 +49,23 @@ def _launch_platform(context):
         project_dir
         / "ros_ws/src/metro_sim/scripts/open_subway_tunnel_v2_sensors.sh"
     )
+    yolo_script = project_dir / "scripts/open_yolo_coverage.sh"
     dashboard_dir = project_dir / "dashboard"
+    localization_config = (
+        project_dir
+        / "ros_ws/src/metro_mapping/metro_localization/config/localization.yaml"
+    )
 
+    detection_enabled = _as_bool(
+        LaunchConfiguration("detection").perform(context), "detection"
+    )
     configured_rviz = LaunchConfiguration("rviz_config").perform(context).strip()
     rviz_config = (
         Path(configured_rviz).expanduser().resolve()
         if configured_rviz
-        else project_dir / "ros_ws/src/metro_sim/config/odin1_pointcloud.rviz"
+        else project_dir
+        / "ros_ws/src/metro_sim/config"
+        / ("yolo_coverage.rviz" if detection_enabled else "odin1_pointcloud.rviz")
     )
     configured_database = LaunchConfiguration("database_path").perform(context).strip()
     database_path = (
@@ -72,6 +83,12 @@ def _launch_platform(context):
         LaunchConfiguration("open_browser").perform(context), "open_browser"
     )
     qt_enabled = _as_bool(LaunchConfiguration("qt").perform(context), "qt")
+    yolo_auto_drive = _as_bool(
+        LaunchConfiguration("yolo_auto_drive").perform(context), "yolo_auto_drive"
+    )
+    localization_enabled = detection_enabled and _as_bool(
+        LaunchConfiguration("localization").perform(context), "localization"
+    )
     if qt_enabled and not dashboard_enabled:
         raise ValueError("qt:=true requires dashboard:=true")
 
@@ -80,6 +97,22 @@ def _launch_platform(context):
         required_paths["dashboard directory"] = dashboard_dir
     if rviz_enabled:
         required_paths["RViz configuration"] = rviz_config
+    if detection_enabled:
+        configured_model = LaunchConfiguration("yolo_model_path").perform(context)
+        yolo_model_path = Path(configured_model).expanduser().resolve()
+        required_paths.update(
+            {
+                "YOLO launch script": yolo_script,
+                "YOLO model": yolo_model_path,
+                "YOLO Python environment": project_dir / ".venv-yolo/bin/python",
+                "YOLO NumPy compatibility overlay": project_dir
+                / ".yolo-ros-compat/numpy",
+                "YOLO OpenCV compatibility overlay": project_dir
+                / ".yolo-ros-compat/cv2",
+            }
+        )
+    if localization_enabled:
+        required_paths["3D localization configuration"] = localization_config
     for label, path in required_paths.items():
         if not path.exists():
             raise FileNotFoundError(f"{label} not found: {path}")
@@ -91,6 +124,13 @@ def _launch_platform(context):
         raise ValueError("dashboard_port must be an integer") from error
     if not 1 <= dashboard_port <= 65535:
         raise ValueError("dashboard_port must be between 1 and 65535")
+
+    configured_defect_topic = LaunchConfiguration("defect_topic").perform(context).strip()
+    defect_topic = configured_defect_topic or (
+        "/localized/defect_events"
+        if localization_enabled
+        else "/simulation/defect_events"
+    )
 
     simulation = ExecuteProcess(
         cmd=[str(simulation_script), f"gui:={'true' if gui else 'false'}"],
@@ -122,6 +162,66 @@ def _launch_platform(context):
         simulation,
     ]
 
+    if detection_enabled:
+        detection = ExecuteProcess(
+            cmd=[str(yolo_script)],
+            output="screen",
+            additional_env={
+                "METRO_YOLO_MODEL_PATH": str(yolo_model_path),
+                "METRO_COVERAGE_AUTO_DRIVE": (
+                    "true" if yolo_auto_drive else "false"
+                ),
+                "METRO_YOLO_SKIP_BUILD": "1",
+                "ROS_DOMAIN_ID": LaunchConfiguration("ros_domain_id"),
+            },
+            sigterm_timeout="10.0",
+            sigkill_timeout="5.0",
+        )
+        actions.extend(
+            [
+                RegisterEventHandler(
+                    OnProcessExit(
+                        target_action=detection,
+                        on_exit=[
+                            EmitEvent(
+                                event=Shutdown(
+                                    reason="The YOLO detection process exited"
+                                )
+                            )
+                        ],
+                    )
+                ),
+                detection,
+            ]
+        )
+
+    if localization_enabled:
+        actions.append(
+            Node(
+                package="metro_localization",
+                executable="damage_localizer",
+                name="odin1_damage_localizer",
+                output="screen",
+                parameters=[
+                    str(localization_config),
+                    {
+                        "use_sim_time": True,
+                        "detections_topic": "/damage_detections/odin1",
+                        "cloud_topic": "/odin1/cloud_raw",
+                        "image_topic": "/odin1/rgb/image_raw",
+                        "camera_info_topic": "/odin1/rgb/camera_info",
+                        "use_mask": False,
+                        "sync_queue_size": 5,
+                        "sync_slop_sec": 0.12,
+                        "publish_events": True,
+                        "event_topic": defect_topic,
+                        "camera_name": "odin1",
+                        "model_name": str(yolo_model_path),
+                    },
+                ],
+            )
+        )
+
     if rviz_enabled:
         actions.append(
             Node(
@@ -135,6 +235,12 @@ def _launch_platform(context):
         )
 
     if dashboard_enabled:
+        configured_session_id = LaunchConfiguration(
+            "inspection_session_id"
+        ).perform(context).strip()
+        inspection_session_id = configured_session_id or datetime.now().strftime(
+            "simulation-%Y%m%d-%H%M%S"
+        )
         actions.append(
             Node(
                 package="metro_dashboard_bridge",
@@ -150,11 +256,9 @@ def _launch_platform(context):
                 },
                 parameters=[
                     {
-                        "defect_topic": LaunchConfiguration("defect_topic"),
+                        "defect_topic": defect_topic,
                         "database_path": str(database_path),
-                        "inspection_session_id": LaunchConfiguration(
-                            "inspection_session_id"
-                        ),
+                        "inspection_session_id": inspection_session_id,
                     }
                 ],
             )
@@ -217,7 +321,34 @@ def generate_launch_description():
             DeclareLaunchArgument(
                 "rviz",
                 default_value="true",
-                description="Start RViz with the Odin1 point-cloud configuration.",
+                description="Start RViz with the configuration selected for this mode.",
+            ),
+            DeclareLaunchArgument(
+                "detection",
+                default_value="true",
+                description="Start five-camera YOLO and use its RViz configuration.",
+            ),
+            DeclareLaunchArgument(
+                "yolo_model_path",
+                default_value=os.environ.get(
+                    "METRO_YOLO_MODEL_PATH",
+                    "/home/jo/incoming/best.pt",
+                ),
+                description="YOLO checkpoint used when detection is enabled.",
+            ),
+            DeclareLaunchArgument(
+                "yolo_auto_drive",
+                default_value="false",
+                description="Drive the bounded ten-site coverage pass automatically.",
+            ),
+            DeclareLaunchArgument(
+                "localization",
+                default_value="true",
+                description=(
+                    "Fuse Odin1 YOLO boxes with its calibrated point cloud and "
+                    "publish 3D engineering-location events. Effective only "
+                    "when detection is enabled."
+                ),
             ),
             DeclareLaunchArgument(
                 "dashboard",
@@ -237,22 +368,31 @@ def generate_launch_description():
             DeclareLaunchArgument(
                 "rviz_config",
                 default_value="",
-                description="RViz config path; empty uses metro_sim/config/odin1_pointcloud.rviz.",
+                description="RViz config path; empty selects the sensor or YOLO profile.",
             ),
             DeclareLaunchArgument(
                 "defect_topic",
-                default_value="/simulation/defect_events",
-                description="DefectEvent topic consumed by the dashboard.",
+                default_value="",
+                description=(
+                    "DefectEvent topic used by localization and dashboard; empty "
+                    "selects localized events or simulation coverage automatically."
+                ),
             ),
             DeclareLaunchArgument(
                 "database_path",
                 default_value="",
-                description="SQLite path; empty uses ~/.local/share/metro-inspection/defects.sqlite3.",
+                description=(
+                    "SQLite path; empty uses "
+                    "~/.local/share/metro-inspection/defects.sqlite3."
+                ),
             ),
             DeclareLaunchArgument(
                 "inspection_session_id",
-                default_value="simulation",
-                description="Dashboard event session stored in SQLite.",
+                default_value="",
+                description=(
+                    "Dashboard event session stored in SQLite; empty creates a "
+                    "fresh timestamped simulation session for each launch."
+                ),
             ),
             DeclareLaunchArgument(
                 "dashboard_bind_address",

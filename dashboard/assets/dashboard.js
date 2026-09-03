@@ -35,12 +35,41 @@ createApp({
       { id: 'xj4', label: 'XJ4' },
       { id: 'pitch_camera', label: 'Pitch' }
     ]);
+    const yoloCameraCatalog = Object.freeze([
+      { id: 'yolo_xj1', label: 'XJ1' },
+      { id: 'yolo_xj2', label: 'XJ2' },
+      { id: 'yolo_xj3', label: 'XJ3' },
+      { id: 'yolo_xj4', label: 'XJ4' },
+      { id: 'yolo_pitch_camera', label: 'Pitch' }
+    ]);
+    const eventCameraCatalog = Object.freeze([
+      ...cameraCatalog,
+      { id: 'odin1', label: 'Odin1（三维定位）' }
+    ]);
     const cameras = Object.freeze([
       { id: 'all', label: '全部相机' },
-      ...cameraCatalog
+      ...eventCameraCatalog
     ]);
+    const defectTypeLabels = Object.freeze({
+      fastener_loose: 'koujianwaixie',
+      fastener_broken: 'koujianduanlie',
+      fastener_missing: 'koujianqueshi',
+      foreign_object: 'yiwu',
+      bracket_loose: 'guanxiansongtuo',
+      segment_damage: 'guanpianposun',
+      crack: 'liefeng',
+      water_leakage: 'shenloushui'
+    });
 
-    const monitorCameras = computed(() => cameraCatalog.map(camera => {
+    function defectTypeLabel(value) {
+      const className = String(value || '').trim();
+      if (!className) return '未分类';
+      return defectTypeLabels[className] || className;
+    }
+
+    const monitorCameras = computed(() => {
+      const catalog = activeView.value === 'yolo' ? yoloCameraCatalog : cameraCatalog;
+      return catalog.map(camera => {
       const status = cameraStatuses.value.find(item => item.id === camera.id);
       return {
         ...camera,
@@ -51,7 +80,8 @@ createApp({
         frames_received: Number(status?.frames_received || 0),
         stream_url: status?.stream_url || `/api/cameras/${camera.id}/stream.mjpg`
       };
-    }));
+      });
+    });
 
     const onlineCameraCount = computed(() => (
       monitorCameras.value.filter(camera => camera.available).length
@@ -94,6 +124,7 @@ createApp({
           item.detection_id,
           item.type,
           item.class_name,
+          defectTypeLabels[item.type],
           item.mileage,
           item.semantic_location?.segment_name,
           item.semantic_location?.segment_id
@@ -127,7 +158,9 @@ createApp({
 
     watch(activeView, value => {
       if (value === 'report') nextTick(renderCharts);
-      if (value !== 'cameras') focusedCameraId.value = '';
+      focusedCameraId.value = '';
+      if (value === 'cameras') selectedMonitorCameraId.value = 'xj1';
+      if (value === 'yolo') selectedMonitorCameraId.value = 'yolo_xj1';
     });
 
     watch(records, () => {
@@ -294,7 +327,7 @@ createApp({
 
       const counts = {};
       records.value.forEach(item => {
-        const name = item.type || '未分类';
+        const name = defectTypeLabel(item.type);
         counts[name] = (counts[name] || 0) + 1;
       });
       const typeData = Object.entries(counts).map(([name, value]) => ({ name, value }));
@@ -362,6 +395,7 @@ createApp({
       summary,
       cameraLabel,
       cameraCount,
+      defectTypeLabel,
       refreshData,
       levelText,
       severityClass,

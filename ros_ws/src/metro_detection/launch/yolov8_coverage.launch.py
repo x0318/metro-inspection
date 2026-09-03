@@ -11,7 +11,7 @@ from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 
 
-DEFAULT_MODEL_PATH = "/home/jo/incoming/yolov8n_sim_demo_best(1).pt"
+DEFAULT_MODEL_PATH = "/home/jo/incoming/best.pt"
 
 
 def generate_launch_description():
@@ -56,6 +56,7 @@ def generate_launch_description():
                 "use_sim_time": ParameterValue(
                     LaunchConfiguration("use_sim_time"), value_type=bool
                 ),
+                "model_name": LaunchConfiguration("model_path"),
                 "publish_events": ParameterValue(
                     LaunchConfiguration("publish_events"), value_type=bool
                 ),

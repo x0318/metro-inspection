@@ -167,6 +167,21 @@ CAMERA_HOUSING_RPY = {
     "xj4_joint": "-1.5707963267949 1.5707963267949 0",
 }
 
+# The CAD zero pose points the gimbal camera toward base_footprint -X. Rotate
+# the complete yaw-to-pitch assembly 180 degrees around the robot vertical axis.
+# Its CAD joint origin is asymmetric, so compensate the yaw translation to keep
+# the combined yuntai/pitch bounding-box center on the robot centerline.
+HARDWARE_JOINT_ORIGINS = {
+    "yaw_joint": (
+        "0.080728936235469 -0.166 0.033082880992946",
+        "3.14159265358979 -1.5707963267949 0",
+    ),
+    "pitch_joint": (
+        "0 0.01 0",
+        "3.14050535389669 -1.5707963267949 0",
+    ),
+}
+
 # Camera-body frames use +X forward. These transforms place +X on each STL's
 # optical axis and restore the previously validated lens-center offsets. The
 # pitch camera is already part of pitch.STL, so its sensor frame is positioned
@@ -194,16 +209,10 @@ PRESERVED_JOINT_ORIGINS = {
         "0 0 0.077",
         "-1.5707963267949 -1.5707963267949 0",
     ),
-    # Articulate the pitch assembly 75 degrees above the robot +X axis. Its
-    # 34.5-degree vertical FOV then includes the tunnel crown at 90 degrees.
-    "pitch_joint": (
-        "0 0.01 0",
-        "-1.83259571459394 1.5707963267949 0",
-    ),
     "pitch_camera_joint": ("0 0 0", "0 0 0"),
     "pitch_camera_sensor_joint": (
         "-0.077300002798 0.003299999982 0.087818765",
-        "1.5707963267949 -1.5707963267949 0",
+        "-3.14159265358979 -0.260712087614 -1.57079632679489",
     ),
 }
 
@@ -573,6 +582,8 @@ def configure_hardware_tree(source_urdf: Path, template: ET.Element) -> ET.Eleme
             if origin is None:
                 raise ValueError(f"Camera housing joint {name} has no origin")
             origin.set("rpy", CAMERA_HOUSING_RPY[name])
+        if name in HARDWARE_JOINT_ORIGINS:
+            set_joint_origin(joint, *HARDWARE_JOINT_ORIGINS[name])
         if name in {"yaw_joint", "pitch_joint"}:
             make_fixed_joint(joint)
         if joint.get("type") in {"continuous", "revolute"}:

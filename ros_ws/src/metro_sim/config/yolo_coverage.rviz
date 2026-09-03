@@ -91,14 +91,14 @@ Visualization Manager:
       Max Value: 1
       Median window: 5
       Min Value: 0
-      Name: Odin1 Raw RGB
+      Name: Selected YOLO Camera
       Normalize Range: true
       Topic:
         Depth: 5
         Durability Policy: Volatile
         History Policy: Keep Last
-        Reliability Policy: Reliable
-        Value: /odin1/rgb/image_raw
+        Reliability Policy: Best Effort
+        Value: /damage_detection/xj4/annotated_image
       Value: true
   Enabled: true
   Global Options:

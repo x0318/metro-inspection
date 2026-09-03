@@ -25,6 +25,27 @@ class DetectionBox:
 
 ClassNames = Union[Sequence[str], Mapping[int, str]]
 
+CLASS_NAME_ALIASES = {
+    "裂缝": "crack",
+    "渗漏水": "water_leakage",
+    "管片破损掉块": "segment_damage",
+    "异物入侵": "foreign_object",
+    "扣件缺失": "fastener_missing",
+    "扣件断裂": "fastener_broken",
+    "扣件松动歪斜": "fastener_loose",
+    "管线支架松脱": "bracket_loose",
+}
+
+
+def normalize_class_names(class_names: ClassNames) -> ClassNames:
+    """Map checkpoint-specific labels onto the stable project taxonomy."""
+    if isinstance(class_names, Mapping):
+        return {
+            index: CLASS_NAME_ALIASES.get(str(name), str(name))
+            for index, name in class_names.items()
+        }
+    return [CLASS_NAME_ALIASES.get(str(name), str(name)) for name in class_names]
+
 
 def class_name(class_names: ClassNames, index: int) -> str:
     """Return a stable class label for list- or dict-based model metadata."""

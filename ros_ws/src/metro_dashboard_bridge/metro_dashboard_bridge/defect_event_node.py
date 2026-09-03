@@ -32,6 +32,31 @@ DEFAULT_CAMERAS = (
         "Pitch",
         "/subway_v2/pitch_camera/image_raw/compressed",
     ),
+    (
+        "yolo_xj1",
+        "XJ1 YOLO",
+        "/damage_detection/xj1/annotated_image/compressed",
+    ),
+    (
+        "yolo_xj2",
+        "XJ2 YOLO",
+        "/damage_detection/xj2/annotated_image/compressed",
+    ),
+    (
+        "yolo_xj3",
+        "XJ3 YOLO",
+        "/damage_detection/xj3/annotated_image/compressed",
+    ),
+    (
+        "yolo_xj4",
+        "XJ4 YOLO",
+        "/damage_detection/xj4/annotated_image/compressed",
+    ),
+    (
+        "yolo_pitch_camera",
+        "Pitch YOLO",
+        "/damage_detection/pitch/annotated_image/compressed",
+    ),
 )
 
 

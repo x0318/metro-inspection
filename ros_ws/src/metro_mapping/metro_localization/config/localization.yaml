@@ -14,7 +14,7 @@ damage_localizer:
     debug_image_topic: /localization/debug_projection
     marker_topic: /localization/estimated_marker
     global_frame: odom
-    sync_queue_size: 20
+    sync_queue_size: 5
     sync_slop_sec: 0.08
     roi_scale: 0.90
     min_roi_points: 3
@@ -24,6 +24,22 @@ damage_localizer:
     dbscan_min_samples: 3
     max_depth_deviation_m: 0.20
     max_debug_points: 1800
+    publish_events: false
+    event_topic: /localized/defect_events
+    camera_name: odin1
+    model_name: ""
+    event_confirmation_hits: 3
+    event_dedup_distance_m: 0.5
+    event_republish_period_sec: 2.0
+    # These are simulation engineering-location parameters, not surveyed line data.
+    chainage_start_m: 12000.0
+    chainage_axis: x
+    chainage_sign: 1.0
+    segment_start_id: 1000
+    segment_length_m: 1.2
+    segment_name: 仿真环号
+    clock_center_y_m: 0.0
+    clock_center_z_m: 1.75
 
 localization_evaluator:
   ros__parameters:

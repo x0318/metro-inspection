@@ -1,10 +1,15 @@
+import cv2
+import numpy as np
 from std_msgs.msg import Header
+from rclpy.qos import ReliabilityPolicy
 
 from metro_detection.detection_conversion import (
     DetectionBox,
     class_name,
+    normalize_class_names,
     to_detection_array,
 )
+from metro_detection.yolo_detector import image_qos_profile, to_compressed_image
 
 
 def test_class_name_supports_list_dict_and_unknown_index():
@@ -13,6 +18,40 @@ def test_class_name_supports_list_dict_and_unknown_index():
         "fastener_missing"
     )
     assert class_name(["crack"], 9) == "9"
+
+
+def test_normalize_class_names_preserves_indices_and_project_taxonomy():
+    assert normalize_class_names(
+        {0: "裂缝", 3: "扣件断裂", 7: "异物入侵"}
+    ) == {0: "crack", 3: "fastener_broken", 7: "foreign_object"}
+    assert normalize_class_names(["crack", "渗漏水"]) == [
+        "crack",
+        "water_leakage",
+    ]
+
+
+def test_image_qos_can_match_simulation_and_hardware_publishers():
+    assert (
+        image_qos_profile("reliable").reliability
+        == ReliabilityPolicy.RELIABLE
+    )
+    assert (
+        image_qos_profile("best_effort").reliability
+        == ReliabilityPolicy.BEST_EFFORT
+    )
+
+
+def test_annotated_image_is_published_as_jpeg_with_original_header():
+    header = Header()
+    header.frame_id = "xj1_optical_frame"
+    image = np.zeros((24, 32, 3), dtype=np.uint8)
+
+    output = to_compressed_image(image, header, jpeg_quality=75)
+    decoded = cv2.imdecode(np.frombuffer(output.data, np.uint8), cv2.IMREAD_COLOR)
+
+    assert output.header == header
+    assert output.format == "jpeg"
+    assert decoded.shape == image.shape
 
 
 def test_detection_array_preserves_header_and_box_geometry():

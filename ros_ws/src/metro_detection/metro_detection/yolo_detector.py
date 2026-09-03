@@ -12,11 +12,57 @@ import rclpy
 from cv_bridge import CvBridge
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
-from rclpy.qos import qos_profile_sensor_data
-from sensor_msgs.msg import Image
+from rclpy.qos import (
+    DurabilityPolicy,
+    QoSProfile,
+    ReliabilityPolicy,
+    qos_profile_sensor_data,
+)
+import cv2
+from sensor_msgs.msg import CompressedImage, Image
+from std_msgs.msg import Bool
 from vision_msgs.msg import Detection2DArray
 
-from .detection_conversion import DetectionBox, to_detection_array
+from .detection_conversion import (
+    DetectionBox,
+    normalize_class_names,
+    to_detection_array,
+)
+
+
+def image_qos_profile(reliability: str) -> QoSProfile:
+    """Create an input QoS that can wake Gazebo's demand-driven cameras."""
+    normalized = reliability.strip().lower()
+    policies = {
+        "reliable": ReliabilityPolicy.RELIABLE,
+        "best_effort": ReliabilityPolicy.BEST_EFFORT,
+    }
+    if normalized not in policies:
+        raise ValueError(
+            "image_reliability must be 'reliable' or 'best_effort', "
+            f"found {reliability!r}"
+        )
+    return QoSProfile(depth=1, reliability=policies[normalized])
+
+
+def to_compressed_image(bgr_image, header, jpeg_quality: int) -> CompressedImage:
+    """Encode one annotated OpenCV image for browser-friendly transport."""
+    quality = int(jpeg_quality)
+    if not 20 <= quality <= 95:
+        raise ValueError("annotated_jpeg_quality must be between 20 and 95")
+    success, encoded = cv2.imencode(
+        ".jpg",
+        bgr_image,
+        [cv2.IMWRITE_JPEG_QUALITY, quality],
+    )
+    if not success:
+        raise RuntimeError("OpenCV could not encode the annotated image")
+
+    message = CompressedImage()
+    message.header = header
+    message.format = "jpeg"
+    message.data = encoded.tobytes()
+    return message
 
 
 @dataclass
@@ -29,6 +75,7 @@ class CameraStream:
     annotated_image_topic: str
     detection_pub: object = None
     annotated_pub: object = None
+    annotated_compressed_pub: object = None
     image_sub: object = None
     last_inference_monotonic: float = 0.0
     received_frames: int = 0
@@ -61,7 +108,10 @@ class YoloDetector(Node):
         self.declare_parameter("fallback_to_cpu", True)
         self.declare_parameter("max_inference_rate_hz", 10.0)
         self.declare_parameter("publish_annotated_image", True)
+        self.declare_parameter("annotated_jpeg_quality", 75)
         self.declare_parameter("status_period_sec", 5.0)
+        self.declare_parameter("image_reliability", "reliable")
+        self.declare_parameter("readiness_topic", "/yolo/ready")
 
         model_path = Path(
             os.path.expanduser(str(self.get_parameter("model_path").value))
@@ -70,6 +120,43 @@ class YoloDetector(Node):
             raise RuntimeError(
                 "YOLO model does not exist: "
                 f"{model_path}. Set model_path or METRO_YOLO_MODEL_PATH."
+            )
+
+        self.bridge = CvBridge()
+        self.image_qos = image_qos_profile(
+            str(self.get_parameter("image_reliability").value)
+        )
+        self.streams = self.configure_streams()
+        self.ready = False
+        readiness_qos = QoSProfile(depth=1)
+        readiness_qos.reliability = ReliabilityPolicy.RELIABLE
+        readiness_qos.durability = DurabilityPolicy.TRANSIENT_LOCAL
+        self.readiness_pub = self.create_publisher(
+            Bool,
+            str(self.get_parameter("readiness_topic").value),
+            readiness_qos,
+        )
+        for stream in self.streams:
+            stream.detection_pub = self.create_publisher(
+                Detection2DArray,
+                stream.detections_topic,
+                qos_profile_sensor_data,
+            )
+            stream.annotated_pub = self.create_publisher(
+                Image,
+                stream.annotated_image_topic,
+                qos_profile_sensor_data,
+            )
+            stream.annotated_compressed_pub = self.create_publisher(
+                CompressedImage,
+                stream.annotated_image_topic + "/compressed",
+                qos_profile_sensor_data,
+            )
+            stream.image_sub = self.create_subscription(
+                Image,
+                stream.image_topic,
+                partial(self.on_image, stream),
+                self.image_qos,
             )
 
         try:
@@ -89,29 +176,13 @@ class YoloDetector(Node):
 
         self.torch = torch
         self.model = YOLO(str(model_path))
+        raw_names = self.model.names
+        normalized_names = normalize_class_names(raw_names)
+        self.model.model.names = normalized_names
         self.device = self.resolve_device(
             str(self.get_parameter("device").value)
         )
         self.cpu_fallback_used = False
-        self.bridge = CvBridge()
-        self.streams = self.configure_streams()
-        for stream in self.streams:
-            stream.detection_pub = self.create_publisher(
-                Detection2DArray,
-                stream.detections_topic,
-                qos_profile_sensor_data,
-            )
-            stream.annotated_pub = self.create_publisher(
-                Image,
-                stream.annotated_image_topic,
-                qos_profile_sensor_data,
-            )
-            stream.image_sub = self.create_subscription(
-                Image,
-                stream.image_topic,
-                partial(self.on_image, stream),
-                qos_profile_sensor_data,
-            )
         status_period = max(
             1.0, float(self.get_parameter("status_period_sec").value)
         )
@@ -121,13 +192,20 @@ class YoloDetector(Node):
         labels = names.values() if isinstance(names, Mapping) else names
         class_labels = ", ".join(str(name) for name in labels)
         self.get_logger().info(f"Loaded YOLO model: {model_path}")
+        if normalized_names != raw_names:
+            self.get_logger().info(
+                f"Normalized checkpoint classes: {raw_names} -> "
+                f"{normalized_names}"
+            )
         self.get_logger().info(
-            f"Device={self.device}; classes=[{class_labels}]"
+            f"Device={self.device}; image_reliability="
+            f"{self.image_qos.reliability.name}; classes=[{class_labels}]"
         )
         for stream in self.streams:
             self.get_logger().info(
                 f"Pipeline[{stream.name}]: {stream.image_topic} -> "
-                f"{stream.detections_topic}"
+                f"{stream.detections_topic}; annotated="
+                f"{stream.annotated_image_topic}[/compressed]"
             )
 
     @staticmethod
@@ -311,14 +389,36 @@ class YoloDetector(Node):
         stream.processed_frames += 1
         stream.published_boxes += len(output.detections)
         stream.inference_seconds += elapsed
+        if not self.ready and all(
+            configured.processed_frames > 0 for configured in self.streams
+        ):
+            self.ready = True
+            ready_message = Bool()
+            ready_message.data = True
+            self.readiness_pub.publish(ready_message)
+            self.get_logger().info(
+                "YOLO is ready: every configured camera has completed inference"
+            )
 
         if bool(self.get_parameter("publish_annotated_image").value):
             try:
+                rendered = result.plot()
                 annotated = self.bridge.cv2_to_imgmsg(
-                    result.plot(), encoding="bgr8"
+                    rendered, encoding="bgr8"
                 )
                 annotated.header = image.header
                 stream.annotated_pub.publish(annotated)
+                stream.annotated_compressed_pub.publish(
+                    to_compressed_image(
+                        rendered,
+                        image.header,
+                        int(
+                            self.get_parameter(
+                                "annotated_jpeg_quality"
+                            ).value
+                        ),
+                    )
+                )
             except Exception as exc:
                 self.get_logger().warning(
                     f"Cannot publish {stream.name} annotated image: {exc}"

@@ -228,7 +228,7 @@
     </collision>
   </link>
   <joint name="yaw_joint" type="fixed">
-    <origin xyz="-0.0738710600481814 -0.166 -0.0109040290468001" rpy="3.14159265358979 1.5707963267949 0" />
+    <origin xyz="0.080728936235469 -0.166 0.033082880992946" rpy="3.14159265358979 -1.5707963267949 0" />
     <parent link="base_link" />
     <child link="yuntai" />
   </joint>
@@ -255,7 +255,7 @@
     </collision>
   </link>
   <joint name="pitch_joint" type="fixed">
-    <origin xyz="0 0.01 0" rpy="-1.83259571459394 1.5707963267949 0" />
+    <origin xyz="0 0.01 0" rpy="3.14050535389669 -1.5707963267949 0" />
     <parent link="yuntai" />
     <child link="pitch" />
   </joint>
@@ -475,7 +475,7 @@
     <child link="pitch_camera" />
   </joint>
   <joint name="pitch_camera_sensor_joint" type="fixed">
-    <origin xyz="-0.077300002798 0.003299999982 0.087818765" rpy="1.5707963267949 -1.5707963267949 0" />
+    <origin xyz="-0.077300002798 0.003299999982 0.087818765" rpy="-3.14159265358979 -0.260712087614 -1.57079632679489" />
     <parent link="pitch_camera" />
     <child link="pitch_camera_sensor_link" />
   </joint>
