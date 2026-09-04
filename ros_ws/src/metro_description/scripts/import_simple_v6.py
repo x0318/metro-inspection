@@ -156,6 +156,35 @@ RIGHT_WHEEL_JOINTS = ("w1_joint", "w4_joint")
 WHEEL_MASS = "0.5"
 WHEEL_INERTIA_TRANSVERSE = "0.000812421666667"
 WHEEL_INERTIA_AXIAL = "0.0015015625"
+PITCH_AXIS = "-1 0 0"
+PITCH_LIMITS = {
+    "lower": "-0.261799387799149",
+    "upper": "0.523598775598299",
+    "effort": "10",
+    "velocity": "0.5",
+}
+PITCH_DYNAMICS = {"damping": "0.5", "friction": "0.1"}
+PITCH_CONTROL_PLUGIN = "subway_v2_pitch_control"
+PITCH_CONTROL_LIBRARY = "libgazebo_ros2_control.so"
+PITCH_CONTROL_NAMESPACE = "/subway_v2"
+PITCH_CONTROL_CONFIG = "ros_ws/src/metro_description/config/subway_v2_controllers.yaml"
+
+# The CAD zero pose points the gimbal camera toward base_footprint -X. Rotate
+# the complete yaw-to-pitch assembly 180 degrees around the robot vertical axis.
+# Its CAD joint origin is asymmetric, so compensate the yaw translation to keep
+# the combined yuntai/pitch bounding-box center on the robot centerline.
+HARDWARE_JOINT_ORIGINS = {
+    "yaw_joint": (
+        "0.080728936235469 -0.166 0.033082880992946",
+        "3.14159265358979 -1.5707963267949 0",
+    ),
+    # Zero position aims the camera 75 degrees above robot +X. The -15-degree
+    # command then aims it vertically at the tunnel crown.
+    "pitch_joint": (
+        "0 0.01 0",
+        "3.14050535389669 -1.5707963267949 0",
+    ),
+}
 
 # The V6 export flipped three camera housings relative to the inspection layout.
 # These rotations restore xj1/xj2 as outward-looking side cameras and xj3/xj4
@@ -194,16 +223,10 @@ PRESERVED_JOINT_ORIGINS = {
         "0 0 0.077",
         "-1.5707963267949 -1.5707963267949 0",
     ),
-    # Articulate the pitch assembly 75 degrees above the robot +X axis. Its
-    # 34.5-degree vertical FOV then includes the tunnel crown at 90 degrees.
-    "pitch_joint": (
-        "0 0.01 0",
-        "-1.83259571459394 1.5707963267949 0",
-    ),
     "pitch_camera_joint": ("0 0 0", "0 0 0"),
     "pitch_camera_sensor_joint": (
         "-0.077300002798 0.003299999982 0.087818765",
-        "1.5707963267949 -1.5707963267949 0",
+        "-3.14159265358979 -0.260712087614 -1.57079632679489",
     ),
 }
 
@@ -492,6 +515,33 @@ def make_fixed_joint(joint: ET.Element) -> None:
             joint.remove(element)
 
 
+def configure_pitch_joint(joint: ET.Element) -> None:
+    """Restore the bounded V6 pitch axis and deterministic simulation limits."""
+    joint.set("type", "revolute")
+    axis = joint.find("axis")
+    if axis is None:
+        axis = ET.SubElement(joint, "axis")
+    axis.set("xyz", PITCH_AXIS)
+    for duplicate in joint.findall("axis")[1:]:
+        joint.remove(duplicate)
+
+    limit = joint.find("limit")
+    if limit is None:
+        limit = ET.SubElement(joint, "limit")
+    limit.attrib.clear()
+    limit.attrib.update(PITCH_LIMITS)
+    for duplicate in joint.findall("limit")[1:]:
+        joint.remove(duplicate)
+
+    dynamics = joint.find("dynamics")
+    if dynamics is None:
+        dynamics = ET.SubElement(joint, "dynamics")
+    dynamics.attrib.clear()
+    dynamics.attrib.update(PITCH_DYNAMICS)
+    for duplicate in joint.findall("dynamics")[1:]:
+        joint.remove(duplicate)
+
+
 def append_preserved_sensors(root: ET.Element, template: ET.Element) -> None:
     for name in PRESERVED_SENSOR_LINKS:
         element = template.find(f"./link[@name='{name}']")
@@ -573,13 +623,18 @@ def configure_hardware_tree(source_urdf: Path, template: ET.Element) -> ET.Eleme
             if origin is None:
                 raise ValueError(f"Camera housing joint {name} has no origin")
             origin.set("rpy", CAMERA_HOUSING_RPY[name])
-        if name in {"yaw_joint", "pitch_joint"}:
+        if name in HARDWARE_JOINT_ORIGINS:
+            set_joint_origin(joint, *HARDWARE_JOINT_ORIGINS[name])
+        if name == "yaw_joint":
             make_fixed_joint(joint)
+        if name == "pitch_joint":
+            configure_pitch_joint(joint)
         if joint.get("type") in {"continuous", "revolute"}:
             dynamics = joint.find("dynamics")
             if dynamics is None:
                 dynamics = ET.SubElement(joint, "dynamics")
-            dynamics.attrib.update({"damping": "0.2", "friction": "0.05"})
+            if name != "pitch_joint":
+                dynamics.attrib.update({"damping": "0.2", "friction": "0.05"})
 
     root.insert(0, ET.Element("link", {"name": "base_footprint"}))
     base_joint = ET.Element(
@@ -595,13 +650,16 @@ def configure_hardware_tree(source_urdf: Path, template: ET.Element) -> ET.Eleme
 
 
 def copy_gazebo_configuration(root: ET.Element, template: ET.Element) -> None:
+    control_blocks = template.findall("ros2_control")
+    if len(control_blocks) != 1:
+        raise ValueError(
+            f"Expected one ros2_control block in the template, found {len(control_blocks)}"
+        )
+    root.append(copy.deepcopy(control_blocks[0]))
+
     for gazebo in template.findall("gazebo"):
         copied = copy.deepcopy(gazebo)
         for plugin in copied.findall(".//plugin"):
-            if plugin.get("name") == "subway_v2_joint_state":
-                for joint_name in list(plugin.findall("joint_name")):
-                    if (joint_name.text or "").strip() == "pitch_joint":
-                        plugin.remove(joint_name)
             if plugin.get("name") == "subway_v2_diff_drive":
                 left = plugin.findall("left_joint")
                 right = plugin.findall("right_joint")
@@ -723,6 +781,57 @@ def validate_tree(root: ET.Element) -> None:
     if len(leida_links[0].findall("collision")) != 1:
         raise ValueError("leida must retain exactly one collision")
 
+    for joint_name, (expected_xyz, expected_rpy) in HARDWARE_JOINT_ORIGINS.items():
+        joint = root.find(f"./joint[@name='{joint_name}']")
+        origin = joint.find("origin") if joint is not None else None
+        if (
+            origin is None
+            or origin.get("xyz") != expected_xyz
+            or origin.get("rpy") != expected_rpy
+        ):
+            raise ValueError(
+                f"{joint_name} must preserve the corrected gimbal zero pose"
+            )
+
+    pitch_joint = root.find("./joint[@name='pitch_joint']")
+    if pitch_joint is None or pitch_joint.get("type") != "revolute":
+        raise ValueError("pitch_joint must be revolute")
+    pitch_origin = pitch_joint.find("origin")
+    expected_pitch_xyz, expected_pitch_rpy = HARDWARE_JOINT_ORIGINS["pitch_joint"]
+    if (
+        pitch_origin is None
+        or pitch_origin.get("xyz") != expected_pitch_xyz
+        or pitch_origin.get("rpy") != expected_pitch_rpy
+    ):
+        raise ValueError("pitch_joint zero pose must preserve the 75-degree view")
+    pitch_axis = pitch_joint.find("axis")
+    if pitch_axis is None or pitch_axis.get("xyz") != PITCH_AXIS:
+        raise ValueError(f"pitch_joint axis must be {PITCH_AXIS}")
+    pitch_limit = pitch_joint.find("limit")
+    if pitch_limit is None or pitch_limit.attrib != PITCH_LIMITS:
+        raise ValueError(f"pitch_joint limits must be {PITCH_LIMITS}")
+    pitch_dynamics = pitch_joint.find("dynamics")
+    if pitch_dynamics is None or pitch_dynamics.attrib != PITCH_DYNAMICS:
+        raise ValueError(f"pitch_joint dynamics must be {PITCH_DYNAMICS}")
+
+    control_blocks = root.findall("ros2_control")
+    if len(control_blocks) != 1:
+        raise ValueError(f"Expected one ros2_control block, found {len(control_blocks)}")
+    control = control_blocks[0]
+    if (
+        control.get("name") != "subway_v2_pitch_system"
+        or control.get("type") != "system"
+        or (control.findtext("hardware/plugin") or "").strip()
+        != "gazebo_ros2_control/GazeboSystem"
+    ):
+        raise ValueError("Unexpected subway_v2 Pitch ros2_control system")
+    controlled_joint = control.find("./joint[@name='pitch_joint']")
+    if controlled_joint is None:
+        raise ValueError("ros2_control must expose pitch_joint")
+    command_interface = controlled_joint.find("./command_interface[@name='position']")
+    if command_interface is None:
+        raise ValueError("pitch_joint needs a position command interface")
+
     required_unique = {
         "link": ("lidar_link", "imu_link", "odin1_rgb_optical_frame"),
         "joint": ("lidar_joint", "imu_joint", "odin1_rgb_optical_joint"),
@@ -731,6 +840,8 @@ def validate_tree(root: ET.Element) -> None:
             "odin1_pointcloud_plugin",
             "odin1_imu_plugin",
             "odin1_rgb_camera_plugin",
+            "subway_v2_joint_state",
+            PITCH_CONTROL_PLUGIN,
         ),
     }
     for tag, names in required_unique.items():
@@ -740,6 +851,24 @@ def validate_tree(root: ET.Element) -> None:
                 raise ValueError(
                     f"Expected exactly one {tag} named {name}, found {counts[name]}"
                 )
+
+    state_plugin = root.find(".//plugin[@name='subway_v2_joint_state']")
+    state_joints = {
+        (element.text or "").strip()
+        for element in state_plugin.findall("joint_name")
+    }
+    if "pitch_joint" not in state_joints:
+        raise ValueError("subway_v2_joint_state must publish pitch_joint")
+
+    pitch_control = root.find(f".//plugin[@name='{PITCH_CONTROL_PLUGIN}']")
+    if pitch_control.get("filename") != PITCH_CONTROL_LIBRARY:
+        raise ValueError("Pitch control uses the wrong Gazebo plugin library")
+    namespace = (pitch_control.findtext("ros/namespace") or "").strip()
+    config = (pitch_control.findtext("parameters") or "").strip()
+    if namespace != PITCH_CONTROL_NAMESPACE:
+        raise ValueError(f"Unexpected Pitch control namespace: {namespace}")
+    if config != PITCH_CONTROL_CONFIG:
+        raise ValueError(f"Unexpected Pitch controller config path: {config}")
 
     for sensor in root.findall(".//gazebo/sensor"):
         name = sensor.get("name", "")

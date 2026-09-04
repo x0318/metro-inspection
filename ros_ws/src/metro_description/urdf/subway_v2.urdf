@@ -228,7 +228,7 @@
     </collision>
   </link>
   <joint name="yaw_joint" type="fixed">
-    <origin xyz="-0.0738710600481814 -0.166 -0.0109040290468001" rpy="3.14159265358979 1.5707963267949 0" />
+    <origin xyz="0.080728936235469 -0.166 0.033082880992946" rpy="3.14159265358979 -1.5707963267949 0" />
     <parent link="base_link" />
     <child link="yuntai" />
   </joint>
@@ -254,10 +254,13 @@
       </geometry>
     </collision>
   </link>
-  <joint name="pitch_joint" type="fixed">
-    <origin xyz="0 0.01 0" rpy="-1.83259571459394 1.5707963267949 0" />
+  <joint name="pitch_joint" type="revolute">
+    <origin xyz="0 0.01 0" rpy="3.14050535389669 -1.5707963267949 0" />
     <parent link="yuntai" />
     <child link="pitch" />
+    <axis xyz="-1 0 0" />
+    <limit lower="-0.261799387799149" upper="0.523598775598299" effort="10" velocity="0.5" />
+    <dynamics damping="0.5" friction="0.1" />
   </joint>
   <link name="leida">
     <inertial>
@@ -475,7 +478,7 @@
     <child link="pitch_camera" />
   </joint>
   <joint name="pitch_camera_sensor_joint" type="fixed">
-    <origin xyz="-0.077300002798 0.003299999982 0.087818765" rpy="1.5707963267949 -1.5707963267949 0" />
+    <origin xyz="-0.077300002798 0.003299999982 0.087818765" rpy="-3.14159265358979 -0.260712087614 -1.57079632679489" />
     <parent link="pitch_camera" />
     <child link="pitch_camera_sensor_link" />
   </joint>
@@ -484,6 +487,22 @@
     <parent link="pitch_camera_sensor_link" />
     <child link="pitch_camera_optical_frame" />
   </joint>
+  <ros2_control name="subway_v2_pitch_system" type="system">
+    <hardware>
+      <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+    </hardware>
+    <joint name="pitch_joint">
+      <command_interface name="position">
+        <param name="min">-0.261799387799149</param>
+        <param name="max">0.523598775598299</param>
+      </command_interface>
+      <state_interface name="position">
+        <param name="initial_value">0</param>
+      </state_interface>
+      <state_interface name="velocity" />
+      <state_interface name="effort" />
+    </joint>
+  </ros2_control>
   <gazebo>
     <static>false</static>
     <plugin name="subway_v2_diff_drive" filename="libgazebo_ros_diff_drive.so">
@@ -518,6 +537,16 @@
       <joint_name>w2_joint</joint_name>
       <joint_name>w3_joint</joint_name>
       <joint_name>w4_joint</joint_name>
+      <joint_name>pitch_joint</joint_name>
+    </plugin>
+    <plugin name="subway_v2_pitch_control" filename="libgazebo_ros2_control.so">
+      <ros>
+        <namespace>/subway_v2</namespace>
+      </ros>
+      <robot_param>robot_description</robot_param>
+      <robot_param_node>/robot_state_publisher</robot_param_node>
+      <parameters>ros_ws/src/metro_description/config/subway_v2_controllers.yaml</parameters>
+      <hold_joints>true</hold_joints>
     </plugin>
   </gazebo>
   <gazebo reference="base_link">

@@ -53,10 +53,13 @@ temporary camera-free SDF from this same model and runs Gazebo without its GUI;
 it does not copy meshes or change the real lidar's resolution, field of view,
 range, noise, or requested frame rate.
 
-Yaw and pitch are locked at the V6 CAD zero pose because this model does not yet
-have a position controller for those joints. Making them freely revolute lets
-gravity rotate the gimbal away from its mounting pose. They can be made movable
-when a controller and commanded initial positions are added.
+Yaw remains locked at the V6 CAD zero pose. Pitch is a bounded revolute joint
+held by a `gazebo_ros2_control` position controller; its joint range is
+`-15 deg` to `+30 deg`. The launch scripts command `0 deg` at startup so gravity
+cannot move it away from the inspection pose. At joint zero the camera optical
+axis is 75 degrees above robot +X; a `-15 deg` joint command aims it straight at
+the tunnel crown, while positive commands lower it toward the forward view. The
+raw controller input is `/subway_v2/pitch_position_controller/commands`.
 
 Each V6 wheel assembly is split reproducibly into a 520-triangle rotating
 flanged wheel and a fixed motor/mount mesh. The wheel joint axes are moved to
@@ -77,8 +80,7 @@ contact. `tunnel_obstacle_guard.py` continues to remove lateral and yaw commands
 The physical Odin1/nose end defines `base_footprint +X`, so a positive
 `linear.x` command moves toward the visible robot front. The importer validates
 this convention and assigns wheels to the left/right drive pairs after applying
-the CAD-to-REP-103 root rotation. The Pitch camera faces `base_footprint -X` on
-this hardware assembly.
+the CAD-to-REP-103 root rotation.
 
 The V6 camera housings keep their CAD mounting translations, with inspection
 orientations restored explicitly: `xj1` and `xj2` look outward to the tunnel
@@ -88,6 +90,14 @@ link origin. The pitch camera frame is located on the camera geometry embedded
 in `pitch.STL`; the complete Pitch assembly is articulated 75 degrees above
 `base_footprint +X`, so its vertical FOV includes the tunnel crown. Odin1's
 calibrated internal transform is unchanged.
+
+With a simulation running, command the Pitch joint in degrees using:
+
+```bash
+./ros_ws/src/metro_sim/scripts/set_subway_v2_pitch.sh -15  # straight up
+./ros_ws/src/metro_sim/scripts/set_subway_v2_pitch.sh 0    # 75 deg upward
+./ros_ws/src/metro_sim/scripts/set_subway_v2_pitch.sh 30   # 45 deg upward
+```
 
 After changing the URDF or meshes, regenerate the Gazebo model from the
 repository root:

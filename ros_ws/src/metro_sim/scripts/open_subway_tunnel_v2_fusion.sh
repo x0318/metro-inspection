@@ -4,6 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 METRO_SIM_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 ROS_WS_DIR="$(cd "${METRO_SIM_DIR}/../.." && pwd)"
+REPOSITORY_DIR="$(cd "${ROS_WS_DIR}/.." && pwd)"
 DESCRIPTION_DIR="${ROS_WS_DIR}/src/metro_description"
 
 WORLD_FILE="${METRO_SIM_DIR}/worlds/subway_tunnel_v2_fusion.world"
@@ -14,6 +15,7 @@ FUSION_MODEL_SCRIPT="${SCRIPT_DIR}/prepare_subway_v2_fusion_model.py"
 SOURCE_MODEL_SDF="${METRO_SIM_DIR}/models/subway_v2/model.sdf"
 WATCHDOG_SCRIPT="${SCRIPT_DIR}/cmd_vel_watchdog.py"
 WATCHDOG_PARAMS="${METRO_SIM_DIR}/config/tunnel_guard_production.yaml"
+PITCH_COMMAND_SCRIPT="${SCRIPT_DIR}/set_subway_v2_pitch.sh"
 
 if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
   cat <<'EOF'
@@ -28,6 +30,8 @@ Environment overrides:
   ROS_DOMAIN_ID                         ROS 2 discovery domain (default: 70)
   SUBWAY_TUNNEL_V2_GAZEBO_MASTER_URI  Gazebo master URI
                                        (default: http://127.0.0.1:11374)
+  SUBWAY_V2_INITIAL_PITCH_DEG          Pitch joint start command, -15 to +30
+                                       (default: 0; camera optical axis: 75 deg)
 
 Examples:
   ./ros_ws/src/metro_sim/scripts/open_subway_tunnel_v2_fusion.sh
@@ -45,6 +49,7 @@ for required_file in \
   "${SOURCE_MODEL_SDF}" \
   "${WATCHDOG_SCRIPT}" \
   "${WATCHDOG_PARAMS}" \
+  "${PITCH_COMMAND_SCRIPT}" \
   "${METRO_SIM_DIR}/models/subway_tunnel_v2/model.sdf"; do
   if [[ ! -f "${required_file}" ]]; then
     echo "Required file not found: ${required_file}" >&2
@@ -65,7 +70,13 @@ for required_command in python3 check_urdf ros2 gz; do
     exit 1
   fi
 done
-for required_package in metro_closed_loop metro_localization robot_localization; do
+for required_package in \
+  controller_manager \
+  gazebo_ros2_control \
+  metro_closed_loop \
+  metro_localization \
+  position_controllers \
+  robot_localization; do
   if ! ros2 pkg prefix "${required_package}" >/dev/null 2>&1; then
     echo "Required ROS package not found: ${required_package}" >&2
     echo "Build the workspace and install ros-humble-robot-localization." >&2
@@ -113,11 +124,15 @@ ROBOT_STATE_PUBLISHER_PID=""
 FUSION_LAUNCH_PID=""
 CMD_VEL_WATCHDOG_PID=""
 ODOMETRY_FUSION_PID=""
+PITCH_INITIALIZER_PID=""
+PITCH_CONTROLLER_SPAWNER_PID=""
 
 cleanup() {
   local exit_code=$?
   trap - EXIT INT TERM
   for child_pid in \
+    "${PITCH_INITIALIZER_PID}" \
+    "${PITCH_CONTROLLER_SPAWNER_PID}" \
     "${FUSION_LAUNCH_PID}" \
     "${ODOMETRY_FUSION_PID}" \
     "${CMD_VEL_WATCHDOG_PID}" \
@@ -166,6 +181,15 @@ ros2 launch metro_closed_loop subway_v2_fusion.launch.py \
   run_placeholder_detector:=false &
 FUSION_LAUNCH_PID=$!
 
+ros2 run controller_manager spawner pitch_position_controller \
+  --controller-manager /subway_v2/controller_manager \
+  --controller-manager-timeout 60 &
+PITCH_CONTROLLER_SPAWNER_PID=$!
+
+"${PITCH_COMMAND_SCRIPT}" "${SUBWAY_V2_INITIAL_PITCH_DEG:-0}" &
+PITCH_INITIALIZER_PID=$!
+
+cd "${REPOSITORY_DIR}"
 ros2 launch gazebo_ros gazebo.launch.py \
   world:="${WORLD_FILE}" \
   verbose:=true \

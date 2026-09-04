@@ -18,6 +18,7 @@ MAPPING_DB_PATH="${SUBWAY_MAPPING_DB_PATH:-${REPOSITORY_DIR}/results/maps/subway
 MAPPING_RESET_DATABASE="${SUBWAY_MAPPING_RESET_DATABASE:-true}"
 WATCHDOG_SCRIPT="${SCRIPT_DIR}/cmd_vel_watchdog.py"
 WATCHDOG_PARAMS="${METRO_SIM_DIR}/config/tunnel_guard_production.yaml"
+PITCH_COMMAND_SCRIPT="${SCRIPT_DIR}/set_subway_v2_pitch.sh"
 
 if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
   cat <<'EOF'
@@ -38,6 +39,8 @@ Environment overrides:
                                        (default: results/maps/subway_v2_rtabmap.db)
   SUBWAY_MAPPING_RESET_DATABASE        true starts a new graph; false resumes
                                        the database (default: true)
+  SUBWAY_V2_INITIAL_PITCH_DEG          Pitch joint start command, -15 to +30
+                                       (default: 0; camera optical axis: 75 deg)
 
 Examples:
   ./ros_ws/src/metro_sim/scripts/open_subway_tunnel_v2_mapping.sh
@@ -55,6 +58,7 @@ for required_file in \
   "${SOURCE_MODEL_SDF}" \
   "${WATCHDOG_SCRIPT}" \
   "${WATCHDOG_PARAMS}" \
+  "${PITCH_COMMAND_SCRIPT}" \
   "${METRO_SIM_DIR}/models/subway_tunnel_v2/model.sdf"; do
   if [[ ! -f "${required_file}" ]]; then
     echo "Required file not found: ${required_file}" >&2
@@ -77,8 +81,11 @@ for required_command in python3 check_urdf ros2 gz ldd; do
 done
 
 for required_package in \
+  controller_manager \
+  gazebo_ros2_control \
   metro_localization \
   metro_pointcloud_mapping \
+  position_controllers \
   robot_localization \
   rtabmap_odom \
   rtabmap_slam \
@@ -136,11 +143,15 @@ MAPPING_MODEL_DIR="${RUN_DIR}/subway_v2_mapping"
 ROBOT_STATE_PUBLISHER_PID=""
 GRAPH_SLAM_PID=""
 CMD_VEL_WATCHDOG_PID=""
+PITCH_INITIALIZER_PID=""
+PITCH_CONTROLLER_SPAWNER_PID=""
 
 cleanup() {
   local exit_code=$?
   trap - EXIT INT TERM
   for child_pid in \
+    "${PITCH_INITIALIZER_PID}" \
+    "${PITCH_CONTROLLER_SPAWNER_PID}" \
     "${GRAPH_SLAM_PID}" \
     "${CMD_VEL_WATCHDOG_PID}" \
     "${ROBOT_STATE_PUBLISHER_PID}"; do
@@ -197,6 +208,15 @@ env LD_LIBRARY_PATH="${MAPPING_LD_LIBRARY_PATH}" \
   reset_database:="${MAPPING_RESET_DATABASE}" &
 GRAPH_SLAM_PID=$!
 
+ros2 run controller_manager spawner pitch_position_controller \
+  --controller-manager /subway_v2/controller_manager \
+  --controller-manager-timeout 60 &
+PITCH_CONTROLLER_SPAWNER_PID=$!
+
+"${PITCH_COMMAND_SCRIPT}" "${SUBWAY_V2_INITIAL_PITCH_DEG:-0}" &
+PITCH_INITIALIZER_PID=$!
+
+cd "${REPOSITORY_DIR}"
 ros2 launch gazebo_ros gazebo.launch.py \
   world:="${WORLD_FILE}" \
   verbose:=true \

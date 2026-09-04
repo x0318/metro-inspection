@@ -82,6 +82,13 @@ SIDE_CAMERA_FORWARDS = {
 }
 PITCH_CAMERA_FORWARD = (0.258819045102521, 0.0, 0.965925826289068)
 PITCH_CAMERA_UP = (-0.965925826289068, 0.0, 0.258819045102521)
+PITCH_JOINT_AXIS = (-1.0, 0.0, 0.0)
+PITCH_JOINT_LOWER = -0.261799387799149
+PITCH_JOINT_UPPER = 0.523598775598299
+PITCH_JOINT_EFFORT = 10.0
+PITCH_JOINT_VELOCITY = 0.5
+PITCH_CONTROL_NAMESPACE = "/subway_v2"
+PITCH_CONTROL_CONFIG = "ros_ws/src/metro_description/config/subway_v2_controllers.yaml"
 WHEEL_NAMES = ("w1", "w2", "w3", "w4")
 LEFT_WHEEL_JOINTS = ("w2_joint", "w3_joint")
 RIGHT_WHEEL_JOINTS = ("w1_joint", "w4_joint")
@@ -456,6 +463,107 @@ def validate_wheel_drive(model: ET.Element) -> None:
             )
 
 
+def validate_pitch_control(model: ET.Element, urdf_root: ET.Element) -> None:
+    urdf_joint = urdf_root.find("./joint[@name='pitch_joint']")
+    if urdf_joint is None or urdf_joint.get("type") != "revolute":
+        raise ValueError("URDF pitch_joint must be revolute")
+    urdf_axis_node = urdf_joint.find("axis")
+    if urdf_axis_node is None:
+        raise ValueError("URDF pitch_joint axis is missing")
+    urdf_axis = parse_values(
+        urdf_axis_node.get("xyz", ""), 3, "URDF pitch_joint axis"
+    )
+    if urdf_axis != PITCH_JOINT_AXIS:
+        raise ValueError(
+            f"URDF pitch_joint axis must be {PITCH_JOINT_AXIS}, found {urdf_axis}"
+        )
+    urdf_limit = urdf_joint.find("limit")
+    if urdf_limit is None:
+        raise ValueError("URDF pitch_joint limits are missing")
+    expected_limits = {
+        "lower": PITCH_JOINT_LOWER,
+        "upper": PITCH_JOINT_UPPER,
+        "effort": PITCH_JOINT_EFFORT,
+        "velocity": PITCH_JOINT_VELOCITY,
+    }
+    for name, expected in expected_limits.items():
+        actual = float(urdf_limit.get(name, "nan"))
+        if not math.isfinite(actual) or abs(actual - expected) > 1e-9:
+            raise ValueError(
+                f"URDF pitch_joint {name} must be {expected}, found {actual}"
+            )
+
+    control_blocks = urdf_root.findall("ros2_control")
+    if len(control_blocks) != 1:
+        raise ValueError(f"Expected one URDF ros2_control block, found {len(control_blocks)}")
+    control = control_blocks[0]
+    if (
+        control.get("name") != "subway_v2_pitch_system"
+        or control.get("type") != "system"
+        or (control.findtext("hardware/plugin") or "").strip()
+        != "gazebo_ros2_control/GazeboSystem"
+    ):
+        raise ValueError("Unexpected subway_v2 Pitch ros2_control system")
+    controlled_joint = control.find("./joint[@name='pitch_joint']")
+    if controlled_joint is None:
+        raise ValueError("ros2_control must expose pitch_joint")
+    command_interface = controlled_joint.find("./command_interface[@name='position']")
+    if command_interface is None:
+        raise ValueError("pitch_joint needs a position command interface")
+
+    sdf_joint = model.find("./joint[@name='pitch_joint']")
+    if sdf_joint is None or sdf_joint.get("type") != "revolute":
+        raise ValueError("Generated SDF pitch_joint must be revolute")
+    sdf_axis_text = sdf_joint.findtext("axis/xyz")
+    if sdf_axis_text is None:
+        raise ValueError("Generated SDF pitch_joint axis is missing")
+    sdf_axis = parse_values(sdf_axis_text, 3, "SDF pitch_joint axis")
+    if sdf_axis != PITCH_JOINT_AXIS:
+        raise ValueError(
+            f"SDF pitch_joint axis must be {PITCH_JOINT_AXIS}, found {sdf_axis}"
+        )
+    for name, expected in expected_limits.items():
+        text = sdf_joint.findtext(f"axis/limit/{name}")
+        actual = float(text) if text is not None else math.nan
+        if not math.isfinite(actual) or abs(actual - expected) > 1e-6:
+            raise ValueError(
+                f"SDF pitch_joint {name} must be {expected}, found {actual}"
+            )
+
+    state_plugins = model.findall("./plugin[@name='subway_v2_joint_state']")
+    if len(state_plugins) != 1:
+        raise ValueError(
+            f"Expected one subway_v2_joint_state plugin, found {len(state_plugins)}"
+        )
+    published_joints = {
+        (element.text or "").strip()
+        for element in state_plugins[0].findall("joint_name")
+    }
+    if "pitch_joint" not in published_joints:
+        raise ValueError("subway_v2_joint_state must publish pitch_joint")
+
+    control_plugins = model.findall("./plugin[@name='subway_v2_pitch_control']")
+    if len(control_plugins) != 1:
+        raise ValueError(
+            f"Expected one subway_v2_pitch_control plugin, found {len(control_plugins)}"
+        )
+    control_plugin = control_plugins[0]
+    if control_plugin.get("filename") != "libgazebo_ros2_control.so":
+        raise ValueError("Pitch control uses the wrong Gazebo plugin")
+    namespace = (control_plugin.findtext("ros/namespace") or "").strip()
+    if namespace != PITCH_CONTROL_NAMESPACE:
+        raise ValueError("Pitch control namespace changed unexpectedly")
+    config = (control_plugin.findtext("parameters") or "").strip()
+    if config != PITCH_CONTROL_CONFIG:
+        raise ValueError(f"Unexpected Pitch controller config path: {config}")
+    parameter_node = (control_plugin.findtext("robot_param_node") or "").strip()
+    if parameter_node != "/robot_state_publisher":
+        raise ValueError(f"Unexpected robot description owner: {parameter_node}")
+    hold_joints = (control_plugin.findtext("hold_joints") or "").strip().lower()
+    if hold_joints not in {"true", "1"}:
+        raise ValueError("Pitch control must hold unclaimed joints during startup")
+
+
 def validate_generated_model(model: ET.Element, urdf_root: ET.Element) -> None:
     sensor_counts = Counter(
         sensor.get("name", "") for sensor in model.findall(".//sensor")
@@ -508,10 +616,16 @@ def validate_generated_model(model: ET.Element, urdf_root: ET.Element) -> None:
     validate_inspection_cameras(model)
     validate_side_camera_mounts(urdf_root)
     validate_wheel_drive(model)
+    validate_pitch_control(model, urdf_root)
 
-    _, pitch_camera_rotation = urdf_transform_to_link(
+    pitch_camera_position, pitch_camera_rotation = urdf_transform_to_link(
         urdf_root, "pitch_camera_sensor_link"
     )
+    if abs(pitch_camera_position[1]) > POSITION_TOLERANCE:
+        raise ValueError(
+            "Pitch camera optical center must remain on the robot center plane "
+            f"(base_footprint Y=0), found {pitch_camera_position}"
+        )
     pitch_camera_forward = rotate_vector(
         pitch_camera_rotation, (1.0, 0.0, 0.0)
     )
