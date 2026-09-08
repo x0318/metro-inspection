@@ -1,0 +1,137 @@
+/mapping/cloud_gate:
+  ros__parameters:
+    minimum_points: 5000
+    reject_out_of_order: true
+
+/mapping/icp_odometry:
+  ros__parameters:
+    qos: 2
+    frame_id: base_footprint
+    odom_frame_id: odom
+    publish_tf: false
+    publish_null_when_lost: false
+    guess_frame_id: odom
+    wait_for_transform: 0.2
+    expected_update_rate: 0.0
+    always_process_most_recent_frame: true
+    "Reg/Strategy": "1"
+    "Reg/Force3DoF": "true"
+    "Icp/Strategy": "1"
+    "Icp/PointToPlane": "true"
+    "Icp/PointToPlaneK": "20"
+    "Icp/PointToPlaneRadius": "0"
+    "Icp/PointToPlaneMinComplexity": "0.02"
+    "Icp/PointToPlaneLowComplexityStrategy": "1"
+    "Icp/Iterations": "20"
+    "Icp/VoxelSize": "0.10"
+    "Icp/Epsilon": "0.001"
+    "Icp/MaxTranslation": "1.0"
+    "Icp/MaxRotation": "0.5"
+    "Icp/MaxCorrespondenceDistance": "1.0"
+    "Icp/CorrespondenceRatio": "0.05"
+    "Icp/OutlierRatio": "0.70"
+    "Icp/RangeMin": "0.20"
+    "Icp/RangeMax": "30.0"
+    "Odom/ScanKeyFrameThr": "0.40"
+    "OdomF2M/ScanSubtractRadius": "0.10"
+    "OdomF2M/ScanMaxSize": "30000"
+    "OdomF2M/BundleAdjustment": "false"
+
+/mapping/motion_cloud_gate:
+  ros__parameters:
+    translation_threshold_m: 0.35
+    rotation_threshold_rad: 0.10
+    maximum_odom_age_s: 0.25
+
+/mapping/rtabmap:
+  ros__parameters:
+    subscribe_depth: false
+    subscribe_rgb: false
+    subscribe_rgbd: false
+    subscribe_stereo: false
+    subscribe_scan: false
+    subscribe_scan_cloud: true
+    subscribe_odom_info: false
+    frame_id: base_footprint
+    map_frame_id: map
+    odom_frame_id: ""
+    publish_tf: true
+    wait_for_transform: 0.2
+    topic_queue_size: 20
+    sync_queue_size: 20
+    approx_sync: true
+    qos_scan: 2
+    qos_odom: 1
+    odom_sensor_sync: true
+    "Mem/IncrementalMemory": "true"
+    "Mem/InitWMWithAllNodes": "false"
+    "Mem/NotLinkedNodesKept": "false"
+    "Mem/STMSize": "30"
+    "Mem/LaserScanVoxelSize": "0.05"
+    "Rtabmap/DetectionRate": "2.0"
+    "RGBD/LinearUpdate": "0.30"
+    "RGBD/AngularUpdate": "0.08"
+    "RGBD/NeighborLinkRefining": "true"
+    "RGBD/ProximityBySpace": "true"
+    "RGBD/ProximityMaxGraphDepth": "0"
+    "RGBD/ProximityPathMaxNeighbors": "5"
+    "RGBD/ProximityPathFilteringRadius": "0.5"
+    "RGBD/LocalRadius": "5.0"
+    "RGBD/CreateOccupancyGrid": "true"
+    "Reg/Strategy": "1"
+    "Reg/Force3DoF": "true"
+    "Icp/Strategy": "1"
+    "Icp/PointToPlane": "true"
+    "Icp/PointToPlaneK": "20"
+    "Icp/PointToPlaneMinComplexity": "0.02"
+    "Icp/PointToPlaneLowComplexityStrategy": "1"
+    "Icp/Iterations": "20"
+    "Icp/VoxelSize": "0.10"
+    "Icp/MaxCorrespondenceDistance": "1.0"
+    "Icp/CorrespondenceRatio": "0.20"
+    "Icp/OutlierRatio": "0.70"
+    "Icp/RangeMin": "0.20"
+    "Icp/RangeMax": "30.0"
+    "Optimizer/Strategy": "2"
+    "Optimizer/Iterations": "30"
+    "Optimizer/Robust": "true"
+    "Grid/Sensor": "0"
+    "Grid/3D": "true"
+    "Grid/CellSize": "0.05"
+    "Grid/RangeMin": "0.20"
+    "Grid/RangeMax": "30.0"
+    "Grid/FootprintLength": "1.8"
+    "Grid/FootprintWidth": "1.2"
+    "Grid/FootprintHeight": "1.5"
+    "Grid/NoiseFilteringRadius": "0.10"
+    "Grid/NoiseFilteringMinNeighbors": "2"
+
+/mapping/map_assembler:
+  ros__parameters:
+    rtabmap: rtabmap
+    regenerate_local_grids: false
+    latch: true
+    map_cleanup: true
+    map_always_update: false
+    cloud_output_voxelized: true
+    "Grid/Sensor": "0"
+    "Grid/3D": "true"
+    "Grid/CellSize": "0.05"
+    "Grid/RangeMin": "0.20"
+    "Grid/RangeMax": "30.0"
+    "Grid/FootprintLength": "1.8"
+    "Grid/FootprintWidth": "1.2"
+    "Grid/FootprintHeight": "1.5"
+    "Grid/NoiseFilteringRadius": "0.10"
+    "Grid/NoiseFilteringMinNeighbors": "2"
+
+/mapping/map_data_gate:
+  ros__parameters:
+    translation_threshold_m: 0.01
+    rotation_threshold_rad: 0.005
+
+/mapping/optimized_cloud_saver:
+  ros__parameters:
+    pcd_path: /tmp/metro_optimized_cloud.pcd
+    save_on_shutdown: true
+    minimum_points: 100

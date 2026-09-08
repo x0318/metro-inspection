@@ -1,0 +1,24 @@
+﻿# 隧道空间语义参数说明
+# 当前 /damage_point_global 的 frame_id 是 odom，因此先把 odom 作为 tunnel_frame 使用。
+# 后续如果建立独立 tunnel_frame，只需要把三维点先通过 TF 转换到 tunnel_frame，下面计算公式不变。
+
+damage_semantic_mapper:
+  ros__parameters:
+    tunnel_frame: odom
+
+    # 里程：chainage = chainage_start_m + chainage_sign * point[chainage_axis]
+    # 例如 K12+000 = 12000.0 m。
+    chainage_start_m: 12000.0
+    chainage_axis: x
+    chainage_sign: 1.0
+
+    # 区段/环号：segment_id = segment_start_id + floor(relative_chainage / segment_length_m)
+    # 当前Gazebo拱门隧道可理解为虚拟区段；盾构隧道中可改名理解为环号。
+    segment_start_id: 1000
+    segment_length_m: 1.2
+    segment_name: segment
+
+    # 时钟方位：面向 +X 方向观察断面。
+    # 12点 = +Z，3点 = -Y，6点 = -Z，9点 = +Y。
+    clock_center_y_m: 0.0
+    clock_center_z_m: 0.65

@@ -1,0 +1,15 @@
+yolo_detector:
+  ros__parameters:
+    use_sim_time: true
+    image_topic: /odin1/rgb/image_raw
+    detections_topic: /damage_detections
+    annotated_image_topic: /damage_detection/annotated_image
+    confidence_threshold: 0.35
+    iou_threshold: 0.45
+    image_size: 640
+    device: auto
+    use_half_precision: false
+    fallback_to_cpu: true
+    max_inference_rate_hz: 10.0
+    publish_annotated_image: true
+    status_period_sec: 5.0

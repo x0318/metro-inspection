@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <link rel="icon" href="data:,">
+  <title>地铁多领域病害综合智能巡检系统</title>
+  <link rel="stylesheet" href="./assets/dashboard.css?v=20260901-print-report-1">
+  <script defer src="./vendor/vue-3.3.4.global.prod.js"></script>
+  <script defer src="./vendor/echarts-5.5.0.min.js"></script>
+  <script defer src="./assets/dashboard.js"></script>
+</head>
+<body>
+  <div id="app" v-cloak>
+    <header class="app-header">
+      <div class="header-inner">
+        <div class="brand-block">
+          <span class="brand-mark" aria-hidden="true">M</span>
+          <div>
+            <h1>地铁多领域病害综合智能巡检系统</h1>
+            <p>病害识别与空间定位工作台</p>
+          </div>
+        </div>
+        <div class="header-status" :class="backendOnline ? 'online' : 'offline'">
+          <span class="status-dot" aria-hidden="true"></span>
+          <div>
+            <strong>{{ backendOnline ? '事件桥在线' : '事件桥离线' }}</strong>
+            <span>{{ lastUpdatedText }}</span>
+          </div>
+        </div>
+      </div>
+      <nav class="view-tabs" aria-label="平台视图">
+        <button type="button" :class="{ active: activeView === 'overview' }"
+          @click="activeView = 'overview'">识别总览</button>
+        <button type="button" :class="{ active: activeView === 'cameras' }"
+          @click="activeView = 'cameras'">相机监控</button>
+        <button type="button" :class="{ active: activeView === 'report' }"
+          @click="activeView = 'report'">巡检报告</button>
+      </nav>
+    </header>
+
+    <main class="page-shell">
+      <section v-if="activeView !== 'cameras'" class="metric-band" aria-label="病害统计摘要">
+        <div><span>病害事件</span><strong>{{ summary.total }}</strong></div>
+        <div><span>完成三维定位</span><strong>{{ summary.localized }}</strong></div>
+        <div><span>完成工程定位</span><strong>{{ summary.semantic }}</strong></div>
+        <div class="metric-severe"><span>III级严重</span><strong>{{ summary.severe }}</strong></div>
+        <div><span>尚未评估</span><strong>{{ summary.unknown }}</strong></div>
+      </section>
+      <section v-else class="camera-metric-band" aria-label="相机监控摘要">
+        <div><span>在线相机</span><strong>{{ onlineCameraCount }} / {{ monitorCameras.length }}</strong></div>
+        <div><span>预览上限</span><strong>{{ previewProfile.max_width }} × {{ previewProfile.max_height }}</strong></div>
+        <div><span>输出帧率</span><strong>{{ formatFps(previewProfile.default_fps) }} FPS</strong></div>
+        <div><span>JPEG质量</span><strong>{{ previewProfile.jpeg_quality }}</strong></div>
+      </section>
+
+      <section v-if="activeView === 'overview'" class="overview-view">
+        <div class="filter-band">
+          <div class="filter-heading">
+            <div>
+              <h2>病害事件</h2>
+              <p>{{ filteredRecords.length }} / {{ records.length }} 条</p>
+            </div>
+            <button type="button" class="refresh-button" :disabled="refreshing"
+              @click="refreshData">{{ refreshing ? '刷新中' : '刷新' }}</button>
+          </div>
+
+          <div class="camera-filter" role="group" aria-label="相机筛选">
+            <button v-for="camera in cameras" :key="camera.id" type="button"
+              :class="{ active: selectedCamera === camera.id }"
+              :aria-pressed="selectedCamera === camera.id"
+              @click="selectedCamera = camera.id">
+              <span>{{ camera.label }}</span><small>{{ cameraCount(camera.id) }}</small>
+            </button>
+          </div>
+
+          <div class="secondary-filters">
+            <label>
+              <span>病害等级</span>
+              <select v-model="selectedSeverity">
+                <option value="all">全部等级</option>
+                <option value="0">尚未评估</option>
+                <option value="1">I级 轻微</option>
+                <option value="2">II级 中度</option>
+                <option value="3">III级 严重</option>
+              </select>
+            </label>
+            <label class="search-field">
+              <span>检索</span>
+              <input v-model.trim="searchText" type="search" placeholder="事件、类型、里程">
+            </label>
+          </div>
+        </div>
+
+        <div v-if="errorMessage" class="connection-alert" role="status">
+          <strong>数据连接异常</strong><span>{{ errorMessage }}</span>
+        </div>
+
+        <div class="work-grid">
+          <section class="event-panel">
+            <div v-if="filteredRecords.length" class="desktop-table-wrap">
+              <table class="event-table">
+                <thead>
+                  <tr>
+                    <th>病害类型</th><th>等级</th><th>相机</th><th>识别置信度</th>
+                    <th>处理阶段</th><th>里程</th><th>接收时间</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="item in filteredRecords" :key="item.event_id"
+                    :class="{ selected: selectedId === item.event_id }"
+                    tabindex="0" @click="selectedId = item.event_id"
+                    @keydown.enter="selectedId = item.event_id">
+                    <td><strong>{{ item.type || '未分类' }}</strong><small>{{ item.event_id }}</small></td>
+                    <td><span :class="severityClass(item)">{{ levelText(item) }}</span></td>
+                    <td>{{ cameraLabel(item.camera_name) }}</td>
+                    <td>{{ confidenceText(item.confidence) }}</td>
+                    <td><span class="stage-label">{{ stageText(item) }}</span></td>
+                    <td>{{ item.mileage || '--' }}</td>
+                    <td>{{ formatTime(item.updated_at || item.created_at) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div v-if="filteredRecords.length" class="mobile-event-list">
+              <button v-for="item in filteredRecords" :key="item.event_id" type="button"
+                :class="{ selected: selectedId === item.event_id }"
+                @click="selectedId = item.event_id">
+                <span><strong>{{ item.type || '未分类' }}</strong><small>{{ cameraLabel(item.camera_name) }}</small></span>
+                <span><em :class="severityClass(item)">{{ levelText(item) }}</em><small>{{ stageText(item) }}</small></span>
+              </button>
+            </div>
+
+            <div v-if="!filteredRecords.length" class="empty-state">
+              <strong>{{ records.length ? '没有符合筛选条件的事件' : '暂无病害事件' }}</strong>
+              <span>{{ records.length ? '当前记录保持不变' : '事件桥正在等待真实识别结果' }}</span>
+            </div>
+          </section>
+
+          <aside class="detail-panel" aria-label="病害事件详情">
+            <template v-if="selectedRecord">
+              <header class="detail-heading">
+                <div>
+                  <span class="eyebrow">{{ stageText(selectedRecord) }}</span>
+                  <h2>{{ selectedRecord.type || '未分类病害' }}</h2>
+                  <p>{{ selectedRecord.event_id }}</p>
+                </div>
+                <span :class="severityClass(selectedRecord)">{{ levelText(selectedRecord) }}</span>
+              </header>
+
+              <dl class="detail-list">
+                <div><dt>来源相机</dt><dd>{{ cameraLabel(selectedRecord.camera_name) }}</dd></div>
+                <div><dt>识别置信度</dt><dd>{{ confidenceText(selectedRecord.confidence) }}</dd></div>
+                <div><dt>检测模型</dt><dd>{{ selectedRecord.model_name || '--' }}</dd></div>
+                <div><dt>二维检测框</dt><dd>{{ bboxText(selectedRecord.bbox) }}</dd></div>
+                <div><dt>图像坐标系</dt><dd>{{ selectedRecord.source_frame_id || '--' }}</dd></div>
+              </dl>
+
+              <section class="detail-section">
+                <h3>三维定位</h3>
+                <dl class="detail-list compact">
+                  <div><dt>坐标</dt><dd>{{ positionText(selectedRecord.position) }}</dd></div>
+                  <div><dt>坐标系</dt><dd>{{ selectedRecord.localization?.frame_id || '--' }}</dd></div>
+                  <div><dt>定位方法</dt><dd>{{ localizationText(selectedRecord) }}</dd></div>
+                  <div><dt>定位置信度</dt><dd>{{ confidenceText(selectedRecord.localization?.confidence) }}</dd></div>
+                </dl>
+              </section>
+
+              <section class="detail-section">
+                <h3>工程位置</h3>
+                <dl class="detail-list compact">
+                  <div><dt>里程</dt><dd>{{ selectedRecord.semantic_location?.chainage || '--' }}</dd></div>
+                  <div><dt>区段 / 环号</dt><dd>{{ segmentText(selectedRecord) }}</dd></div>
+                  <div><dt>断面方位</dt><dd>{{ clockText(selectedRecord.clock_position) }}</dd></div>
+                  <div><dt>结构区域</dt><dd>{{ selectedRecord.semantic_location?.structure_area || '--' }}</dd></div>
+                </dl>
+              </section>
+            </template>
+            <div v-else class="empty-state detail-empty">
+              <strong>暂无事件详情</strong><span>病害记录为空</span>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section v-else-if="activeView === 'cameras'" class="camera-view">
+        <header class="camera-view-heading">
+          <div>
+            <h2>五路相机监控</h2>
+            <p>{{ onlineCameraCount }} 路在线 · 源图像状态每 2 秒更新</p>
+          </div>
+          <span class="stream-profile">{{ previewProfile.max_width }} × {{ previewProfile.max_height }} · {{ formatFps(previewProfile.default_fps) }} FPS</span>
+        </header>
+
+        <div v-if="errorMessage" class="connection-alert" role="status">
+          <strong>数据连接异常</strong><span>{{ errorMessage }}</span>
+        </div>
+
+        <template v-if="compactCameraLayout">
+          <div class="mobile-camera-switch" role="group" aria-label="选择监控相机">
+            <button v-for="camera in monitorCameras" :key="camera.id" type="button"
+              :class="{ active: selectedMonitorCameraId === camera.id }"
+              :aria-pressed="selectedMonitorCameraId === camera.id"
+              @click="selectedMonitorCameraId = camera.id">
+              <span :class="['mini-status', { online: camera.available }]" aria-hidden="true"></span>
+              {{ camera.label }}
+            </button>
+          </div>
+
+          <article v-if="selectedMonitorCamera" class="camera-tile camera-tile-mobile">
+            <header>
+              <div><strong>{{ selectedMonitorCamera.label }}</strong><small>{{ selectedMonitorCamera.topic }}</small></div>
+              <span :class="['camera-state', { online: selectedMonitorCamera.available }]">
+                {{ selectedMonitorCamera.available ? '在线' : '离线' }}
+              </span>
+            </header>
+            <div class="camera-media">
+              <img v-if="selectedMonitorCamera.available" :src="streamUrl(selectedMonitorCamera)"
+                :alt="`${selectedMonitorCamera.label} 实时画面`">
+              <div v-else class="camera-offline">
+                <strong>等待图像</strong><span>{{ cameraAgeText(selectedMonitorCamera) }}</span>
+              </div>
+            </div>
+            <footer>
+              <span>源帧率 {{ cameraFpsText(selectedMonitorCamera) }}</span>
+              <span>{{ cameraAgeText(selectedMonitorCamera) }}</span>
+            </footer>
+          </article>
+        </template>
+
+        <section v-else-if="focusedCamera" class="camera-focus" aria-label="单路相机放大画面">
+          <header>
+            <div>
+              <span class="eyebrow">单路监控</span>
+              <h2>{{ focusedCamera.label }}</h2>
+              <p>{{ focusedCamera.topic }}</p>
+            </div>
+            <div class="camera-focus-actions">
+              <span :class="['camera-state', { online: focusedCamera.available }]">
+                {{ focusedCamera.available ? '在线' : '离线' }}
+              </span>
+              <button type="button" class="close-camera-button" title="返回五画面"
+                aria-label="返回五画面" @click="focusedCameraId = ''">×</button>
+            </div>
+          </header>
+          <div class="camera-focus-frame">
+            <img v-if="focusedCamera.available" :src="streamUrl(focusedCamera)"
+              :alt="`${focusedCamera.label} 实时画面`">
+            <div v-else class="camera-offline">
+              <strong>等待图像</strong><span>{{ cameraAgeText(focusedCamera) }}</span>
+            </div>
+          </div>
+          <footer>
+            <span>源帧率 {{ cameraFpsText(focusedCamera) }}</span>
+            <span>{{ cameraAgeText(focusedCamera) }}</span>
+            <span>累计 {{ focusedCamera.frames_received || 0 }} 帧</span>
+          </footer>
+        </section>
+
+        <div v-else class="camera-grid">
+          <article v-for="camera in monitorCameras" :key="camera.id" class="camera-tile">
+            <header>
+              <div><strong>{{ camera.label }}</strong><small>{{ camera.topic }}</small></div>
+              <span :class="['camera-state', { online: camera.available }]">
+                {{ camera.available ? '在线' : '离线' }}
+              </span>
+            </header>
+            <button type="button" class="camera-media" :title="`放大查看 ${camera.label}`"
+              :aria-label="`放大查看 ${camera.label}`" @click="focusedCameraId = camera.id">
+              <img v-if="camera.available" :src="streamUrl(camera)" :alt="`${camera.label} 实时画面`">
+              <span v-else class="camera-offline">
+                <strong>等待图像</strong><span>{{ cameraAgeText(camera) }}</span>
+              </span>
+            </button>
+            <footer>
+              <span>源帧率 {{ cameraFpsText(camera) }}</span>
+              <span>{{ cameraAgeText(camera) }}</span>
+            </footer>
+          </article>
+        </div>
+      </section>
+
+      <section v-else class="report-view">
+        <header class="report-heading">
+          <div><h2>巡检病害统计报告</h2><p>数据更新时间：{{ lastUpdatedText }}</p></div>
+          <button type="button" class="print-button" @click="printReport">打印 / 导出 PDF</button>
+        </header>
+
+        <div class="chart-grid">
+          <section><h3>病害等级分布</h3><div id="severity-chart" class="chart"></div></section>
+          <section><h3>病害类型分布</h3><div id="type-chart" class="chart"></div></section>
+        </div>
+
+        <section class="report-table-panel">
+          <table class="report-table">
+            <thead><tr><th>序号</th><th>事件</th><th>等级</th><th>相机</th><th>里程 / 区段</th><th>三维坐标</th><th>时间</th></tr></thead>
+            <tbody>
+              <tr v-for="(item, index) in records" :key="item.event_id">
+                <td>{{ index + 1 }}</td><td><strong>{{ item.type || '未分类' }}</strong><small>{{ item.event_id }}</small></td>
+                <td>{{ levelText(item) }}</td><td>{{ cameraLabel(item.camera_name) }}</td>
+                <td>{{ locationText(item) }}</td><td>{{ positionText(item.position) }}</td>
+                <td>{{ formatTime(item.updated_at || item.created_at) }}</td>
+              </tr>
+              <tr v-if="!records.length"><td colspan="7" class="report-empty">本次巡检暂无病害事件</td></tr>
+            </tbody>
+          </table>
+        </section>
+      </section>
+    </main>
+
+    <section id="print-report">
+      <header><h1>地铁隧道病害智能巡检报告</h1><p>生成时间：{{ new Date().toLocaleString('zh-CN') }}</p></header>
+      <div class="print-summary">
+        <span>事件总数：{{ summary.total }}</span><span>三维定位：{{ summary.localized }}</span>
+        <span>工程定位：{{ summary.semantic }}</span><span>III级严重：{{ summary.severe }}</span>
+      </div>
+      <table>
+        <thead><tr><th>序号</th><th>事件 / 等级</th><th>相机</th><th>里程 / 区段</th><th>三维坐标</th><th>时间</th></tr></thead>
+        <tbody>
+          <tr v-for="(item, index) in records" :key="item.event_id">
+            <td>{{ index + 1 }}</td><td>{{ item.type || '未分类' }}<br>{{ levelText(item) }}</td>
+            <td>{{ cameraLabel(item.camera_name) }}</td><td>{{ locationText(item) }}</td>
+            <td>{{ positionText(item.position) }}</td><td>{{ formatTime(item.updated_at || item.created_at) }}</td>
+          </tr>
+          <tr v-if="!records.length"><td colspan="6">本次巡检暂无病害事件</td></tr>
+        </tbody>
+      </table>
+      <footer><span>系统判定确认：________________</span><span>人工复核签字：________________</span></footer>
+    </section>
+  </div>
+</body>
+</html>

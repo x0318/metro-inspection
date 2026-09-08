@@ -1,0 +1,750 @@
+<?xml version="1.0" ?>
+<sdf version='1.7'>
+
+  <model name='gazebo_train'>
+  <pose>0.0 0.0 0.0 0.0 0.0 0.0</pose>
+  <self_collide>false</self_collide>
+
+    <link name='base_footprint'></link>
+    <link name="base_link">
+      <gravity>1</gravity>
+      <self_collide>0</self_collide>
+      <kinematic>0</kinematic>
+      <enable_wind>0</enable_wind>
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>3</mass>
+        <inertia>
+          <ixx>0.6</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.2</iyy>
+          <iyz>0</iyz>
+          <izz>0.6</izz>
+        </inertia>
+      </inertial>
+      <!--
+        修改前：
+        <mesh>
+          <scale>0.001 0.001 0.001</scale>
+          <uri>model://gazebo_train/meshes/waffle_custom_base.stl</uri>
+        </mesh>
+        修改后：用简单盒子做碰撞体，避免复杂 STL mesh 和地面接触时导致 Gazebo 抖动。
+      -->
+      <collision name='base_footprint_fixed_joint_lump__base_link_collision'>
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1.20 1.35 0.20</size>
+          </box>
+        </geometry>
+      </collision>
+      <!--
+        修改前：可视外观使用 waffle_custom_base.stl，车壳方向容易和实际运动方向混淆。
+        修改后：可视外观改成与调试 URDF 一致的简化车体，方便判断 base_link +X 前进方向。
+      -->
+      <visual name='base_footprint_fixed_joint_lump__base_link_visual'>
+        <pose>0 0 0 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>1.20 1.35 0.22</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.08 0.38 0.62 1</ambient>
+          <diffuse>0.08 0.38 0.62 1</diffuse>
+        </material>
+      </visual>
+      <visual name='front_axle_visual'>
+        <pose>0.35 0 0 1.5708 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.035</radius>
+            <length>1.505</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.04 0.04 0.04 1</ambient>
+          <diffuse>0.04 0.04 0.04 1</diffuse>
+        </material>
+      </visual>
+      <visual name='rear_axle_visual'>
+        <pose>-0.35 0 0 1.5708 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.035</radius>
+            <length>1.505</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.04 0.04 0.04 1</ambient>
+          <diffuse>0.04 0.04 0.04 1</diffuse>
+        </material>
+      </visual>
+      <!--
+        修改前：没有明显的车头方向标记。
+        修改后：绿色前向标记表示 base_link 的 +X 方向，也是 Nav2/cmd_vel 的前进方向。
+      -->
+      <visual name='front_marker_visual'>
+        <pose>0.62 0 0.16 0 0 0</pose>
+        <geometry>
+          <box>
+            <size>0.10 1.05 0.08</size>
+          </box>
+        </geometry>
+        <material>
+          <ambient>0.05 0.8 0.35 1</ambient>
+          <diffuse>0.05 0.8 0.35 1</diffuse>
+        </material>
+      </visual>
+    </link>
+
+    <joint name="base_joint" type="fixed">
+      <parent>base_footprint</parent>
+      <child>base_link</child>
+      <pose>0.0 0.0 0.3 0 0 0</pose>
+    </joint>
+
+    <link name="laser_link">
+      <sensor name="hls_lfcd_lds" type="ray">
+        <always_on>true</always_on>
+        <visualize>0</visualize>
+        <pose>0 0 0.74 0 0 0</pose>
+        <update_rate>10</update_rate>
+        <ray>
+          <scan>
+            <horizontal>
+              <samples>1024</samples>
+              <resolution>1.000000</resolution>
+              <min_angle>0.000000</min_angle>
+              <max_angle>6.280000</max_angle>
+            </horizontal>
+          </scan>
+          <range>
+            <min>0.5</min>
+            <max>120</max>
+            <resolution>0.0010000</resolution>
+          </range>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.01</stddev>
+          </noise>
+        </ray>
+        <plugin name="train_laserscan" filename="libgazebo_ros_ray_sensor.so">
+          <ros>
+            <remapping>~/out:=scan</remapping>
+          </ros>
+          <output_type>sensor_msgs/LaserScan</output_type>
+          <frame_name>laser_link</frame_name>
+        </plugin>
+      </sensor>
+    </link>
+
+    <joint name="lidar_joint" type="fixed">
+      <parent>base_link</parent>
+      <child>laser_link</child>
+      <pose>0 0 0.74 0 0 3.14159</pose>
+      <axis>
+        <xyz>0 0 1</xyz>
+      </axis>
+    </joint>
+
+    <link name="camera_link">
+      <inertial>
+        <pose> 0 0 0 0 0 0</pose>
+        <inertia>
+          <ixx>0.0001</ixx>
+          <ixy>0.000</ixy>
+          <ixz>0.000</ixz>
+          <iyy>0.0001</iyy>
+          <iyz>0.000</iyz>
+          <izz>0.0001</izz>
+        </inertia>
+        <mass>0.001</mass>
+      </inertial>
+      <visual name="camera_visual">
+        <pose> 0 -0.6 0.57 0 0 0</pose>
+        <geometry>
+          <mesh>
+            <uri>model://gazebo_train/meshes/webcam.stl</uri>
+            <scale>0.0006 0.0006 0.0006</scale>
+          </mesh>
+        </geometry>
+        <material>
+          <script>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/DarkGrey</name>
+          </script>
+        </material>
+      </visual>
+    </link>
+
+    <link name="camera_lens_link">
+      <sensor name="zed2i_depth" type="depth">
+        <always_on>1</always_on>
+        <visualize>0</visualize>
+        <update_rate>10</update_rate>
+        <pose>0.022 -0.8 0.99 0 0 -1.571</pose>
+        <camera name="realsense_depth_camera">
+          <horizontal_fov>1.02974</horizontal_fov>
+          <image>
+            <width>1920</width>  <!-- 640 -->
+            <height>1080</height>  <!-- 380 -->
+          </image>
+          <clip>
+            <near>0.02</near>
+            <far>40</far>
+          </clip>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.05</stddev>
+          </noise>
+        </camera>
+	  <plugin name="zed2i_depth_driver" filename="libgazebo_ros_camera.so">
+	    <ros>
+	    </ros>
+            <camera_name>zed2i_depth</camera_name>
+            <frame_name>camera_lens_link</frame_name>
+            <hack_baseline>0.012</hack_baseline>
+            <min_depth>0.5</min_depth>
+            <max_depth>25</max_depth>
+          </plugin>
+      </sensor>
+    </link>
+
+    <joint name="camera_joint" type="fixed">
+      <parent>base_link</parent>
+      <child>camera_link</child>
+      <pose>0 -0.5 0.53 0 0 0</pose>
+    </joint>
+
+    <joint name="camera_rgb_joint" type="fixed">
+      <parent>camera_link</parent>
+      <child>camera_lens_link</child>
+      <pose>0 -0.5 0.53 0 0 0</pose>
+    </joint>
+
+    <link name="imu_link">
+      <sensor name="gazebo_train_imu" type="imu">
+        <always_on>true</always_on>
+        <update_rate>255</update_rate>
+        <visualize>true</visualize>
+        <imu>
+          <angular_velocity>
+            <x>
+              <noise type="gaussian">
+                <mean>2.170023e-03</mean>
+                <stddev>1.380934e-3</stddev>
+              </noise>
+            </x>
+            <y>
+              <noise type="gaussian">
+                <mean>-0.000013</mean>
+                <stddev>0.001424</stddev>
+              </noise>
+            </y>
+            <z>
+              <noise type="gaussian">
+                <mean>0.000012</mean>
+                <stddev>0.001386</stddev>
+              </noise>
+            </z>
+          </angular_velocity>
+          <linear_acceleration>
+            <x>
+              <noise type="gaussian">
+                <mean>0.069218</mean>     <!--- 0.095342 Sensorwert ohne Gleise -->
+                <stddev>0.009161</stddev>
+              </noise>
+            </x>
+            <y>
+              <noise type="gaussian">
+                <mean>0.165061</mean>
+                <stddev>0.008535</stddev>
+              </noise>
+            </y>
+            <z>
+              <noise type="gaussian">
+                <mean>-1.066594e-02</mean>
+                <stddev>0.008694</stddev>
+              </noise>
+            </z>
+          </linear_acceleration>
+        </imu>
+        <plugin name="train_imu" filename="libgazebo_ros_imu_sensor.so">
+          <ros>
+            <remapping>~/out:=imu</remapping>
+          </ros>
+        </plugin>
+      </sensor>
+    </link>
+
+    <joint name="imu_joint" type="fixed">
+      <parent>base_link</parent>
+      <child>imu_link</child>
+      <pose>0 0 0 0 0 0</pose>
+      <axis>
+        <xyz>0 0 1</xyz>
+      </axis>
+    </joint>
+
+    <!--
+      修改前：pose=-0.22 0.4 0.1 -1.5708 0 0，axis=1 0 0。
+      修改后：后左支撑轮按差速车坐标布置，左右轮在 Y 轴两侧，轮轴沿 Y 方向。
+    -->
+    <joint name='wheel_left2_joint' type='revolute'>
+      <pose relative_to='base_footprint'>-0.35 0.7525 0 0 0 0</pose>
+      <parent>base_link</parent>
+      <child>wheel_left2_link</child>
+      <axis>
+        <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='wheel_left2_link'>
+      <pose relative_to='wheel_left2_joint'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>0.2</mass>
+        <inertia>
+          <ixx>0.0007</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.0011</iyy>
+          <iyz>0</iyz>
+          <izz>0.0007</izz>
+        </inertia>
+      </inertial>
+      <!--
+        修改前：
+        <mesh>
+          <scale>0.001 0.001 0.001</scale>
+          <uri>model://gazebo_train/meshes/left_tire.stl</uri>
+        </mesh>
+        修改后：圆柱碰撞体比轮胎 STL 更稳定，物理求解更像真实轮子。
+      -->
+      <collision name='wheel_left2_link_collision'>
+        <pose>0 0 0 -1.5708 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.105</radius>
+            <length>0.08</length>
+          </cylinder>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>1</mu>
+              <mu2>1</mu2>
+              <fdir1>0 0 0</fdir1>
+              <slip1>0.01</slip1>
+              <slip2>0.01</slip2>
+            </ode>
+            <torsional>
+              <coefficient>1</coefficient>
+              <patch_radius>0</patch_radius>
+              <surface_radius>0</surface_radius>
+              <use_patch_radius>1</use_patch_radius>
+              <ode>
+                <slip>0</slip>
+              </ode>
+            </torsional>
+          </friction>
+          <bounce>
+            <restitution_coefficient>0</restitution_coefficient>
+            <threshold>1e+06</threshold>
+          </bounce>
+          <contact>
+            <collide_without_contact>0</collide_without_contact>
+            <collide_without_contact_bitmask>1</collide_without_contact_bitmask>
+            <collide_bitmask>1</collide_bitmask>
+            <ode>
+              <soft_cfm>0</soft_cfm>
+              <soft_erp>0.2</soft_erp>
+              <!--
+                修改前：kp=1e+13, kd=1, max_vel=0.01, min_depth=0。
+                修改后：降低接触刚度并增加阻尼，减少轮子和地面高频抽搐。
+              -->
+              <kp>1e+06</kp>
+              <kd>10</kd>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+            <bullet>
+              <split_impulse>1</split_impulse>
+              <split_impulse_penetration_threshold>-0.01</split_impulse_penetration_threshold>
+              <soft_cfm>0</soft_cfm>
+              <soft_erp>0.2</soft_erp>
+              <kp>1e+06</kp>
+              <kd>10</kd>
+            </bullet>
+          </contact>
+        </surface>
+      </collision>
+      <!--
+        修改前：轮子视觉仍使用 left_tire.stl。
+        修改后：轮子视觉也用圆柱，保证看到的轮子方向和碰撞体一致。
+      -->
+      <visual name='wheel_left2_link_visual'>
+        <pose>0 0 0 1.5708 -0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.105</radius>
+            <length>0.08</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.02 0.02 0.02 1</ambient>
+          <diffuse>0.02 0.02 0.02 1</diffuse>
+        </material>
+      </visual>
+    </link>
+    <!--
+      修改前：pose=-0.22 -0.4 0.1 -1.5708 0 0，axis=1 0 0。
+      修改后：前左主动轮放在 +X/+Y 位置，diff_drive 插件控制这一侧的轮子。
+    -->
+    <joint name='wheel_left_joint' type='revolute'>
+      <pose relative_to='base_footprint'>0.35 0.7525 0 0 0 0</pose>
+      <parent>base_link</parent>
+      <child>wheel_left_link</child>
+      <axis>
+        <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='wheel_left_link'>
+      <pose relative_to='wheel_left_joint'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>0.2</mass>
+        <inertia>
+          <ixx>0.0007</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.0011</iyy>
+          <iyz>0</iyz>
+          <izz>0.0007</izz>
+        </inertia>
+      </inertial>
+      <collision name='wheel_left_link_collision'>
+        <pose>0 0 0 -1.5708 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.105</radius>
+            <length>0.08</length>
+          </cylinder>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>1</mu>
+              <mu2>1</mu2>
+              <fdir1>0 0 0</fdir1>
+              <slip1>0.01</slip1>
+              <slip2>0.01</slip2>
+            </ode>
+            <torsional>
+              <coefficient>1</coefficient>
+              <patch_radius>0</patch_radius>
+              <surface_radius>0</surface_radius>
+              <use_patch_radius>1</use_patch_radius>
+              <ode>
+                <slip>0</slip>
+              </ode>
+            </torsional>
+          </friction>
+          <bounce>
+            <restitution_coefficient>0</restitution_coefficient>
+            <threshold>1e+06</threshold>
+          </bounce>
+          <contact>
+            <collide_without_contact>0</collide_without_contact>
+            <collide_without_contact_bitmask>1</collide_without_contact_bitmask>
+            <collide_bitmask>1</collide_bitmask>
+            <ode>
+              <soft_cfm>0</soft_cfm>
+              <soft_erp>0.2</soft_erp>
+              <kp>1e+06</kp>
+              <kd>10</kd>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+            <bullet>
+              <split_impulse>1</split_impulse>
+              <split_impulse_penetration_threshold>-0.01</split_impulse_penetration_threshold>
+              <soft_cfm>0</soft_cfm>
+              <soft_erp>0.2</soft_erp>
+              <kp>1e+06</kp>
+              <kd>10</kd>
+            </bullet>
+          </contact>
+        </surface>
+
+      </collision>
+      <visual name='wheel_left_link_visual'>
+        <pose>0 0 0 1.5708 -0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.105</radius>
+            <length>0.08</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.02 0.02 0.02 1</ambient>
+          <diffuse>0.02 0.02 0.02 1</diffuse>
+        </material>
+      </visual>
+    </link>
+    <joint name='wheel_right2_joint' type='revolute'>
+      <pose relative_to='base_footprint'>-0.35 -0.7525 0 0 0 0</pose>
+      <parent>base_link</parent>
+      <child>wheel_right2_link</child>
+      <axis>
+        <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='wheel_right2_link'>
+      <pose relative_to='wheel_right2_joint'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>0.2</mass>
+        <inertia>
+          <ixx>0.0007</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.0011</iyy>
+          <iyz>0</iyz>
+          <izz>0.0007</izz>
+        </inertia>
+      </inertial>
+      <collision name='wheel_right2_link_collision'>
+        <pose>0 0 0 -1.5708 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.105</radius>
+            <length>0.08</length>
+          </cylinder>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>1</mu>
+              <mu2>1</mu2>
+              <fdir1>0 0 0</fdir1>
+              <slip1>0.01</slip1>
+              <slip2>0.01</slip2>
+            </ode>
+            <torsional>
+              <coefficient>1</coefficient>
+              <patch_radius>0</patch_radius>
+              <surface_radius>0</surface_radius>
+              <use_patch_radius>1</use_patch_radius>
+              <ode>
+                <slip>0</slip>
+              </ode>
+            </torsional>
+          </friction>
+          <bounce>
+            <restitution_coefficient>0</restitution_coefficient>
+            <threshold>1e+06</threshold>
+          </bounce>
+          <contact>
+            <collide_without_contact>0</collide_without_contact>
+            <collide_without_contact_bitmask>1</collide_without_contact_bitmask>
+            <collide_bitmask>1</collide_bitmask>
+            <ode>
+              <soft_cfm>0</soft_cfm>
+              <soft_erp>0.2</soft_erp>
+              <kp>1e+06</kp>
+              <kd>10</kd>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+            <bullet>
+              <split_impulse>1</split_impulse>
+              <split_impulse_penetration_threshold>-0.01</split_impulse_penetration_threshold>
+              <soft_cfm>0</soft_cfm>
+              <soft_erp>0.2</soft_erp>
+              <kp>1e+06</kp>
+              <kd>10</kd>
+            </bullet>
+          </contact>
+        </surface>
+
+      </collision>
+      <visual name='wheel_right2_link_visual'>
+        <pose>0 0 0 1.5708 -0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.105</radius>
+            <length>0.08</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.02 0.02 0.02 1</ambient>
+          <diffuse>0.02 0.02 0.02 1</diffuse>
+        </material>
+      </visual>
+    </link>
+    <joint name='wheel_right_joint' type='revolute'>
+      <pose relative_to='base_footprint'>0.35 -0.7525 0 0 0 0</pose>
+      <parent>base_link</parent>
+      <child>wheel_right_link</child>
+      <axis>
+        <xyz>0 1 0</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name='wheel_right_link'>
+      <pose relative_to='wheel_right_joint'>0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>0 0 0 0 0 0</pose>
+        <mass>0.2</mass>
+        <inertia>
+          <ixx>0.0007</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.0011</iyy>
+          <iyz>0</iyz>
+          <izz>0.0007</izz>
+        </inertia>
+      </inertial>
+      <collision name='wheel_right_link_collision'>
+        <pose>0 0 0 -1.5708 0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.105</radius>
+            <length>0.08</length>
+          </cylinder>
+        </geometry>
+        <surface>
+          <friction>
+            <ode>
+              <mu>1</mu>
+              <mu2>1</mu2>
+              <fdir1>0 0 0</fdir1>
+              <slip1>0.01</slip1>
+              <slip2>0.01</slip2>
+            </ode>
+            <torsional>
+              <coefficient>1</coefficient>
+              <patch_radius>0</patch_radius>
+              <surface_radius>0</surface_radius>
+              <use_patch_radius>1</use_patch_radius>
+              <ode>
+                <slip>0</slip>
+              </ode>
+            </torsional>
+          </friction>
+          <bounce>
+            <restitution_coefficient>0</restitution_coefficient>
+            <threshold>1e+06</threshold>
+          </bounce>
+          <contact>
+            <collide_without_contact>0</collide_without_contact>
+            <collide_without_contact_bitmask>1</collide_without_contact_bitmask>
+            <collide_bitmask>1</collide_bitmask>
+            <ode>
+              <soft_cfm>0</soft_cfm>
+              <soft_erp>0.2</soft_erp>
+              <kp>1e+06</kp>
+              <kd>10</kd>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+            <bullet>
+              <split_impulse>1</split_impulse>
+              <split_impulse_penetration_threshold>-0.01</split_impulse_penetration_threshold>
+              <soft_cfm>0</soft_cfm>
+              <soft_erp>0.2</soft_erp>
+              <kp>1e+06</kp>
+              <kd>10</kd>
+            </bullet>
+          </contact>
+        </surface>
+
+      </collision>
+      <visual name='wheel_right_link_visual'>
+        <pose>0 0 0 1.5708 -0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.105</radius>
+            <length>0.08</length>
+          </cylinder>
+        </geometry>
+        <material>
+          <ambient>0.02 0.02 0.02 1</ambient>
+          <diffuse>0.02 0.02 0.02 1</diffuse>
+        </material>
+      </visual>
+    </link>
+
+    <!--
+      The rail wheels remain as the visible running gear.  Motion is applied
+      to the complete vehicle by planar_move so /cmd_vel is reliable even
+      when detailed wheel/rail contacts are present in the scene.
+    -->
+    <plugin name="train_planar_move" filename="libgazebo_ros_planar_move.so">
+      <ros>
+        <remapping>cmd_vel:=cmd_vel_drive</remapping>
+        <remapping>odom:=odom</remapping>
+      </ros>
+
+      <update_rate>100</update_rate>
+      <publish_rate>30</publish_rate>
+
+      <publish_odom>true</publish_odom>
+      <publish_odom_tf>true</publish_odom_tf>
+      <odometry_frame>odom</odometry_frame>
+      <robot_base_frame>base_footprint</robot_base_frame>
+
+      <covariance_x>0.0001</covariance_x>
+      <covariance_y>0.0001</covariance_y>
+      <covariance_yaw>0.01</covariance_yaw>
+    </plugin>
+
+
+    <plugin name="train_joint_state" filename="libgazebo_ros_joint_state_publisher.so">
+      <ros>
+        <remapping>~/out:=joint_states</remapping>
+      </ros>
+      <update_rate>30</update_rate>
+      <joint_name>wheel_left_joint</joint_name>
+      <joint_name>wheel_left2_joint</joint_name>
+      <joint_name>wheel_right_joint</joint_name>
+      <joint_name>wheel_right2_joint</joint_name>
+    </plugin>
+
+  </model>
+</sdf>

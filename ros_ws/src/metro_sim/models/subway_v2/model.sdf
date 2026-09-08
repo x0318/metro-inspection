@@ -1,0 +1,1101 @@
+<?xml version='1.0' encoding='utf-8'?>
+<sdf version="1.7">
+  <model name="subway_v2">
+    <link name="base_footprint">
+      <inertial>
+        <pose>0.002599 0.046882 0.505445 0 -0 0</pose>
+        <mass>18.7872</mass>
+        <inertia>
+          <ixx>1.95687</ixx>
+          <ixy>-0.0489826</ixy>
+          <ixz>-0.0610905</ixz>
+          <iyy>2.86504</iyy>
+          <iyz>-0.446041</iyz>
+          <izz>3.19757</izz>
+        </inertia>
+      </inertial>
+      <collision name="base_footprint_fixed_joint_lump__base_link_collision_collision">
+        <pose>-0.081924 0 0.545704 -1.5708 -0 -1.5708</pose>
+        <geometry>
+          <box>
+            <size>1.43104 0.829804 1.39646</size>
+          </box>
+        </geometry>
+        <surface>
+          <contact>
+            <ode />
+          </contact>
+          <friction>
+            <ode>
+              <mu>0.001</mu>
+              <mu2>0.001</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+      <collision name="base_footprint_fixed_joint_lump__leida_collision_collision_1">
+        <pose>0.501464 0 0.67493 -1.5708 -0 -1.5708</pose>
+        <geometry>
+          <box>
+            <size>0.300638 0.186396 0.139496</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="base_footprint_fixed_joint_lump__xj1_collision_collision_2">
+        <pose>0.000225 -0.538469 0.895359 1.5708 0 -0</pose>
+        <geometry>
+          <box>
+            <size>0.113792 0.17268 0.361088</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="base_footprint_fixed_joint_lump__xj2_collision_collision_3">
+        <pose>-0.000225 0.538469 0.895359 1.5708 -0 3.14159</pose>
+        <geometry>
+          <box>
+            <size>0.113792 0.17268 0.361088</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="base_footprint_fixed_joint_lump__xj3_collision_collision_4">
+        <pose>-0.656669 -0.674932 0.810217 3.14159 0 -0</pose>
+        <geometry>
+          <box>
+            <size>0.113792 0.114017 0.34874</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="base_footprint_fixed_joint_lump__xj4_collision_collision_5">
+        <pose>-0.657119 0.674932 0.810217 3.14159 -0 3.14159</pose>
+        <geometry>
+          <box>
+            <size>0.113792 0.114017 0.34874</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="base_footprint_fixed_joint_lump__yuntai_collision_collision_6">
+        <pose>-0 0 0.949654 1.5708 -0 3.14159</pose>
+        <geometry>
+          <box>
+            <size>0.420893 0.657679 0.577225</size>
+          </box>
+        </geometry>
+      </collision>
+      <collision name="base_footprint_fixed_joint_lump__pitch_collision_collision_7">
+        <pose>0.09414 0.464786 1.08044 -0.261799 0 -1.5708</pose>
+        <geometry>
+          <box>
+            <size>0.582035 0.369785 0.705747</size>
+          </box>
+        </geometry>
+      </collision>
+      <visual name="base_footprint_fixed_joint_lump__base_link_visual">
+        <pose>0.032782 0.010309 0.644866 -1.5708 -0 -1.5708</pose>
+        <geometry>
+          <mesh>
+            <scale>3.00638 3.00638 3.00638</scale>
+            <uri>model://subway_v2/meshes/base_link.STL</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name="base_footprint_fixed_joint_lump__w1_fixed_mount_visual_visual_1">
+        <pose>0.435925 -0.44765 0.335209 1.5708 1.40236 -0</pose>
+        <geometry>
+          <mesh>
+            <scale>3.00638 3.00638 3.00638</scale>
+            <uri>model://subway_v2/meshes/w1_mount.STL</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name="base_footprint_fixed_joint_lump__w2_fixed_mount_visual_visual_2">
+        <pose>0.435925 0.44765 0.335209 1.5708 -1.40236 3.14159</pose>
+        <geometry>
+          <mesh>
+            <scale>3.00638 3.00638 3.00638</scale>
+            <uri>model://subway_v2/meshes/w2_mount.STL</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name="base_footprint_fixed_joint_lump__w3_fixed_mount_visual_visual_3">
+        <pose>-0.435925 0.44765 0.335209 1.5708 -0.502733 3.14159</pose>
+        <geometry>
+          <mesh>
+            <scale>3.00638 3.00638 3.00638</scale>
+            <uri>model://subway_v2/meshes/w3_mount.STL</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name="base_footprint_fixed_joint_lump__w4_fixed_mount_visual_visual_4">
+        <pose>-0.435925 -0.44765 0.335209 1.5708 0.502733 -0</pose>
+        <geometry>
+          <mesh>
+            <scale>3.00638 3.00638 3.00638</scale>
+            <uri>model://subway_v2/meshes/w4_mount.STL</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name="base_footprint_fixed_joint_lump__xj1_visual_5">
+        <pose>-0 -0.481021 0.685452 1.5708 0 -0</pose>
+        <geometry>
+          <mesh>
+            <scale>3.00638 3.00638 3.00638</scale>
+            <uri>model://subway_v2/meshes/xj1.STL</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name="base_footprint_fixed_joint_lump__xj2_visual_6">
+        <pose>-0 0.481021 0.685452 1.5708 -0 3.14159</pose>
+        <geometry>
+          <mesh>
+            <scale>3.00638 3.00638 3.00638</scale>
+            <uri>model://subway_v2/meshes/xj2.STL</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name="base_footprint_fixed_joint_lump__xj3_visual_7">
+        <pose>-0.656894 -0.674932 0.966549 3.14159 0 -0</pose>
+        <geometry>
+          <mesh>
+            <scale>3.00638 3.00638 3.00638</scale>
+            <uri>model://subway_v2/meshes/xj3.STL</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name="base_footprint_fixed_joint_lump__xj4_visual_8">
+        <pose>-0.656894 0.674932 0.966549 3.14159 -0 3.14159</pose>
+        <geometry>
+          <mesh>
+            <scale>3.00638 3.00638 3.00638</scale>
+            <uri>model://subway_v2/meshes/xj4.STL</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name="base_footprint_fixed_joint_lump__yuntai_visual_9">
+        <pose>-0 0.232393 1.14393 1.5708 -0 3.14159</pose>
+        <geometry>
+          <mesh>
+            <scale>3.00638 3.00638 3.00638</scale>
+            <uri>model://subway_v2/meshes/yuntai.STL</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <visual name="base_footprint_fixed_joint_lump__pitch_visual_10">
+        <pose>-0 0.232393 1.17399 -0.261799 0 -1.5708</pose>
+        <geometry>
+          <mesh>
+            <scale>3.00638 3.00638 3.00638</scale>
+            <uri>model://subway_v2/meshes/pitch.STL</uri>
+          </mesh>
+        </geometry>
+      </visual>
+      <sensor name="xj1_camera_sensor" type="camera">
+        <always_on>1</always_on>
+        <visualize>0</visualize>
+        <update_rate>30</update_rate>
+        <camera name="xj1_camera">
+          <horizontal_fov>1.22173</horizontal_fov>
+          <image>
+            <width>1440</width>
+            <height>1080</height>
+            <format>B8G8R8</format>
+          </image>
+          <clip>
+            <near>0.05</near>
+            <far>100</far>
+          </clip>
+          <noise>
+            <type>gaussian</type>
+            <mean>0</mean>
+            <stddev>0.01</stddev>
+          </noise>
+          <distortion>
+            <k1>-0.099402</k1>
+            <k2>0.115175</k2>
+            <k3>0.0</k3>
+            <p1>-0.003985</p1>
+            <p2>-0.001845</p2>
+            <center>0.4835390972222 0.5071845925926</center>
+          </distortion>
+          <lens>
+            <intrinsics>
+              <fx>1028.2670861548688</fx>
+              <fy>1028.3315643616631</fy>
+              <cx>696.2963</cx>
+              <cy>547.75936</cy>
+              <s>0</s>
+            </intrinsics>
+            <type>stereographic</type>
+            <scale_to_hfov>1</scale_to_hfov>
+          </lens>
+        </camera>
+        <plugin name="xj1_camera_plugin" filename="libgazebo_ros_camera.so">
+          <ros>
+            <namespace>/subway_v2</namespace>
+          </ros>
+          <camera_name>xj1</camera_name>
+          <frame_name>xj1_optical_frame</frame_name>
+          <focal_length>1028.2670861548688</focal_length>
+          <cx>696.2963</cx>
+          <cy>547.75936</cy>
+          <border_crop>0</border_crop>
+          <rectification_matrix>1 0 0 0 1 0 0 0 1</rectification_matrix>
+          <P_fx>1013.3186295621878</P_fx>
+          <P_fy>1018.5246022239418</P_fy>
+          <P_cx>693.56983</P_cx>
+          <P_cy>545.3029</P_cy>
+        </plugin>
+        <pose>-0 -0.536573 0.685452 -0 -0.436332 -1.5708</pose>
+      </sensor>
+      <sensor name="xj2_camera_sensor" type="camera">
+        <always_on>1</always_on>
+        <visualize>0</visualize>
+        <update_rate>30</update_rate>
+        <camera name="xj2_camera">
+          <horizontal_fov>1.22173</horizontal_fov>
+          <image>
+            <width>1440</width>
+            <height>1080</height>
+            <format>B8G8R8</format>
+          </image>
+          <clip>
+            <near>0.05</near>
+            <far>100</far>
+          </clip>
+          <noise>
+            <type>gaussian</type>
+            <mean>0</mean>
+            <stddev>0.01</stddev>
+          </noise>
+          <distortion>
+            <k1>-0.099402</k1>
+            <k2>0.115175</k2>
+            <k3>0.0</k3>
+            <p1>-0.003985</p1>
+            <p2>-0.001845</p2>
+            <center>0.4835390972222 0.5071845925926</center>
+          </distortion>
+          <lens>
+            <intrinsics>
+              <fx>1028.2670861548688</fx>
+              <fy>1028.3315643616631</fy>
+              <cx>696.2963</cx>
+              <cy>547.75936</cy>
+              <s>0</s>
+            </intrinsics>
+            <type>stereographic</type>
+            <scale_to_hfov>1</scale_to_hfov>
+          </lens>
+        </camera>
+        <plugin name="xj2_camera_plugin" filename="libgazebo_ros_camera.so">
+          <ros>
+            <namespace>/subway_v2</namespace>
+          </ros>
+          <camera_name>xj2</camera_name>
+          <frame_name>xj2_optical_frame</frame_name>
+          <focal_length>1028.2670861548688</focal_length>
+          <cx>696.2963</cx>
+          <cy>547.75936</cy>
+          <border_crop>0</border_crop>
+          <rectification_matrix>1 0 0 0 1 0 0 0 1</rectification_matrix>
+          <P_fx>1013.3186295621878</P_fx>
+          <P_fy>1018.5246022239418</P_fy>
+          <P_cx>693.56983</P_cx>
+          <P_cy>545.3029</P_cy>
+        </plugin>
+        <pose>-0 0.536573 0.685452 0 -0.436332 1.5708</pose>
+      </sensor>
+      <sensor name="xj3_camera_sensor" type="camera">
+        <always_on>1</always_on>
+        <visualize>0</visualize>
+        <update_rate>30</update_rate>
+        <camera name="xj3_camera">
+          <horizontal_fov>0.784537</horizontal_fov>
+          <image>
+            <width>1440</width>
+            <height>1080</height>
+            <format>B8G8R8</format>
+          </image>
+          <clip>
+            <near>0.05</near>
+            <far>100</far>
+          </clip>
+          <noise>
+            <type>gaussian</type>
+            <mean>0</mean>
+            <stddev>0.01</stddev>
+          </noise>
+          <distortion>
+            <k1>-0.099402</k1>
+            <k2>0.115175</k2>
+            <k3>0.0</k3>
+            <p1>-0.003985</p1>
+            <p2>-0.001845</p2>
+            <center>0.4835390972222 0.5071845925926</center>
+          </distortion>
+          <lens>
+            <intrinsics>
+              <fx>1740.3529088647258</fx>
+              <fy>1740.4620389110569</fy>
+              <cx>696.2963</cx>
+              <cy>547.75936</cy>
+              <s>0</s>
+            </intrinsics>
+            <type>stereographic</type>
+            <scale_to_hfov>1</scale_to_hfov>
+          </lens>
+        </camera>
+        <plugin name="xj3_camera_plugin" filename="libgazebo_ros_camera.so">
+          <ros>
+            <namespace>/subway_v2</namespace>
+          </ros>
+          <camera_name>xj3</camera_name>
+          <frame_name>xj3_optical_frame</frame_name>
+          <focal_length>1740.3529088647258</focal_length>
+          <cx>696.2963</cx>
+          <cy>547.75936</cy>
+          <border_crop>0</border_crop>
+          <rectification_matrix>1 0 0 0 1 0 0 0 1</rectification_matrix>
+          <P_fx>1715.0524881234628</P_fx>
+          <P_fy>1723.8636518642318</P_fy>
+          <P_cx>693.56983</P_cx>
+          <P_cy>545.3029</P_cy>
+        </plugin>
+        <pose>-0.656894 -0.674932 0.735057 3.14159 1.57079 1.5708</pose>
+      </sensor>
+      <sensor name="xj4_camera_sensor" type="camera">
+        <always_on>1</always_on>
+        <visualize>0</visualize>
+        <update_rate>30</update_rate>
+        <camera name="xj4_camera">
+          <horizontal_fov>0.784537</horizontal_fov>
+          <image>
+            <width>1440</width>
+            <height>1080</height>
+            <format>B8G8R8</format>
+          </image>
+          <clip>
+            <near>0.05</near>
+            <far>100</far>
+          </clip>
+          <noise>
+            <type>gaussian</type>
+            <mean>0</mean>
+            <stddev>0.01</stddev>
+          </noise>
+          <distortion>
+            <k1>-0.099402</k1>
+            <k2>0.115175</k2>
+            <k3>0.0</k3>
+            <p1>-0.003985</p1>
+            <p2>-0.001845</p2>
+            <center>0.4835390972222 0.5071845925926</center>
+          </distortion>
+          <lens>
+            <intrinsics>
+              <fx>1740.3529088647258</fx>
+              <fy>1740.4620389110569</fy>
+              <cx>696.2963</cx>
+              <cy>547.75936</cy>
+              <s>0</s>
+            </intrinsics>
+            <type>stereographic</type>
+            <scale_to_hfov>1</scale_to_hfov>
+          </lens>
+        </camera>
+        <plugin name="xj4_camera_plugin" filename="libgazebo_ros_camera.so">
+          <ros>
+            <namespace>/subway_v2</namespace>
+          </ros>
+          <camera_name>xj4</camera_name>
+          <frame_name>xj4_optical_frame</frame_name>
+          <focal_length>1740.3529088647258</focal_length>
+          <cx>696.2963</cx>
+          <cy>547.75936</cy>
+          <border_crop>0</border_crop>
+          <rectification_matrix>1 0 0 0 1 0 0 0 1</rectification_matrix>
+          <P_fx>1715.0524881234628</P_fx>
+          <P_fy>1723.8636518642318</P_fy>
+          <P_cx>693.56983</P_cx>
+          <P_cy>545.3029</P_cy>
+        </plugin>
+        <pose>-0.656894 0.674932 0.735057 3.14159 1.57079 -1.57079</pose>
+      </sensor>
+      <sensor name="pitch_camera_sensor" type="camera">
+        <always_on>1</always_on>
+        <visualize>0</visualize>
+        <update_rate>30</update_rate>
+        <camera name="pitch_camera">
+          <horizontal_fov>0.959931</horizontal_fov>
+          <image>
+            <width>1440</width>
+            <height>1080</height>
+            <format>B8G8R8</format>
+          </image>
+          <clip>
+            <near>0.05</near>
+            <far>100</far>
+          </clip>
+          <noise>
+            <type>gaussian</type>
+            <mean>0</mean>
+            <stddev>0.01</stddev>
+          </noise>
+          <distortion>
+            <k1>-0.099402</k1>
+            <k2>0.115175</k2>
+            <k3>0.0</k3>
+            <p1>-0.003985</p1>
+            <p2>-0.001845</p2>
+            <center>0.4835390972222 0.5071845925926</center>
+          </distortion>
+          <lens>
+            <intrinsics>
+              <fx>1383.107281011723</fx>
+              <fy>1383.1940097211066</fy>
+              <cx>696.2963</cx>
+              <cy>547.75936</cy>
+              <s>0</s>
+            </intrinsics>
+            <type>stereographic</type>
+            <scale_to_hfov>1</scale_to_hfov>
+          </lens>
+        </camera>
+        <plugin name="pitch_camera_plugin" filename="libgazebo_ros_camera.so">
+          <ros>
+            <namespace>/subway_v2</namespace>
+          </ros>
+          <camera_name>pitch_camera</camera_name>
+          <frame_name>pitch_camera_optical_frame</frame_name>
+          <focal_length>1383.107281011723</focal_length>
+          <cx>696.2963</cx>
+          <cy>547.75936</cy>
+          <border_crop>0</border_crop>
+          <rectification_matrix>1 0 0 0 1 0 0 0 1</rectification_matrix>
+          <P_fx>1363.000326863712</P_fx>
+          <P_fy>1370.0028058793007</P_fy>
+          <P_cx>693.56983</P_cx>
+          <P_cy>545.3029</P_cy>
+        </plugin>
+        <pose>0.077916 0.464786 1.42644 0 -1.309 -0</pose>
+      </sensor>
+    </link>
+    <joint name="lidar_joint" type="fixed">
+      <pose relative_to="base_footprint">0.574218 0 0.680943 0 0 -0</pose>
+      <parent>base_footprint</parent>
+      <child>lidar_link</child>
+      <axis>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+        <xyz>0 0 1</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+      </axis>
+      <physics>
+        <ode>
+          <limit>
+            <cfm>0</cfm>
+            <erp>0.2</erp>
+          </limit>
+        </ode>
+      </physics>
+    </joint>
+    <link name="lidar_link">
+      <pose relative_to="lidar_joint">0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>0 0 0 0 -0 0</pose>
+        <mass>0.001</mass>
+        <inertia>
+          <ixx>9.03832e-06</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>9.03832e-06</iyy>
+          <iyz>0</iyz>
+          <izz>9.03832e-06</izz>
+        </inertia>
+      </inertial>
+      <sensor name="odin1_lidar" type="gpu_ray">
+        <always_on>1</always_on>
+        <visualize>0</visualize>
+        <pose>0 0 0 0 -0 0</pose>
+        <update_rate>10</update_rate>
+        <ray>
+          <scan>
+            <horizontal>
+              <samples>240</samples>
+              <resolution>1</resolution>
+              <min_angle>-1.0472</min_angle>
+              <max_angle>1.0472</max_angle>
+            </horizontal>
+            <vertical>
+              <samples>180</samples>
+              <resolution>1</resolution>
+              <min_angle>-0.785398</min_angle>
+              <max_angle>0.785398</max_angle>
+            </vertical>
+          </scan>
+          <range>
+            <min>0.2</min>
+            <max>30</max>
+            <resolution>0.01</resolution>
+          </range>
+          <noise>
+            <type>gaussian</type>
+            <mean>0</mean>
+            <stddev>0.03</stddev>
+          </noise>
+        </ray>
+        <plugin name="odin1_pointcloud_plugin" filename="libgazebo_ros_ray_sensor.so">
+          <ros>
+            <namespace>/odin1</namespace>
+            <remapping>~/out:=cloud_raw</remapping>
+          </ros>
+          <output_type>sensor_msgs/PointCloud2</output_type>
+          <frame_name>lidar_link</frame_name>
+        </plugin>
+      </sensor>
+      <sensor name="odin1_rgb_camera" type="camera">
+        <always_on>1</always_on>
+        <visualize>0</visualize>
+        <update_rate>10</update_rate>
+        <pose>0.01462 0.034376 0.000445 -0.00208 -0.0061 -0.01139</pose>
+        <camera name="odin1_rgb">
+          <horizontal_fov>1.6527705344413242</horizontal_fov>
+          <image>
+            <width>1600</width>
+            <height>1296</height>
+            <format>R8G8B8</format>
+          </image>
+          <clip>
+            <near>0.1</near>
+            <far>100</far>
+          </clip>
+          <lens>
+            <intrinsics>
+              <fx>736.9688</fx>
+              <fy>737.0365</fy>
+              <cx>766.6570</cx>
+              <cy>642.9091</cy>
+              <s>0.2058</s>
+            </intrinsics>
+            <type>stereographic</type>
+            <scale_to_hfov>1</scale_to_hfov>
+          </lens>
+        </camera>
+        <plugin name="odin1_rgb_camera_plugin" filename="libgazebo_ros_camera.so">
+          <ros>
+            <namespace>/odin1</namespace>
+            <remapping>rgb/camera_info:=rgb/camera_info_gazebo</remapping>
+          </ros>
+          <camera_name>rgb</camera_name>
+          <frame_name>odin1_rgb_optical_frame</frame_name>
+          <cx>766.6570</cx>
+          <cy>642.9091</cy>
+          <border_crop>0</border_crop>
+          <rectification_matrix>1 0 0 0 1 0 0 0 1</rectification_matrix>
+          <P_fx>736.9688</P_fx>
+          <P_fy>737.0365</P_fy>
+          <P_cx>766.6570</P_cx>
+          <P_cy>642.9091</P_cy>
+        </plugin>
+      </sensor>
+    </link>
+    <joint name="imu_joint" type="fixed">
+      <pose relative_to="lidar_link">0.02663 -0.03447 -0.02174 0 -0 0</pose>
+      <parent>lidar_link</parent>
+      <child>imu_link</child>
+      <axis>
+        <dynamics>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+        <xyz>0 0 1</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+      </axis>
+      <physics>
+        <ode>
+          <limit>
+            <cfm>0</cfm>
+            <erp>0.2</erp>
+          </limit>
+        </ode>
+      </physics>
+    </joint>
+    <link name="imu_link">
+      <pose relative_to="imu_joint">0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>0 0 0 0 -0 0</pose>
+        <mass>0.001</mass>
+        <inertia>
+          <ixx>9.03832e-06</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>9.03832e-06</iyy>
+          <iyz>0</iyz>
+          <izz>9.03832e-06</izz>
+        </inertia>
+      </inertial>
+      <sensor name="odin1_imu" type="imu">
+        <always_on>1</always_on>
+        <update_rate>100</update_rate>
+        <imu>
+          <angular_velocity>
+            <x>
+              <noise type="gaussian">
+                <mean>0</mean>
+                <stddev>0.0002</stddev>
+              </noise>
+            </x>
+            <y>
+              <noise type="gaussian">
+                <mean>0</mean>
+                <stddev>0.0002</stddev>
+              </noise>
+            </y>
+            <z>
+              <noise type="gaussian">
+                <mean>0</mean>
+                <stddev>0.0002</stddev>
+              </noise>
+            </z>
+          </angular_velocity>
+          <linear_acceleration>
+            <x>
+              <noise type="gaussian">
+                <mean>0</mean>
+                <stddev>0.017</stddev>
+              </noise>
+            </x>
+            <y>
+              <noise type="gaussian">
+                <mean>0</mean>
+                <stddev>0.017</stddev>
+              </noise>
+            </y>
+            <z>
+              <noise type="gaussian">
+                <mean>0</mean>
+                <stddev>0.017</stddev>
+              </noise>
+            </z>
+          </linear_acceleration>
+        </imu>
+        <plugin name="odin1_imu_plugin" filename="libgazebo_ros_imu_sensor.so">
+          <initial_orientation_as_reference>0</initial_orientation_as_reference>
+          <ros>
+            <namespace>/odin1</namespace>
+            <remapping>~/out:=imu</remapping>
+          </ros>
+        </plugin>
+      </sensor>
+    </link>
+    <joint name="w1_joint" type="revolute">
+      <pose relative_to="base_footprint">0.435925 -0.754 0.232992 1.5708 1.40236 -0</pose>
+      <parent>base_footprint</parent>
+      <child>w1</child>
+      <axis>
+        <xyz>0 0 -1</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <damping>0.2</damping>
+          <friction>0.05</friction>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name="w1">
+      <pose relative_to="w1_joint">0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>0 0 -0.029012 0 -0 0</pose>
+        <mass>0.5</mass>
+        <inertia>
+          <ixx>0.00734293</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.00734293</iyy>
+          <iyz>0</iyz>
+          <izz>0.0135716</izz>
+        </inertia>
+      </inertial>
+      <collision name="w1_tread_collision_collision">
+        <pose>0 0 0 0 -0 0</pose>
+        <geometry>
+          <cylinder>
+            <length>0.0571212</length>
+            <radius>0.180383</radius>
+          </cylinder>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <kp>1e+06</kp>
+              <kd>10</kd>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+          <friction>
+            <ode>
+              <mu>1</mu>
+              <mu2>1</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+      <collision name="w1_flange_collision_collision_1">
+        <pose>0 0 -0.048102 0 -0 0</pose>
+        <geometry>
+          <cylinder>
+            <length>0.0390829</length>
+            <radius>0.232994</radius>
+          </cylinder>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <kp>1e+06</kp>
+              <kd>10</kd>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+          <friction>
+            <ode>
+              <mu>1</mu>
+              <mu2>1</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+      <visual name="w1_visual">
+        <pose>-0.10077 0.017136 -0.30635 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>3.00638 3.00638 3.00638</scale>
+            <uri>model://subway_v2/meshes/w1_wheel.STL</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name="w2_joint" type="revolute">
+      <pose relative_to="base_footprint">0.435925 0.754 0.232992 1.5708 -1.40236 3.14159</pose>
+      <parent>base_footprint</parent>
+      <child>w2</child>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <damping>0.2</damping>
+          <friction>0.05</friction>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name="w2">
+      <pose relative_to="w2_joint">0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>0 0 -0.029012 0 -0 0</pose>
+        <mass>0.5</mass>
+        <inertia>
+          <ixx>0.00734293</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.00734293</iyy>
+          <iyz>0</iyz>
+          <izz>0.0135716</izz>
+        </inertia>
+      </inertial>
+      <collision name="w2_tread_collision_collision">
+        <pose>0 0 0 0 -0 0</pose>
+        <geometry>
+          <cylinder>
+            <length>0.0571212</length>
+            <radius>0.180383</radius>
+          </cylinder>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <kp>1e+06</kp>
+              <kd>10</kd>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+          <friction>
+            <ode>
+              <mu>1</mu>
+              <mu2>1</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+      <collision name="w2_flange_collision_collision_1">
+        <pose>0 0 -0.048102 0 -0 0</pose>
+        <geometry>
+          <cylinder>
+            <length>0.0390829</length>
+            <radius>0.232994</radius>
+          </cylinder>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <kp>1e+06</kp>
+              <kd>10</kd>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+          <friction>
+            <ode>
+              <mu>1</mu>
+              <mu2>1</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+      <visual name="w2_visual">
+        <pose>0.10077 0.017136 -0.30635 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>3.00638 3.00638 3.00638</scale>
+            <uri>model://subway_v2/meshes/w2_wheel.STL</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name="w3_joint" type="revolute">
+      <pose relative_to="base_footprint">-0.435925 0.754 0.232992 1.5708 -0.502733 3.14159</pose>
+      <parent>base_footprint</parent>
+      <child>w3</child>
+      <axis>
+        <xyz>0 0 1</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <damping>0.2</damping>
+          <friction>0.05</friction>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name="w3">
+      <pose relative_to="w3_joint">0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>0 0 -0.029012 0 -0 0</pose>
+        <mass>0.5</mass>
+        <inertia>
+          <ixx>0.00734293</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.00734293</iyy>
+          <iyz>0</iyz>
+          <izz>0.0135716</izz>
+        </inertia>
+      </inertial>
+      <collision name="w3_tread_collision_collision">
+        <pose>0 0 0 0 -0 0</pose>
+        <geometry>
+          <cylinder>
+            <length>0.0571212</length>
+            <radius>0.180383</radius>
+          </cylinder>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <kp>1e+06</kp>
+              <kd>10</kd>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+          <friction>
+            <ode>
+              <mu>1</mu>
+              <mu2>1</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+      <collision name="w3_flange_collision_collision_1">
+        <pose>0 0 -0.048102 0 -0 0</pose>
+        <geometry>
+          <cylinder>
+            <length>0.0390829</length>
+            <radius>0.232994</radius>
+          </cylinder>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <kp>1e+06</kp>
+              <kd>10</kd>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+          <friction>
+            <ode>
+              <mu>1</mu>
+              <mu2>1</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+      <visual name="w3_visual">
+        <pose>0.04925 0.08957 -0.30635 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>3.00638 3.00638 3.00638</scale>
+            <uri>model://subway_v2/meshes/w3_wheel.STL</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <joint name="w4_joint" type="revolute">
+      <pose relative_to="base_footprint">-0.435925 -0.754 0.232992 1.5708 0.502733 -0</pose>
+      <parent>base_footprint</parent>
+      <child>w4</child>
+      <axis>
+        <xyz>0 0 -1</xyz>
+        <limit>
+          <lower>-1e+16</lower>
+          <upper>1e+16</upper>
+        </limit>
+        <dynamics>
+          <damping>0.2</damping>
+          <friction>0.05</friction>
+          <spring_reference>0</spring_reference>
+          <spring_stiffness>0</spring_stiffness>
+        </dynamics>
+      </axis>
+    </joint>
+    <link name="w4">
+      <pose relative_to="w4_joint">0 0 0 0 -0 0</pose>
+      <inertial>
+        <pose>0 0 -0.029012 0 -0 0</pose>
+        <mass>0.5</mass>
+        <inertia>
+          <ixx>0.00734293</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.00734293</iyy>
+          <iyz>0</iyz>
+          <izz>0.0135716</izz>
+        </inertia>
+      </inertial>
+      <collision name="w4_tread_collision_collision">
+        <pose>0 0 0 0 -0 0</pose>
+        <geometry>
+          <cylinder>
+            <length>0.0571212</length>
+            <radius>0.180383</radius>
+          </cylinder>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <kp>1e+06</kp>
+              <kd>10</kd>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+          <friction>
+            <ode>
+              <mu>1</mu>
+              <mu2>1</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+      <collision name="w4_flange_collision_collision_1">
+        <pose>0 0 -0.048102 0 -0 0</pose>
+        <geometry>
+          <cylinder>
+            <length>0.0390829</length>
+            <radius>0.232994</radius>
+          </cylinder>
+        </geometry>
+        <surface>
+          <contact>
+            <ode>
+              <kp>1e+06</kp>
+              <kd>10</kd>
+              <max_vel>0.1</max_vel>
+              <min_depth>0.001</min_depth>
+            </ode>
+          </contact>
+          <friction>
+            <ode>
+              <mu>1</mu>
+              <mu2>1</mu2>
+            </ode>
+          </friction>
+        </surface>
+      </collision>
+      <visual name="w4_visual">
+        <pose>-0.04925 0.08957 -0.30635 0 -0 0</pose>
+        <geometry>
+          <mesh>
+            <scale>3.00638 3.00638 3.00638</scale>
+            <uri>model://subway_v2/meshes/w4_wheel.STL</uri>
+          </mesh>
+        </geometry>
+      </visual>
+    </link>
+    <static>0</static>
+    <plugin name="subway_v2_diff_drive" filename="libgazebo_ros_diff_drive.so">
+      <ros>
+        <remapping>cmd_vel:=cmd_vel_drive</remapping>
+        <remapping>odom:=wheel/odom_raw</remapping>
+      </ros>
+      <update_rate>100</update_rate>
+      <num_wheel_pairs>2</num_wheel_pairs>
+      <left_joint>w2_joint</left_joint>
+      <right_joint>w1_joint</right_joint>
+      <left_joint>w3_joint</left_joint>
+      <right_joint>w4_joint</right_joint>
+      <wheel_separation>1.508</wheel_separation>
+      <wheel_separation>1.508</wheel_separation>
+      <wheel_diameter>0.360765550239234</wheel_diameter>
+      <wheel_diameter>0.360765550239234</wheel_diameter>
+      <max_wheel_torque>40</max_wheel_torque>
+      <max_wheel_acceleration>1.0</max_wheel_acceleration>
+      <publish_odom>1</publish_odom>
+      <publish_odom_tf>0</publish_odom_tf>
+      <publish_wheel_tf>0</publish_wheel_tf>
+      <odometry_frame>odom</odometry_frame>
+      <robot_base_frame>base_footprint</robot_base_frame>
+    </plugin>
+    <plugin name="subway_v2_joint_state" filename="libgazebo_ros_joint_state_publisher.so">
+      <ros>
+        <remapping>~/out:=joint_states</remapping>
+      </ros>
+      <update_rate>30</update_rate>
+      <joint_name>w1_joint</joint_name>
+      <joint_name>w2_joint</joint_name>
+      <joint_name>w3_joint</joint_name>
+      <joint_name>w4_joint</joint_name>
+    </plugin>
+  </model>
+</sdf>

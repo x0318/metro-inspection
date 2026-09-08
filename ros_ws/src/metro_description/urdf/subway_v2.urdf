@@ -1,0 +1,1017 @@
+<?xml version='1.0' encoding='utf-8'?>
+<robot name="subway_v2">
+  <!-- Hardware geometry imported from feature/hardware:hardware/simple_v6@37ce04e; ROS 2 sensor plugins and calibrated sensor frames are preserved. -->
+  <link name="base_footprint" />
+  <joint name="base_footprint_to_base_link" type="fixed">
+    <origin xyz="0.010904028627 0.003428939952 0.214499211212" rpy="-1.570796326795 0 -1.570796326795" />
+    <parent link="base_footprint" />
+    <child link="base_link" />
+  </joint>
+  <link name="base_link">
+    <inertial>
+      <origin xyz="0.00342988110460384 0.0758048857706379 -0.0126791518273465" rpy="0 0 0" />
+      <mass value="15.4748516352473" />
+      <inertia ixx="0.21737681546364" ixy="-6.17546120947726E-07" ixz="6.73548072296192E-07" iyy="0.280704882221397" iyz="-5.31706809662726E-05" izz="0.0741097470555598" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://metro_description/meshes/base_link.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.898039215686275 0.917647058823529 0.929411764705882 1" />
+      </material>
+    </visual>
+    <collision name="base_link_collision">
+      <origin xyz="0.003428936005 0.032983805984 -0.038154035807" rpy="0 0 0" />
+      <geometry>
+        <box size="0.475999981165 0.276014514267 0.464500010014" />
+      </geometry>
+    </collision>
+    <visual name="w1_fixed_mount_visual">
+      <origin xyz="0.152328939951822 0.103 0.134095970953207" rpy="1.57079632679489 -0.16843576907617 1.5707963267949" />
+      <geometry>
+        <mesh filename="package://metro_description/meshes/w1_mount.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <visual name="w2_fixed_mount_visual">
+      <origin xyz="-0.145471060048178 0.103 0.134095970953207" rpy="1.57079632679489 0.16843576907617 -1.5707963267949" />
+      <geometry>
+        <mesh filename="package://metro_description/meshes/w2_mount.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <visual name="w3_fixed_mount_visual">
+      <origin xyz="-0.145471060048178 0.102999999999999 -0.155904029046793" rpy="1.57079632679489 1.06806361303278 -1.5707963267949" />
+      <geometry>
+        <mesh filename="package://metro_description/meshes/w3_mount.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <visual name="w4_fixed_mount_visual">
+      <origin xyz="0.152328939951822 0.102999999999999 -0.155904029046793" rpy="1.57079632679489 -1.06806361303278 1.5707963267949" />
+      <geometry>
+        <mesh filename="package://metro_description/meshes/w4_mount.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="1 1 1 1" />
+      </material>
+    </visual>
+  </link>
+  <link name="w1">
+    <inertial>
+      <origin xyz="0 0 -0.00965" rpy="0 0 0" />
+      <mass value="0.5" />
+      <inertia ixx="0.000812421666667" ixy="0" ixz="0" iyy="0.000812421666667" iyz="0" izz="0.0015015625" />
+    </inertial>
+    <visual>
+      <origin xyz="-0.033518838253 0.005699772312 -0.101900000000" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://metro_description/meshes/w1_wheel.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision name="w1_tread_collision">
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <cylinder radius="0.060" length="0.019" />
+      </geometry>
+    </collision>
+    <collision name="w1_flange_collision">
+      <origin xyz="0 0 -0.016" rpy="0 0 0" />
+      <geometry>
+        <cylinder radius="0.0775" length="0.013" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="w1_joint" type="continuous">
+    <origin xyz="0.254228939952 0.136999998856323 0.134095974152992" rpy="1.57079632679489 -0.16843576907617 1.5707963267949" />
+    <parent link="base_link" />
+    <child link="w1" />
+    <axis xyz="0 0 -1" />
+    <dynamics damping="0.2" friction="0.05" />
+  </joint>
+  <link name="w2">
+    <inertial>
+      <origin xyz="0 0 -0.00965" rpy="0 0 0" />
+      <mass value="0.5" />
+      <inertia ixx="0.000812421666667" ixy="0" ixz="0" iyy="0.000812421666667" iyz="0" izz="0.0015015625" />
+    </inertial>
+    <visual>
+      <origin xyz="0.033518837740 0.005699775792 -0.101900000000" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://metro_description/meshes/w2_wheel.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision name="w2_tread_collision">
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <cylinder radius="0.060" length="0.019" />
+      </geometry>
+    </collision>
+    <collision name="w2_flange_collision">
+      <origin xyz="0 0 -0.016" rpy="0 0 0" />
+      <geometry>
+        <cylinder radius="0.0775" length="0.013" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="w2_joint" type="continuous">
+    <origin xyz="-0.247371060048 0.136999998934387 0.134095970636500" rpy="1.57079632679489 0.16843576907617 -1.5707963267949" />
+    <parent link="base_link" />
+    <child link="w2" />
+    <axis xyz="0 0 1" />
+    <dynamics damping="0.2" friction="0.05" />
+  </joint>
+  <link name="w3">
+    <inertial>
+      <origin xyz="0 0 -0.00965" rpy="0 0 0" />
+      <mass value="0.5" />
+      <inertia ixx="0.000812421666667" ixy="0" ixz="0" iyy="0.000812421666667" iyz="0" izz="0.0015015625" />
+    </inertial>
+    <visual>
+      <origin xyz="0.016381944458 0.029793150762 -0.101900000000" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://metro_description/meshes/w3_wheel.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision name="w3_tread_collision">
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <cylinder radius="0.060" length="0.019" />
+      </geometry>
+    </collision>
+    <collision name="w3_flange_collision">
+      <origin xyz="0 0 -0.016" rpy="0 0 0" />
+      <geometry>
+        <cylinder radius="0.0775" length="0.013" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="w3_joint" type="continuous">
+    <origin xyz="-0.247371060048 0.136999999067289 -0.155904029760880" rpy="1.57079632679489 1.06806361303278 -1.5707963267949" />
+    <parent link="base_link" />
+    <child link="w3" />
+    <axis xyz="0 0 1" />
+    <dynamics damping="0.2" friction="0.05" />
+  </joint>
+  <link name="w4">
+    <inertial>
+      <origin xyz="0 0 -0.00965" rpy="0 0 0" />
+      <mass value="0.5" />
+      <inertia ixx="0.000812421666667" ixy="0" ixz="0" iyy="0.000812421666667" iyz="0" izz="0.0015015625" />
+    </inertial>
+    <visual>
+      <origin xyz="-0.016381944871 0.029793151047 -0.101900000000" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://metro_description/meshes/w4_wheel.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision name="w4_tread_collision">
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <cylinder radius="0.060" length="0.019" />
+      </geometry>
+    </collision>
+    <collision name="w4_flange_collision">
+      <origin xyz="0 0 -0.016" rpy="0 0 0" />
+      <geometry>
+        <cylinder radius="0.0775" length="0.013" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="w4_joint" type="continuous">
+    <origin xyz="0.254228939952 0.136999999516020 -0.155904029536466" rpy="1.57079632679489 -1.06806361303278 1.5707963267949" />
+    <parent link="base_link" />
+    <child link="w4" />
+    <axis xyz="0 0 -1" />
+    <dynamics damping="0.2" friction="0.05" />
+  </joint>
+  <link name="yuntai">
+    <inertial>
+      <origin xyz="-2.5637757964346E-07 -0.110169069602299 -0.0784992077231397" rpy="0 0 0" />
+      <mass value="0.904884147270093" />
+      <inertia ixx="0.00311178538498172" ixy="4.72925129736929E-06" ixz="6.19240417083107E-07" iyy="0.0025251066654015" iyz="-2.23541087825991E-05" izz="0.00263526415654357" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://metro_description/meshes/yuntai.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision name="yuntai_collision">
+      <origin xyz="0 -0.064619481564 -0.077299998142" rpy="0 0 0" />
+      <geometry>
+        <box size="0.140000000596 0.218761026859 0.191999999806" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="yaw_joint" type="fixed">
+    <origin xyz="-0.0738710600481814 -0.166 -0.0109040290468001" rpy="3.14159265358979 1.5707963267949 0" />
+    <parent link="base_link" />
+    <child link="yuntai" />
+  </joint>
+  <link name="pitch">
+    <inertial>
+      <origin xyz="-0.0772695318878126 0.0326598382404958 -0.0474066970277468" rpy="0 0 0" />
+      <mass value="1.90241501200622" />
+      <inertia ixx="0.0021941081471964" ixy="3.19697219355379E-10" ixz="-3.42069944155675E-06" iyy="0.00512780545767912" iyz="2.60726514964611E-05" izz="0.00325257938604102" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://metro_description/meshes/pitch.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision name="pitch_collision">
+      <origin xyz="-0.077299998142 0.038299999200 -0.021951824427" rpy="0 0 0" />
+      <geometry>
+        <box size="0.193599997088 0.122999997810 0.234749644995" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="pitch_joint" type="fixed">
+    <origin xyz="0 0.01 0" rpy="-1.83259571459394 1.5707963267949 0" />
+    <parent link="yuntai" />
+    <child link="pitch" />
+  </joint>
+  <link name="leida">
+    <inertial>
+      <origin xyz="-6.70843891956881E-05 0.00142859560598621 0.0183157980078029" rpy="0 0 0" />
+      <mass value="0.224138920084812" />
+      <inertia ixx="9.82520762919608E-05" ixy="-2.15936634694029E-07" ixz="1.20856551604039E-06" iyy="0.000207409840818258" iyz="1.49309321807351E-07" izz="0.000241137504614476" />
+    </inertial>
+    <collision name="leida_collision">
+      <origin xyz="0 0.002000000328 0.016799999634" rpy="0 0 0" />
+      <geometry>
+        <box size="0.100000001490 0.061999998987 0.046399998944" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="leida_joint" type="fixed">
+    <origin xyz="0.00342893995182154 -0.0120000000000005 0.139095970953207" rpy="0 0 0" />
+    <parent link="base_link" />
+    <child link="leida" />
+    <axis xyz="0 0 0" />
+  </joint>
+  <link name="xj1">
+    <inertial>
+      <origin xyz="-5.3776427755281E-17 0.0660110229373988 0.0284188128778561" rpy="0 0 0" />
+      <mass value="0.0702201485513357" />
+      <inertia ixx="6.8924576094566E-05" ixy="-1.50919670614972E-21" ixz="-6.17675307837514E-21" iyy="6.47726594190448E-05" iyz="-1.57023483082672E-05" izz="1.3224610350669E-05" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://metro_description/meshes/xj1.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision name="xj1_collision">
+      <origin xyz="0.000074910000 0.069820364937 0.019108943641" rpy="0 0 0" />
+      <geometry>
+        <box size="0.037850178778 0.057438004762 0.120107173920" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="xj1_joint" type="fixed">
+    <origin xyz="0.163428939951822 -0.0135000000000005 -0.0109040290467929" rpy="3.14159265358979 -1.5707963267949 0" />
+    <parent link="base_link" />
+    <child link="xj1" />
+    <axis xyz="0 0 0" />
+  </joint>
+  <link name="xj2">
+    <inertial>
+      <origin xyz="5.55111512312578E-17 0.0660110229373987 0.0284188128778561" rpy="0 0 0" />
+      <mass value="0.0702201485513357" />
+      <inertia ixx="6.89245760945659E-05" ixy="-4.50123854327909E-22" ixz="4.00555336197713E-21" iyy="6.47726594190448E-05" iyz="-1.57023483082672E-05" izz="1.3224610350669E-05" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://metro_description/meshes/xj2.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision name="xj2_collision">
+      <origin xyz="0.000074910000 0.069820364937 0.019108943641" rpy="0 0 0" />
+      <geometry>
+        <box size="0.037850178778 0.057438004762 0.120107173920" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="xj2_joint" type="fixed">
+    <origin xyz="-0.156571060048178 -0.0135000000000005 -0.0109040290467929" rpy="3.14159265358979 1.5707963267949 0" />
+    <parent link="base_link" />
+    <child link="xj2" />
+    <axis xyz="0 0 0" />
+  </joint>
+  <link name="xj3">
+    <inertial>
+      <origin xyz="5.55111512312578E-17 0.00131485474518428 0.0633800194825994" rpy="0 0 0" />
+      <mass value="0.0702201485513358" />
+      <inertia ixx="6.8924576094566E-05" ixy="-2.84496811484628E-21" ixz="1.66960589847858E-21" iyy="6.88359580916203E-05" iyz="4.53852695686594E-06" izz="9.16131167809349E-06" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://metro_description/meshes/xj3.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision name="xj3_collision">
+      <origin xyz="0.000074910000 0 0.052000000142" rpy="0 0 0" />
+      <geometry>
+        <box size="0.037850178778 0.037925016135 0.115999998525" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="xj3_joint" type="fixed">
+    <origin xyz="0.227928939951822 -0.107 -0.229404029046793" rpy="-1.5707963267949 -1.5707963267949 0" />
+    <parent link="base_link" />
+    <child link="xj3" />
+    <axis xyz="0 0 0" />
+  </joint>
+  <link name="xj4">
+    <inertial>
+      <origin xyz="0 0.00131485474518436 0.0633800194825994" rpy="0 0 0" />
+      <mass value="0.0702201485513357" />
+      <inertia ixx="6.8924576094566E-05" ixy="-1.61553034878437E-21" ixz="-8.98356059370655E-21" iyy="6.88359580916203E-05" iyz="4.5385269568659E-06" izz="9.16131167809348E-06" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://metro_description/meshes/xj4.STL" />
+      </geometry>
+      <material name="">
+        <color rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision name="xj4_collision">
+      <origin xyz="0.000074910000 0 0.052000000142" rpy="0 0 0" />
+      <geometry>
+        <box size="0.037850178778 0.037925016135 0.115999998525" />
+      </geometry>
+    </collision>
+  </link>
+  <joint name="xj4_joint" type="fixed">
+    <origin xyz="-0.221071060048178 -0.107 -0.229404029046793" rpy="-1.5707963267949 1.5707963267949 0" />
+    <parent link="base_link" />
+    <child link="xj4" />
+    <axis xyz="0 0 0" />
+  </joint>
+  <link name="lidar_link">
+    <inertial>
+      <mass value="0.001" />
+      <inertia ixx="0.000001" ixy="0" ixz="0" iyy="0.000001" iyz="0" izz="0.000001" />
+    </inertial>
+  </link>
+  <link name="imu_link">
+    <inertial>
+      <mass value="0.001" />
+      <inertia ixx="0.000001" ixy="0" ixz="0" iyy="0.000001" iyz="0" izz="0.000001" />
+    </inertial>
+  </link>
+  <link name="odin1_rgb_optical_frame" />
+  <link name="xj1_camera_link" />
+  <link name="xj1_optical_frame" />
+  <link name="xj2_camera_link" />
+  <link name="xj2_optical_frame" />
+  <link name="xj3_camera_link" />
+  <link name="xj3_optical_frame" />
+  <link name="xj4_camera_link" />
+  <link name="xj4_optical_frame" />
+  <link name="pitch_camera" />
+  <link name="pitch_camera_sensor_link" />
+  <link name="pitch_camera_optical_frame" />
+  <joint name="lidar_joint" type="fixed">
+    <origin xyz="0 0 0.041" rpy="1.5707963267949 -1.5707963267949 0" />
+    <parent link="leida" />
+    <child link="lidar_link" />
+  </joint>
+  <joint name="imu_joint" type="fixed">
+    <origin xyz="0.02663 -0.03447 -0.02174" rpy="0 0 0" />
+    <parent link="lidar_link" />
+    <child link="imu_link" />
+  </joint>
+  <joint name="odin1_rgb_optical_joint" type="fixed">
+    <origin xyz="0.01462035 0.03437643 0.00044495" rpy="-1.56469628 -0.00208000 -1.58220663" />
+    <parent link="lidar_link" />
+    <child link="odin1_rgb_optical_frame" />
+  </joint>
+  <joint name="xj1_camera_joint" type="fixed">
+    <origin xyz="0 0 0.018478" rpy="-3.14159265358979 -1.13446401379631 1.5707963267949" />
+    <parent link="xj1" />
+    <child link="xj1_camera_link" />
+  </joint>
+  <joint name="xj1_optical_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="-1.570796326795 0 -1.570796326795" />
+    <parent link="xj1_camera_link" />
+    <child link="xj1_optical_frame" />
+  </joint>
+  <joint name="xj2_camera_joint" type="fixed">
+    <origin xyz="0 0 0.018478" rpy="-3.14159265358979 -1.13446401379631 1.5707963267949" />
+    <parent link="xj2" />
+    <child link="xj2_camera_link" />
+  </joint>
+  <joint name="xj2_optical_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="-1.570796326795 0 -1.570796326795" />
+    <parent link="xj2_camera_link" />
+    <child link="xj2_optical_frame" />
+  </joint>
+  <joint name="xj3_camera_joint" type="fixed">
+    <origin xyz="0 0 0.077" rpy="-1.5707963267949 -1.5707963267949 0" />
+    <parent link="xj3" />
+    <child link="xj3_camera_link" />
+  </joint>
+  <joint name="xj3_optical_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="-1.570796326795 0 -1.570796326795" />
+    <parent link="xj3_camera_link" />
+    <child link="xj3_optical_frame" />
+  </joint>
+  <joint name="xj4_camera_joint" type="fixed">
+    <origin xyz="0 0 0.077" rpy="-1.5707963267949 -1.5707963267949 0" />
+    <parent link="xj4" />
+    <child link="xj4_camera_link" />
+  </joint>
+  <joint name="xj4_optical_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="-1.570796326795 0 -1.570796326795" />
+    <parent link="xj4_camera_link" />
+    <child link="xj4_optical_frame" />
+  </joint>
+  <joint name="pitch_camera_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="0 0 0" />
+    <parent link="pitch" />
+    <child link="pitch_camera" />
+  </joint>
+  <joint name="pitch_camera_sensor_joint" type="fixed">
+    <origin xyz="-0.077300002798 0.003299999982 0.087818765" rpy="1.5707963267949 -1.5707963267949 0" />
+    <parent link="pitch_camera" />
+    <child link="pitch_camera_sensor_link" />
+  </joint>
+  <joint name="pitch_camera_optical_joint" type="fixed">
+    <origin xyz="0 0 0" rpy="-1.570796326795 0 -1.570796326795" />
+    <parent link="pitch_camera_sensor_link" />
+    <child link="pitch_camera_optical_frame" />
+  </joint>
+  <gazebo>
+    <static>false</static>
+    <plugin name="subway_v2_diff_drive" filename="libgazebo_ros_diff_drive.so">
+      <ros>
+        <remapping>cmd_vel:=cmd_vel_drive</remapping>
+        <remapping>odom:=wheel/odom_raw</remapping>
+      </ros>
+      <update_rate>100</update_rate>
+      <num_wheel_pairs>2</num_wheel_pairs>
+      <left_joint>w2_joint</left_joint>
+      <right_joint>w1_joint</right_joint>
+      <left_joint>w3_joint</left_joint>
+      <right_joint>w4_joint</right_joint>
+      <wheel_separation>0.5016</wheel_separation>
+      <wheel_separation>0.5016</wheel_separation>
+      <wheel_diameter>0.12</wheel_diameter>
+      <wheel_diameter>0.12</wheel_diameter>
+      <max_wheel_torque>40</max_wheel_torque>
+      <max_wheel_acceleration>1.0</max_wheel_acceleration>
+      <publish_odom>true</publish_odom>
+      <publish_odom_tf>false</publish_odom_tf>
+      <publish_wheel_tf>false</publish_wheel_tf>
+      <odometry_frame>odom</odometry_frame>
+      <robot_base_frame>base_footprint</robot_base_frame>
+    </plugin>
+    <plugin name="subway_v2_joint_state" filename="libgazebo_ros_joint_state_publisher.so">
+      <ros>
+        <remapping>~/out:=joint_states</remapping>
+      </ros>
+      <update_rate>30</update_rate>
+      <joint_name>w1_joint</joint_name>
+      <joint_name>w2_joint</joint_name>
+      <joint_name>w3_joint</joint_name>
+      <joint_name>w4_joint</joint_name>
+    </plugin>
+  </gazebo>
+  <gazebo reference="base_link">
+    <mu1>0.001</mu1>
+    <mu2>0.001</mu2>
+  </gazebo>
+  <gazebo reference="w1">
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+  </gazebo>
+  <gazebo reference="w2">
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+  </gazebo>
+  <gazebo reference="w3">
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+  </gazebo>
+  <gazebo reference="w4">
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+  </gazebo>
+  <gazebo reference="imu_joint">
+    <preserveFixedJoint>true</preserveFixedJoint>
+  </gazebo>
+  <gazebo reference="lidar_joint">
+    <preserveFixedJoint>true</preserveFixedJoint>
+  </gazebo>
+  <gazebo reference="imu_link">
+    <sensor name="odin1_imu" type="imu">
+      <always_on>true</always_on>
+      <update_rate>100</update_rate>
+      <imu>
+        <angular_velocity>
+          <x>
+            <noise type="gaussian">
+              <mean>0</mean>
+              <stddev>0.0002</stddev>
+            </noise>
+          </x>
+          <y>
+            <noise type="gaussian">
+              <mean>0</mean>
+              <stddev>0.0002</stddev>
+            </noise>
+          </y>
+          <z>
+            <noise type="gaussian">
+              <mean>0</mean>
+              <stddev>0.0002</stddev>
+            </noise>
+          </z>
+        </angular_velocity>
+        <linear_acceleration>
+          <x>
+            <noise type="gaussian">
+              <mean>0</mean>
+              <stddev>0.017</stddev>
+            </noise>
+          </x>
+          <y>
+            <noise type="gaussian">
+              <mean>0</mean>
+              <stddev>0.017</stddev>
+            </noise>
+          </y>
+          <z>
+            <noise type="gaussian">
+              <mean>0</mean>
+              <stddev>0.017</stddev>
+            </noise>
+          </z>
+        </linear_acceleration>
+      </imu>
+      <plugin name="odin1_imu_plugin" filename="libgazebo_ros_imu_sensor.so">
+        <initial_orientation_as_reference>false</initial_orientation_as_reference>
+        <ros>
+          <namespace>/odin1</namespace>
+          <remapping>~/out:=imu</remapping>
+        </ros>
+      </plugin>
+    </sensor>
+  </gazebo>
+  <gazebo reference="lidar_link">
+    <sensor name="odin1_lidar" type="gpu_ray">
+      <always_on>true</always_on>
+      <visualize>false</visualize>
+      <pose>0 0 0 0 0 0</pose>
+      <update_rate>10</update_rate>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>240</samples>
+            <resolution>1</resolution>
+            <min_angle>-1.0471975511966</min_angle>
+            <max_angle>1.0471975511966</max_angle>
+          </horizontal>
+          <vertical>
+            <samples>180</samples>
+            <resolution>1</resolution>
+            <min_angle>-0.78539816339745</min_angle>
+            <max_angle>0.78539816339745</max_angle>
+          </vertical>
+        </scan>
+        <range>
+          <min>0.2</min>
+          <max>30.0</max>
+          <resolution>0.01</resolution>
+        </range>
+        <noise>
+          <type>gaussian</type>
+          <mean>0</mean>
+          <stddev>0.03</stddev>
+        </noise>
+      </ray>
+      <plugin name="odin1_pointcloud_plugin" filename="libgazebo_ros_ray_sensor.so">
+        <ros>
+          <namespace>/odin1</namespace>
+          <remapping>~/out:=cloud_raw</remapping>
+        </ros>
+        <output_type>sensor_msgs/PointCloud2</output_type>
+        <frame_name>lidar_link</frame_name>
+      </plugin>
+    </sensor>
+    <sensor name="odin1_rgb_camera" type="camera">
+      <always_on>true</always_on>
+      <visualize>false</visualize>
+      <update_rate>10</update_rate>
+      <pose>
+      0.01462035 0.03437643 0.00044495
+      -0.00208004 -0.00610004 -0.01139042
+    </pose>
+      <camera name="odin1_rgb">
+        <horizontal_fov>1.6527705344413242</horizontal_fov>
+        <image>
+          <width>1600</width>
+          <height>1296</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.10</near>
+          <far>100.0</far>
+        </clip>
+        <lens>
+          <intrinsics>
+            <fx>736.9688</fx>
+            <fy>737.0365</fy>
+            <cx>766.6570</cx>
+            <cy>642.9091</cy>
+            <s>0.2058</s>
+          </intrinsics>
+        </lens>
+      </camera>
+      <plugin name="odin1_rgb_camera_plugin" filename="libgazebo_ros_camera.so">
+        <ros>
+          <namespace>/odin1</namespace>
+          <remapping>rgb/camera_info:=rgb/camera_info_gazebo</remapping>
+        </ros>
+        <camera_name>rgb</camera_name>
+        <frame_name>odin1_rgb_optical_frame</frame_name>
+        <cx>766.6570</cx>
+        <cy>642.9091</cy>
+        <border_crop>false</border_crop>
+        <rectification_matrix>1 0 0 0 1 0 0 0 1</rectification_matrix>
+        <P_fx>736.9688</P_fx>
+        <P_fy>737.0365</P_fy>
+        <P_cx>766.6570</P_cx>
+        <P_cy>642.9091</P_cy>
+      </plugin>
+    </sensor>
+  </gazebo>
+  <!-- Simulation-only optics: XJ1/XJ2 use 70 degrees for raised side-wall
+       coverage, XJ3/XJ4 retain their calibrated 44.95-degree track view, and
+       Pitch uses 55 degrees. These do not replace physical calibration. -->
+  <gazebo reference="xj1_camera_link">
+    <sensor name="xj1_camera_sensor" type="camera">
+      <always_on>true</always_on>
+      <visualize>false</visualize>
+      <update_rate>30</update_rate>
+      <pose>0 0 0 0 0 0</pose>
+      <camera name="xj1_camera">
+        <horizontal_fov>1.22173</horizontal_fov>
+        <image>
+          <width>1440</width>
+          <height>1080</height>
+          <format>B8G8R8</format>
+        </image>
+        <clip>
+          <near>0.05</near>
+          <far>100.0</far>
+        </clip>
+        <noise>
+          <type>gaussian</type>
+          <mean>0</mean>
+          <stddev>0.01</stddev>
+        </noise>
+        <distortion>
+          <k1>-0.099402</k1>
+          <k2>0.115175</k2>
+          <k3>0.0</k3>
+          <p1>-0.003985</p1>
+          <p2>-0.001845</p2>
+          <center>0.4835390972222 0.5071845925926</center>
+        </distortion>
+        <lens>
+          <intrinsics>
+            <fx>1028.2670861548688</fx>
+            <fy>1028.3315643616631</fy>
+            <cx>696.2963</cx>
+            <cy>547.75936</cy>
+            <s>0</s>
+          </intrinsics>
+        </lens>
+      </camera>
+      <plugin name="xj1_camera_plugin" filename="libgazebo_ros_camera.so">
+        <ros>
+          <namespace>/subway_v2</namespace>
+        </ros>
+        <camera_name>xj1</camera_name>
+        <frame_name>xj1_optical_frame</frame_name>
+        <focal_length>1028.2670861548688</focal_length>
+        <cx>696.2963</cx>
+        <cy>547.75936</cy>
+        <border_crop>false</border_crop>
+        <rectification_matrix>1 0 0 0 1 0 0 0 1</rectification_matrix>
+        <P_fx>1013.3186295621878</P_fx>
+        <P_fy>1018.5246022239418</P_fy>
+        <P_cx>693.56983</P_cx>
+        <P_cy>545.3029</P_cy>
+      </plugin>
+    </sensor>
+  </gazebo>
+  <gazebo reference="xj2_camera_link">
+    <sensor name="xj2_camera_sensor" type="camera">
+      <always_on>true</always_on>
+      <visualize>false</visualize>
+      <update_rate>30</update_rate>
+      <pose>0 0 0 0 0 0</pose>
+      <camera name="xj2_camera">
+        <horizontal_fov>1.22173</horizontal_fov>
+        <image>
+          <width>1440</width>
+          <height>1080</height>
+          <format>B8G8R8</format>
+        </image>
+        <clip>
+          <near>0.05</near>
+          <far>100.0</far>
+        </clip>
+        <noise>
+          <type>gaussian</type>
+          <mean>0</mean>
+          <stddev>0.01</stddev>
+        </noise>
+        <distortion>
+          <k1>-0.099402</k1>
+          <k2>0.115175</k2>
+          <k3>0.0</k3>
+          <p1>-0.003985</p1>
+          <p2>-0.001845</p2>
+          <center>0.4835390972222 0.5071845925926</center>
+        </distortion>
+        <lens>
+          <intrinsics>
+            <fx>1028.2670861548688</fx>
+            <fy>1028.3315643616631</fy>
+            <cx>696.2963</cx>
+            <cy>547.75936</cy>
+            <s>0</s>
+          </intrinsics>
+        </lens>
+      </camera>
+      <plugin name="xj2_camera_plugin" filename="libgazebo_ros_camera.so">
+        <ros>
+          <namespace>/subway_v2</namespace>
+        </ros>
+        <camera_name>xj2</camera_name>
+        <frame_name>xj2_optical_frame</frame_name>
+        <focal_length>1028.2670861548688</focal_length>
+        <cx>696.2963</cx>
+        <cy>547.75936</cy>
+        <border_crop>false</border_crop>
+        <rectification_matrix>1 0 0 0 1 0 0 0 1</rectification_matrix>
+        <P_fx>1013.3186295621878</P_fx>
+        <P_fy>1018.5246022239418</P_fy>
+        <P_cx>693.56983</P_cx>
+        <P_cy>545.3029</P_cy>
+      </plugin>
+    </sensor>
+  </gazebo>
+  <gazebo reference="xj3_camera_link">
+    <sensor name="xj3_camera_sensor" type="camera">
+      <always_on>true</always_on>
+      <visualize>false</visualize>
+      <update_rate>30</update_rate>
+      <pose>0 0 0 0 0 0</pose>
+      <camera name="xj3_camera">
+        <horizontal_fov>0.784537</horizontal_fov>
+        <image>
+          <width>1440</width>
+          <height>1080</height>
+          <format>B8G8R8</format>
+        </image>
+        <clip>
+          <near>0.05</near>
+          <far>100.0</far>
+        </clip>
+        <noise>
+          <type>gaussian</type>
+          <mean>0</mean>
+          <stddev>0.01</stddev>
+        </noise>
+        <distortion>
+          <k1>-0.099402</k1>
+          <k2>0.115175</k2>
+          <k3>0.0</k3>
+          <p1>-0.003985</p1>
+          <p2>-0.001845</p2>
+          <center>0.4835390972222 0.5071845925926</center>
+        </distortion>
+        <lens>
+          <intrinsics>
+            <fx>1740.3529088647258</fx>
+            <fy>1740.4620389110569</fy>
+            <cx>696.2963</cx>
+            <cy>547.75936</cy>
+            <s>0</s>
+          </intrinsics>
+        </lens>
+      </camera>
+      <plugin name="xj3_camera_plugin" filename="libgazebo_ros_camera.so">
+        <ros>
+          <namespace>/subway_v2</namespace>
+        </ros>
+        <camera_name>xj3</camera_name>
+        <frame_name>xj3_optical_frame</frame_name>
+        <focal_length>1740.3529088647258</focal_length>
+        <cx>696.2963</cx>
+        <cy>547.75936</cy>
+        <border_crop>false</border_crop>
+        <rectification_matrix>1 0 0 0 1 0 0 0 1</rectification_matrix>
+        <P_fx>1715.0524881234628</P_fx>
+        <P_fy>1723.8636518642318</P_fy>
+        <P_cx>693.56983</P_cx>
+        <P_cy>545.3029</P_cy>
+      </plugin>
+    </sensor>
+  </gazebo>
+  <gazebo reference="xj4_camera_link">
+    <sensor name="xj4_camera_sensor" type="camera">
+      <always_on>true</always_on>
+      <visualize>false</visualize>
+      <update_rate>30</update_rate>
+      <pose>0 0 0 0 0 0</pose>
+      <camera name="xj4_camera">
+        <horizontal_fov>0.784537</horizontal_fov>
+        <image>
+          <width>1440</width>
+          <height>1080</height>
+          <format>B8G8R8</format>
+        </image>
+        <clip>
+          <near>0.05</near>
+          <far>100.0</far>
+        </clip>
+        <noise>
+          <type>gaussian</type>
+          <mean>0</mean>
+          <stddev>0.01</stddev>
+        </noise>
+        <distortion>
+          <k1>-0.099402</k1>
+          <k2>0.115175</k2>
+          <k3>0.0</k3>
+          <p1>-0.003985</p1>
+          <p2>-0.001845</p2>
+          <center>0.4835390972222 0.5071845925926</center>
+        </distortion>
+        <lens>
+          <intrinsics>
+            <fx>1740.3529088647258</fx>
+            <fy>1740.4620389110569</fy>
+            <cx>696.2963</cx>
+            <cy>547.75936</cy>
+            <s>0</s>
+          </intrinsics>
+        </lens>
+      </camera>
+      <plugin name="xj4_camera_plugin" filename="libgazebo_ros_camera.so">
+        <ros>
+          <namespace>/subway_v2</namespace>
+        </ros>
+        <camera_name>xj4</camera_name>
+        <frame_name>xj4_optical_frame</frame_name>
+        <focal_length>1740.3529088647258</focal_length>
+        <cx>696.2963</cx>
+        <cy>547.75936</cy>
+        <border_crop>false</border_crop>
+        <rectification_matrix>1 0 0 0 1 0 0 0 1</rectification_matrix>
+        <P_fx>1715.0524881234628</P_fx>
+        <P_fy>1723.8636518642318</P_fy>
+        <P_cx>693.56983</P_cx>
+        <P_cy>545.3029</P_cy>
+      </plugin>
+    </sensor>
+  </gazebo>
+  <gazebo reference="pitch_camera_sensor_link">
+    <sensor name="pitch_camera_sensor" type="camera">
+      <always_on>true</always_on>
+      <visualize>false</visualize>
+      <update_rate>30</update_rate>
+      <pose>0 0 0 0 0 0</pose>
+      <camera name="pitch_camera">
+        <horizontal_fov>0.959931</horizontal_fov>
+        <image>
+          <width>1440</width>
+          <height>1080</height>
+          <format>B8G8R8</format>
+        </image>
+        <clip>
+          <near>0.05</near>
+          <far>100.0</far>
+        </clip>
+        <noise>
+          <type>gaussian</type>
+          <mean>0</mean>
+          <stddev>0.01</stddev>
+        </noise>
+        <distortion>
+          <k1>-0.099402</k1>
+          <k2>0.115175</k2>
+          <k3>0.0</k3>
+          <p1>-0.003985</p1>
+          <p2>-0.001845</p2>
+          <center>0.4835390972222 0.5071845925926</center>
+        </distortion>
+        <lens>
+          <intrinsics>
+            <fx>1383.107281011723</fx>
+            <fy>1383.1940097211066</fy>
+            <cx>696.2963</cx>
+            <cy>547.75936</cy>
+            <s>0</s>
+          </intrinsics>
+        </lens>
+      </camera>
+      <plugin name="pitch_camera_plugin" filename="libgazebo_ros_camera.so">
+        <ros>
+          <namespace>/subway_v2</namespace>
+        </ros>
+        <camera_name>pitch_camera</camera_name>
+        <frame_name>pitch_camera_optical_frame</frame_name>
+        <focal_length>1383.107281011723</focal_length>
+        <cx>696.2963</cx>
+        <cy>547.75936</cy>
+        <border_crop>false</border_crop>
+        <rectification_matrix>1 0 0 0 1 0 0 0 1</rectification_matrix>
+        <P_fx>1363.000326863712</P_fx>
+        <P_fy>1370.0028058793007</P_fy>
+        <P_cx>693.56983</P_cx>
+        <P_cy>545.3029</P_cy>
+      </plugin>
+    </sensor>
+  </gazebo>
+  <gazebo reference="w1">
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+    <kp>1000000</kp>
+    <kd>10</kd>
+    <maxVel>0.1</maxVel>
+    <minDepth>0.001</minDepth>
+  </gazebo>
+  <gazebo reference="w2">
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+    <kp>1000000</kp>
+    <kd>10</kd>
+    <maxVel>0.1</maxVel>
+    <minDepth>0.001</minDepth>
+  </gazebo>
+  <gazebo reference="w3">
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+    <kp>1000000</kp>
+    <kd>10</kd>
+    <maxVel>0.1</maxVel>
+    <minDepth>0.001</minDepth>
+  </gazebo>
+  <gazebo reference="w4">
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
+    <kp>1000000</kp>
+    <kd>10</kd>
+    <maxVel>0.1</maxVel>
+    <minDepth>0.001</minDepth>
+  </gazebo>
+</robot>

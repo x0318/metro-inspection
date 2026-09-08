@@ -7,6 +7,8 @@ log/
 __pycache__/
 *.pyc
 .venv/
+.venv-yolo
+.yolo-ros-compat/
 .env
 
 # Model weights
@@ -22,11 +24,14 @@ videos/
 *.avi
 *.bag
 *.db3
+/results/maps/*.pcd
 
 # IDE
 .vscode/
 .idea/
+.codex/
 
 # OS
 .DS_Store
 Thumbs.db
+*:Zone.Identifier
