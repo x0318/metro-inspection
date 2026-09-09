@@ -4,14 +4,16 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument
+from launch.actions import DeclareLaunchArgument, EmitEvent, RegisterEventHandler
 from launch.conditions import IfCondition
+from launch.event_handlers import OnProcessExit
+from launch.events import Shutdown
 from launch.substitutions import EnvironmentVariable, LaunchConfiguration
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
 
 
-DEFAULT_MODEL_PATH = "/home/jo/incoming/best.pt"
+DEFAULT_MODEL_PATH = "/home/jo/incoming/yolov8n_sim_demo_best(1).pt"
 
 
 def generate_launch_description():
@@ -98,6 +100,12 @@ def generate_launch_description():
             ),
             DeclareLaunchArgument("publish_events", default_value="true"),
             DeclareLaunchArgument("auto_drive", default_value="false"),
+            RegisterEventHandler(
+                OnProcessExit(
+                    target_action=detector,
+                    on_exit=[EmitEvent(event=Shutdown(reason="YOLO detector exited"))],
+                )
+            ),
             detector,
             evaluator,
             driver,

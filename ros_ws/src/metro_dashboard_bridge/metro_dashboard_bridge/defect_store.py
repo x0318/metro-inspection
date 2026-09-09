@@ -218,7 +218,49 @@ class DefectStore:
                 imported += 1
         return imported
 
-    def list(self) -> List[Dict[str, object]]:
+    def _selected_session_id(self, session_id: Optional[str]) -> str:
+        if session_id is None:
+            return self._session_id
+        normalized_session_id = str(session_id).strip()
+        if not normalized_session_id:
+            raise ValueError("session_id must not be empty")
+        return normalized_session_id
+
+    def list_sessions(self) -> List[Dict[str, object]]:
+        """List every persisted inspection session without changing write scope."""
+        with self._lock:
+            rows = self._connection.execute(
+                """
+                SELECT
+                    sessions.session_id,
+                    sessions.started_at,
+                    sessions.updated_at,
+                    COUNT(events.event_id) AS record_count
+                FROM inspection_sessions AS sessions
+                LEFT JOIN defect_events AS events
+                    ON events.session_id = sessions.session_id
+                GROUP BY
+                    sessions.session_id,
+                    sessions.started_at,
+                    sessions.updated_at
+                ORDER BY sessions.updated_at DESC, sessions.session_id DESC
+                """
+            ).fetchall()
+            return [
+                {
+                    "session_id": str(row["session_id"]),
+                    "started_at": str(row["started_at"]),
+                    "updated_at": str(row["updated_at"]),
+                    "record_count": int(row["record_count"]),
+                    "active": str(row["session_id"]) == self._session_id,
+                }
+                for row in rows
+            ]
+
+    def list(
+        self, session_id: Optional[str] = None
+    ) -> List[Dict[str, object]]:
+        selected_session_id = self._selected_session_id(session_id)
         with self._lock:
             rows = self._connection.execute(
                 """
@@ -227,14 +269,17 @@ class DefectStore:
                 WHERE session_id = ?
                 ORDER BY updated_at DESC, rowid DESC
                 """,
-                (self._session_id,),
+                (selected_session_id,),
             ).fetchall()
             return [self._deserialize(str(row["payload_json"])) for row in rows]
 
-    def get(self, event_id: str) -> Optional[Dict[str, object]]:
+    def get(
+        self, event_id: str, session_id: Optional[str] = None
+    ) -> Optional[Dict[str, object]]:
         normalized_event_id = str(event_id).strip()
         if not normalized_event_id:
             return None
+        selected_session_id = self._selected_session_id(session_id)
         with self._lock:
             row = self._connection.execute(
                 """
@@ -242,7 +287,7 @@ class DefectStore:
                 FROM defect_events
                 WHERE session_id = ? AND event_id = ?
                 """,
-                (self._session_id, normalized_event_id),
+                (selected_session_id, normalized_event_id),
             ).fetchone()
             return (
                 self._deserialize(str(row["payload_json"]))
@@ -250,11 +295,12 @@ class DefectStore:
                 else None
             )
 
-    def count(self) -> int:
+    def count(self, session_id: Optional[str] = None) -> int:
+        selected_session_id = self._selected_session_id(session_id)
         with self._lock:
             row = self._connection.execute(
                 "SELECT COUNT(*) AS count FROM defect_events WHERE session_id = ?",
-                (self._session_id,),
+                (selected_session_id,),
             ).fetchone()
             return int(row["count"])
 

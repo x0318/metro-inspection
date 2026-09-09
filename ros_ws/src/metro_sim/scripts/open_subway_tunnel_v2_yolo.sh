@@ -8,7 +8,7 @@ PROJECT_DIR="$(cd "${ROS_WS_DIR}/.." && pwd)"
 YOLO_SCRIPT="${PROJECT_DIR}/scripts/open_yolo_detector.sh"
 FUSION_SCRIPT="${SCRIPT_DIR}/open_subway_tunnel_v2_fusion.sh"
 VENV_DIR="${METRO_YOLO_VENV:-${PROJECT_DIR}/.venv-yolo}"
-MODEL_PATH="${METRO_YOLO_MODEL_PATH:-/home/jo/incoming/best.pt}"
+MODEL_PATH="${METRO_YOLO_MODEL_PATH:-/home/jo/incoming/yolov8n_sim_demo_best(1).pt}"
 FRONT_YOLO_PID=""
 PITCH_YOLO_PID=""
 

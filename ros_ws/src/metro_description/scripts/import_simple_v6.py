@@ -159,7 +159,7 @@ WHEEL_INERTIA_AXIAL = "0.0015015625"
 PITCH_AXIS = "-1 0 0"
 PITCH_LIMITS = {
     "lower": "-0.261799387799149",
-    "upper": "0.523598775598299",
+    "upper": "0.785398163397448",
     "effort": "10",
     "velocity": "0.5",
 }
@@ -179,7 +179,8 @@ HARDWARE_JOINT_ORIGINS = {
         "3.14159265358979 -1.5707963267949 0",
     ),
     # Zero position aims the camera 75 degrees above robot +X. The -15-degree
-    # command then aims it vertically at the tunnel crown.
+    # command aims vertically at the crown; +45 degrees gives a 30-degree
+    # forward/upward view of the upper side wall.
     "pitch_joint": (
         "0 0.01 0",
         "3.14050535389669 -1.5707963267949 0",
@@ -197,9 +198,13 @@ CAMERA_HOUSING_RPY = {
 }
 
 # Camera-body frames use +X forward. These transforms place +X on each STL's
-# optical axis and restore the previously validated lens-center offsets. The
-# pitch camera is already part of pitch.STL, so its sensor frame is positioned
-# directly at that mesh's lens face instead of using the obsolete detached link.
+# optical axis and restore the validated lens-center offsets. XJ2's simulation
+# ray origin is moved beyond the scaled base-link envelope to prevent the chassis
+# from occluding the upper image. XJ3's ray origin is 2 mm beyond its local +Z
+# housing face; its simulation optical frame looks toward the right wall and 75
+# degrees downward so the wheel flange, rail, and wall-side inspection area
+# remain visible together. The Pitch camera is already part of pitch.STL; its ray
+# origin is 2.57 mm beyond the first unobstructed lens surface.
 PRESERVED_JOINT_ORIGINS = {
     # The housing is already assembled into base_link.STL. Its front face is
     # local +Z; place the ray origin 1 mm beyond that face and map lidar +X to it.
@@ -212,12 +217,12 @@ PRESERVED_JOINT_ORIGINS = {
         "-3.14159265358979 -1.13446401379631 1.5707963267949",
     ),
     "xj2_camera_joint": (
-        "0 0 0.018478",
+        "0 0 0.082",
         "-3.14159265358979 -1.13446401379631 1.5707963267949",
     ),
     "xj3_camera_joint": (
-        "0 0 0.077",
-        "-1.5707963267949 -1.5707963267949 0",
+        "0 0 0.112",
+        "3.14159265358979 -1.30899693899575 1.5707963267949",
     ),
     "xj4_camera_joint": (
         "0 0 0.077",
@@ -225,7 +230,7 @@ PRESERVED_JOINT_ORIGINS = {
     ),
     "pitch_camera_joint": ("0 0 0", "0 0 0"),
     "pitch_camera_sensor_joint": (
-        "-0.077300002798 0.003299999982 0.087818765",
+        "-0.077300002798 -0.025686200096 0.095551824230",
         "-3.14159265358979 -0.260712087614 -1.57079632679489",
     ),
 }
@@ -813,6 +818,40 @@ def validate_tree(root: ET.Element) -> None:
     pitch_dynamics = pitch_joint.find("dynamics")
     if pitch_dynamics is None or pitch_dynamics.attrib != PITCH_DYNAMICS:
         raise ValueError(f"pitch_joint dynamics must be {PITCH_DYNAMICS}")
+
+    pitch_sensor_joint = root.find(
+        "./joint[@name='pitch_camera_sensor_joint']"
+    )
+    pitch_sensor_origin = (
+        pitch_sensor_joint.find("origin")
+        if pitch_sensor_joint is not None
+        else None
+    )
+    expected_sensor_xyz, expected_sensor_rpy = PRESERVED_JOINT_ORIGINS[
+        "pitch_camera_sensor_joint"
+    ]
+    if (
+        pitch_sensor_origin is None
+        or pitch_sensor_origin.get("xyz") != expected_sensor_xyz
+        or pitch_sensor_origin.get("rpy") != expected_sensor_rpy
+    ):
+        raise ValueError(
+            "pitch_camera_sensor_joint must remain outside the Pitch housing"
+        )
+
+    xj3_sensor_joint = root.find("./joint[@name='xj3_camera_joint']")
+    xj3_sensor_origin = (
+        xj3_sensor_joint.find("origin") if xj3_sensor_joint is not None else None
+    )
+    expected_xj3_xyz, expected_xj3_rpy = PRESERVED_JOINT_ORIGINS[
+        "xj3_camera_joint"
+    ]
+    if (
+        xj3_sensor_origin is None
+        or xj3_sensor_origin.get("xyz") != expected_xj3_xyz
+        or xj3_sensor_origin.get("rpy") != expected_xj3_rpy
+    ):
+        raise ValueError("xj3_camera_joint must remain outside the XJ3 housing")
 
     control_blocks = root.findall("ros2_control")
     if len(control_blocks) != 1:

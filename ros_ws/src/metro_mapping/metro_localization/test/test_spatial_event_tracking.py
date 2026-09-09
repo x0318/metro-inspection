@@ -1,3 +1,5 @@
+import pytest
+
 from metro_localization.spatial_event_tracking import SpatialEventTracker
 
 
@@ -61,3 +63,65 @@ def test_separates_distant_observations_and_throttles_updates():
     )
     assert distant.event_id != first.event_id
     assert due is True
+
+
+def observe_frame(tracker, positions, frame, classes=None):
+    return tracker.observe_frame(
+        observations=list(zip(classes or ["crack"] * len(positions), positions)),
+        frame_key=(frame, 0), stamp_sec=float(frame),
+    )
+
+
+def test_nearby_same_class_targets_remain_distinct_when_order_changes():
+    tracker = make_tracker()
+    first = observe_frame(tracker, [(0., 0., 0.), (0.3, 0., 0.)], 1)
+    ids = [track.event_id for track, _ in first]
+    assert len(set(ids)) == 2
+    second = observe_frame(tracker, [(0.31, 0., 0.), (0.01, 0., 0.)], 2)
+    assert [track.event_id for track, _ in second] == ids[::-1]
+    third = observe_frame(tracker, [(0.02, 0., 0.), (0.32, 0., 0.)], 3)
+    assert [track.event_id for track, _ in third] == ids
+    assert all(track.hit_count == 3 and due for track, due in third)
+
+
+def test_assignment_preserves_matches_when_nearest_greedy_would_steal_track():
+    tracker = make_tracker()
+    first = observe_frame(tracker, [(0., 0., 0.), (0.6, 0., 0.)], 1)
+    # First observation can use either track; the second can only use the left.
+    second = observe_frame(tracker, [(0.2, 0., 0.), (-0.4, 0., 0.)], 2)
+    assert second[0][0] is first[1][0]
+    assert second[1][0] is first[0][0]
+    assert len(tracker.tracks) == 2
+
+
+def test_existing_track_cannot_be_used_twice_and_classes_are_gated():
+    tracker = make_tracker()
+    original = observe_frame(tracker, [(0., 0., 0.)], 1)[0][0]
+    results = observe_frame(
+        tracker, [(0.1, 0., 0.), (0.2, 0., 0.), (0., 0., 0.)], 2,
+        ["crack", "crack", "leak"],
+    )
+    assert len({track.event_id for track, _ in results}) == 3
+    assert results[0][0] is original
+    assert [track.hit_count for track, _ in results] == [2, 1, 1]
+
+
+def test_duplicate_and_delayed_frames_do_not_change_tracks_or_republish():
+    tracker = make_tracker()
+    tracker.republish_period_sec = 0.0
+    positions = [(0., 0., 0.), (0.3, 0., 0.)]
+    for frame in (1, 2, 3):
+        observe_frame(tracker, positions, frame)
+    before = [vars(track).copy() for track in tracker.tracks]
+    for frame in (3, 1, 2, 3):
+        assert observe_frame(tracker, positions + [(99., 0., 0.)], frame) == []
+        assert [vars(track).copy() for track in tracker.tracks] == before
+
+
+@pytest.mark.parametrize("position", [(float("nan"), 0., 0.), (1., 2.)])
+def test_invalid_batch_does_not_partially_update_tracker(position):
+    tracker = make_tracker()
+    with pytest.raises(ValueError, match="coordinates"):
+        observe_frame(tracker, [(0., 0., 0.), position], 1)
+    assert tracker.tracks == []
+    assert len(observe_frame(tracker, [(0., 0., 0.)], 1)) == 1

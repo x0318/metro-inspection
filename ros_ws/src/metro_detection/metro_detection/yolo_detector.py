@@ -1,6 +1,7 @@
 """ROS 2 image detector backed by an Ultralytics YOLO checkpoint."""
 
 import os
+import signal
 import time
 import warnings
 from dataclasses import dataclass
@@ -12,6 +13,7 @@ import rclpy
 from cv_bridge import CvBridge
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
+from rclpy.signals import SignalHandlerOptions
 from rclpy.qos import (
     DurabilityPolicy,
     QoSProfile,
@@ -25,6 +27,7 @@ from vision_msgs.msg import Detection2DArray
 
 from .detection_conversion import (
     DetectionBox,
+    display_class_names,
     normalize_class_names,
     to_detection_array,
 )
@@ -178,7 +181,10 @@ class YoloDetector(Node):
         self.model = YOLO(str(model_path))
         raw_names = self.model.names
         normalized_names = normalize_class_names(raw_names)
+        # Rendering and backend initialization can replace model label metadata.
+        self.class_names = normalize_class_names(raw_names)
         self.model.model.names = normalized_names
+        self.annotation_names = display_class_names(normalized_names)
         self.device = self.resolve_device(
             str(self.get_parameter("device").value)
         )
@@ -354,7 +360,7 @@ class YoloDetector(Node):
 
     def publish_empty(self, stream: CameraStream, image: Image):
         stream.detection_pub.publish(
-            to_detection_array(image.header, [], self.model.names)
+            to_detection_array(image.header, [], self.class_names)
         )
 
     def on_image(self, stream: CameraStream, image: Image):
@@ -384,7 +390,7 @@ class YoloDetector(Node):
         elapsed = time.perf_counter() - started
 
         boxes = self.result_boxes(result)
-        output = to_detection_array(image.header, boxes, self.model.names)
+        output = to_detection_array(image.header, boxes, self.class_names)
         stream.detection_pub.publish(output)
         stream.processed_frames += 1
         stream.published_boxes += len(output.detections)
@@ -402,6 +408,7 @@ class YoloDetector(Node):
 
         if bool(self.get_parameter("publish_annotated_image").value):
             try:
+                result.names = self.annotation_names
                 rendered = result.plot()
                 annotated = self.bridge.cv2_to_imgmsg(
                     rendered, encoding="bgr8"
@@ -445,11 +452,20 @@ class YoloDetector(Node):
 
 
 def main(args=None):
-    rclpy.init(args=args)
+    rclpy.init(args=args, signal_handler_options=SignalHandlerOptions.NO)
+    stop_requested = False
+
+    def request_stop(_signum, _frame):
+        nonlocal stop_requested
+        stop_requested = True
+
+    signal.signal(signal.SIGINT, request_stop)
+    signal.signal(signal.SIGTERM, request_stop)
     node = None
     try:
         node = YoloDetector()
-        rclpy.spin(node)
+        while rclpy.ok() and not stop_requested:
+            rclpy.spin_once(node, timeout_sec=0.2)
     except (KeyboardInterrupt, ExternalShutdownException):
         pass
     finally:

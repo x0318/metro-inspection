@@ -1,8 +1,10 @@
 """Publish the calibrated Odin1 CameraInfo unsupported by Gazebo Classic."""
 
 import rclpy
+import signal
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
+from rclpy.signals import SignalHandlerOptions
 from rclpy.qos import QoSProfile, ReliabilityPolicy, qos_profile_sensor_data
 from sensor_msgs.msg import CameraInfo
 
@@ -71,10 +73,20 @@ class CameraInfoCalibrator(Node):
 
 
 def main():
-    rclpy.init()
+    rclpy.init(signal_handler_options=SignalHandlerOptions.NO)
+    stop_requested = False
+
+    def request_stop(_signum, _frame):
+        nonlocal stop_requested
+        stop_requested = True
+
+    signal.signal(signal.SIGINT, request_stop)
+    signal.signal(signal.SIGTERM, request_stop)
     node = CameraInfoCalibrator()
     try:
-        rclpy.spin(node)
+        # Python signal handlers must also run after camera publishers stop.
+        while rclpy.ok() and not stop_requested:
+            rclpy.spin_once(node, timeout_sec=0.2)
     except (KeyboardInterrupt, ExternalShutdownException):
         pass
     finally:

@@ -4,6 +4,9 @@ import cv2
 import message_filters
 import numpy as np
 import rclpy
+import signal
+from copy import deepcopy
+from dataclasses import dataclass
 from cv_bridge import CvBridge
 from geometry_msgs.msg import PointStamped
 from metro_inspection_interfaces.msg import DefectEvent
@@ -11,6 +14,7 @@ from pathlib import Path
 from rclpy.duration import Duration
 from rclpy.executors import ExternalShutdownException, MultiThreadedExecutor
 from rclpy.node import Node
+from rclpy.signals import SignalHandlerOptions
 from rclpy.qos import QoSProfile, ReliabilityPolicy, qos_profile_sensor_data
 from rclpy.time import Time
 from sensor_msgs.msg import CameraInfo, Image, PointCloud2
@@ -29,6 +33,19 @@ from .cloud_projector import (
 from .geometry_utils import transform_point, transform_points
 from .semantic_geometry import Point3D, TunnelSemanticProjector
 from .spatial_event_tracking import SpatialEventTracker
+
+
+@dataclass
+class DetectionLocalization:
+    detection: Detection2D
+    index: int
+    drawable: bool = False
+    roi_uv: object = None
+    estimated_uv: object = None
+    global_point: object = None
+    roi_count: int = 0
+    inlier_count: int = 0
+    status: str = ""
 
 
 class DamageLocalizer(Node):
@@ -93,6 +110,8 @@ class DamageLocalizer(Node):
         self.global_point_count = 0
         self.event_count = 0
         self.latest_mask_msg = None
+        self.last_frame_key = None
+        self.marker_ids = set()
         self.tf_buffer = Buffer(cache_time=Duration(seconds=15.0))
         self.tf_listener = TransformListener(self.tf_buffer, self)
 
@@ -314,9 +333,7 @@ class DamageLocalizer(Node):
         self,
         image_msg,
         projected_uv,
-        detection=None,
-        roi_uv=None,
-        estimated_uv=None,
+        targets=(),
         mask_image=None,
         status_text="",
     ):
@@ -344,7 +361,10 @@ class DamageLocalizer(Node):
         for u, v in draw_uv:
             cv2.circle(debug, (int(round(u)), int(round(v))), 1, (0, 210, 0), -1)
 
-        if detection is not None:
+        for target in targets:
+            if not target.drawable:
+                continue
+            detection = target.detection
             bbox = detection.bbox
             cx = float(bbox.center.position.x)
             cy = float(bbox.center.position.y)
@@ -352,41 +372,34 @@ class DamageLocalizer(Node):
             half_h = float(bbox.size_y) / 2.0
             p1 = (int(round(cx - half_w)), int(round(cy - half_h)))
             p2 = (int(round(cx + half_w)), int(round(cy + half_h)))
-            cv2.rectangle(debug, p1, p2, (255, 80, 0), 2)
+            color = self.target_color(target.index)
+            cv2.rectangle(debug, p1, p2, color, 2)
+            label = f"#{target.index + 1} {target.status}"
             if detection.results:
                 best_result = max(
                     detection.results,
                     key=lambda result: float(result.hypothesis.score),
                 )
                 label = (
-                    f"{best_result.hypothesis.class_id} "
-                    f"{float(best_result.hypothesis.score):.2f}"
+                    f"#{target.index + 1} {best_result.hypothesis.class_id} "
+                    f"{float(best_result.hypothesis.score):.2f} {target.status}"
                 )
-                label_y = max(22, p1[1] - 8)
-                cv2.putText(
-                    debug,
-                    label,
-                    (max(0, p1[0]), label_y),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.65,
-                    (255, 80, 0),
-                    2,
-                    cv2.LINE_AA,
-                )
-
-        if roi_uv is not None:
-            for u, v in roi_uv:
-                cv2.circle(debug, (int(round(u)), int(round(v))), 2, (0, 255, 255), -1)
-
-        if estimated_uv is not None:
-            cv2.drawMarker(
-                debug,
-                (int(round(estimated_uv[0])), int(round(estimated_uv[1]))),
-                (0, 0, 255),
-                cv2.MARKER_CROSS,
-                16,
-                2,
+            label_y = max(48, p1[1] - 8)
+            cv2.putText(
+                debug, label, (max(0, p1[0]), label_y),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 1, cv2.LINE_AA,
             )
+
+            if target.roi_uv is not None:
+                for u, v in target.roi_uv:
+                    cv2.circle(debug, (int(round(u)), int(round(v))), 2, color, -1)
+
+            if target.estimated_uv is not None:
+                cv2.drawMarker(
+                    debug,
+                    tuple(int(round(value)) for value in target.estimated_uv),
+                    color, cv2.MARKER_CROSS, 16, 2,
+                )
 
         if status_text:
             cv2.putText(
@@ -414,11 +427,25 @@ class DamageLocalizer(Node):
         publisher.publish(msg)
         return msg
 
-    def publish_estimated_marker(self, point_msg):
+    @staticmethod
+    def target_color(index):
+        return ((255, 80, 0), (0, 200, 255), (200, 50, 220), (40, 220, 80))[index % 4]
+
+    def clear_estimated_markers(self, header):
+        for marker_id in sorted(self.marker_ids):
+            marker = Marker()
+            marker.header = header
+            marker.ns = "damage_localization"
+            marker.id = marker_id
+            marker.action = Marker.DELETE
+            self.marker_pub.publish(marker)
+        self.marker_ids.clear()
+
+    def publish_estimated_marker(self, point_msg, index, class_name):
         sphere = Marker()
         sphere.header = point_msg.header
         sphere.ns = "damage_localization"
-        sphere.id = 0
+        sphere.id = 2 * index
         sphere.type = Marker.SPHERE
         sphere.action = Marker.ADD
         sphere.pose.position = point_msg.point
@@ -426,19 +453,21 @@ class DamageLocalizer(Node):
         sphere.scale.x = 0.14
         sphere.scale.y = 0.14
         sphere.scale.z = 0.14
-        sphere.color.r = 1.0
-        sphere.color.g = 0.12
-        sphere.color.b = 0.02
+        blue, green, red = self.target_color(index)
+        sphere.color.r = red / 255.0
+        sphere.color.g = green / 255.0
+        sphere.color.b = blue / 255.0
         sphere.color.a = 1.0
+        sphere.lifetime = Duration(seconds=2.0).to_msg()
         self.marker_pub.publish(sphere)
 
         label = Marker()
         label.header = point_msg.header
         label.ns = "damage_localization"
-        label.id = 1
+        label.id = 2 * index + 1
         label.type = Marker.TEXT_VIEW_FACING
         label.action = Marker.ADD
-        label.pose.position = point_msg.point
+        label.pose.position = deepcopy(point_msg.point)
         label.pose.position.z += 0.18
         label.pose.orientation.w = 1.0
         label.scale.z = 0.12
@@ -446,11 +475,13 @@ class DamageLocalizer(Node):
         label.color.g = 0.9
         label.color.b = 0.1
         label.color.a = 1.0
+        label.lifetime = sphere.lifetime
         label.text = (
-            f"damage  x={point_msg.point.x:.2f} "
+            f"#{index + 1} {class_name}  x={point_msg.point.x:.2f} "
             f"y={point_msg.point.y:.2f} z={point_msg.point.z:.2f} m"
         )
         self.marker_pub.publish(label)
+        self.marker_ids.update((sphere.id, label.id))
 
     @staticmethod
     def best_hypothesis(detection: Detection2D):
@@ -480,6 +511,7 @@ class DamageLocalizer(Node):
         global_point: PointStamped,
         inlier_count: int,
         roi_count: int,
+        track,
     ) -> None:
         if self.event_pub is None or self.event_tracker is None:
             return
@@ -488,20 +520,6 @@ class DamageLocalizer(Node):
         if hypothesis is None:
             return
         stamp = detections.header.stamp
-        stamp_sec = self.stamp_to_sec(stamp)
-        track, should_publish = self.event_tracker.observe(
-            class_name=hypothesis.class_id,
-            position=(
-                global_point.point.x,
-                global_point.point.y,
-                global_point.point.z,
-            ),
-            frame_key=(int(stamp.sec), int(stamp.nanosec)),
-            stamp_sec=stamp_sec,
-        )
-        if not should_publish:
-            return
-
         event = DefectEvent()
         event.header = detections.header
         event.event_id = track.event_id
@@ -549,8 +567,15 @@ class DamageLocalizer(Node):
 
     def on_synced_data(self, detections, cloud, image):
         self.sync_count += 1
+        stamp = detections.header.stamp
+        frame_key = (int(stamp.sec), int(stamp.nanosec))
+        if self.last_frame_key is not None and frame_key <= self.last_frame_key:
+            return
+        self.last_frame_key = frame_key
+        self.clear_estimated_markers(cloud.header)
         if not detections.detections:
             self.empty_detection_count += 1
+            self.publish_debug_image(image, (), status_text="detections=0")
             return
         if self.camera_info is None:
             self.warn_throttled("Waiting for CameraInfo before projecting lidar points.")
@@ -578,79 +603,144 @@ class DamageLocalizer(Node):
             return
 
         self.nonempty_detection_count += 1
-        detection = max(detections.detections, key=self.detection_score)
-        roi_scale = float(self.get_parameter("roi_scale").value)
-        min_points = max(1, int(self.get_parameter("min_roi_points").value))
         mask_image = None
-        selection_mode = "bbox"
         mask_msg, mask_status = self.get_matching_mask(image)
         if mask_msg is not None:
             try:
                 mask_image = self.mask_msg_to_array(mask_msg, image.width, image.height)
-                roi_points, roi_uv = select_mask_points(
-                    points_camera,
-                    projected_uv,
-                    mask_image,
-                    bbox=detection.bbox,
-                    roi_scale=roi_scale,
-                    min_value=int(self.get_parameter("mask_min_value").value),
-                )
-                selection_mode = "mask"
-                self.mask_used_count += 1
             except Exception as exc:
                 mask_status = f"bad mask: {exc}"
-                mask_image = None
-                roi_points = np.empty((0, 3), dtype=np.float64)
-                roi_uv = np.empty((0, 2), dtype=np.float64)
+                self.warn_throttled(mask_status)
 
-            fallback_to_bbox = bool(
-                self.get_parameter("mask_fallback_to_bbox").value
+        global_frame = str(self.get_parameter("global_frame").value)
+        camera_to_global = None
+        try:
+            camera_to_global = self.lookup_transform(
+                global_frame, camera_frame, cloud.header.stamp
             )
-            if len(roi_points) < min_points and fallback_to_bbox:
+        except TransformException as exc:
+            self.global_tf_failure_count += 1
+            self.warn_throttled(f"Camera points available, but global TF failed: {exc}")
+
+        targets = []
+        event_targets = []
+        for index, detection in enumerate(detections.detections):
+            target = DetectionLocalization(detection=detection, index=index)
+            targets.append(target)
+            try:
+                self.localize_detection(
+                    target, points_camera, projected_uv, mask_image,
+                    mask_msg is not None, camera_frame, global_frame,
+                    camera_to_global, cloud.header.stamp,
+                )
+                if target.global_point is not None:
+                    hypothesis = self.best_hypothesis(detection)
+                    class_name = str(hypothesis.class_id).strip() if hypothesis else ""
+                    self.publish_estimated_marker(
+                        target.global_point, index, class_name or "damage"
+                    )
+                    if class_name and np.isfinite(hypothesis.score):
+                        event_targets.append(target)
+            except Exception as exc:
+                self.roi_failure_count += 1
+                target.status = "failed"
+                self.warn_throttled(f"Detection #{index + 1} localization failed: {exc}")
+
+        if self.event_tracker is not None:
+            observations = []
+            for target in event_targets:
+                point = target.global_point.point
+                observations.append((
+                    self.best_hypothesis(target.detection).class_id,
+                    (point.x, point.y, point.z),
+                ))
+            associations = self.event_tracker.observe_frame(
+                observations=observations, frame_key=frame_key,
+                stamp_sec=self.stamp_to_sec(stamp),
+            )
+            for target, (track, should_publish) in zip(event_targets, associations):
+                if not should_publish:
+                    continue
+                try:
+                    self.publish_defect_event(
+                        detections=detections, detection=target.detection,
+                        image=image, global_point=target.global_point,
+                        inlier_count=target.inlier_count, roi_count=target.roi_count,
+                        track=track,
+                    )
+                except Exception as exc:
+                    self.warn_throttled(f"Event {track.event_id} publication failed: {exc}")
+
+        self.publish_debug_image(
+            image, projected_uv, targets=targets, mask_image=mask_image,
+            status_text=(
+                f"detections={len(targets)} "
+                f"localized={sum(t.global_point is not None for t in targets)} "
+                f"mask={mask_status}"
+            ),
+        )
+
+    def localize_detection(
+        self, target, points_camera, projected_uv, mask_image, mask_present,
+        camera_frame, global_frame, camera_to_global, stamp,
+    ):
+        detection = target.detection
+        bbox = detection.bbox
+        dimensions = (bbox.center.position.x, bbox.center.position.y,
+                      bbox.size_x, bbox.size_y)
+        if not all(np.isfinite(value) for value in dimensions):
+            raise ValueError("bbox must be finite")
+        if bbox.size_x <= 0.0 or bbox.size_y <= 0.0:
+            raise ValueError("bbox dimensions must be positive")
+        target.drawable = True
+        roi_scale = float(self.get_parameter("roi_scale").value)
+        min_points = max(1, int(self.get_parameter("min_roi_points").value))
+        selection_mode = "bbox"
+        if mask_present:
+            roi_points = np.empty((0, 3), dtype=np.float64)
+            roi_uv = np.empty((0, 2), dtype=np.float64)
+            selection_mode = "mask"
+            if mask_image is not None:
+                roi_points, roi_uv = select_mask_points(
+                    points_camera, projected_uv, mask_image,
+                    bbox=bbox, roi_scale=roi_scale,
+                    min_value=int(self.get_parameter("mask_min_value").value),
+                )
+                self.mask_used_count += 1
+            if len(roi_points) < min_points and bool(
+                self.get_parameter("mask_fallback_to_bbox").value
+            ):
                 self.mask_fallback_count += 1
                 roi_points, roi_uv = select_bbox_points(
-                    points_camera,
-                    projected_uv,
-                    detection.bbox,
-                    roi_scale=roi_scale,
+                    points_camera, projected_uv, bbox, roi_scale=roi_scale,
                 )
                 selection_mode = "bbox_fallback"
         else:
             roi_points, roi_uv = select_bbox_points(
-                points_camera,
-                projected_uv,
-                detection.bbox,
-                roi_scale=roi_scale,
+                points_camera, projected_uv, bbox, roi_scale=roi_scale,
             )
 
+        target.roi_uv = roi_uv
+        target.roi_count = len(roi_points)
         if len(roi_points) < min_points:
             self.roi_failure_count += 1
-            self.publish_debug_image(
-                image,
-                projected_uv,
-                detection=detection,
-                roi_uv=roi_uv,
-                mask_image=mask_image,
-                status_text=(
-                    f"{selection_mode} ROI {len(roi_points)}/{min_points}; "
-                    f"mask={mask_status}"
-                ),
-            )
+            target.status = f"{selection_mode} ROI {len(roi_points)}/{min_points}"
             self.warn_throttled(
-                f"Detection has only {len(roi_points)} projected lidar points "
-                f"with {selection_mode}; "
-                f"need {min_points}. mask={mask_status}"
+                f"Detection #{target.index + 1}: {target.status}"
             )
             return
 
         estimated_camera, inlier_points, estimator_method = self.estimate_damage_point(
             roi_points
         )
+        if not np.all(np.isfinite(estimated_camera)) or estimated_camera[2] <= 0.0:
+            raise ValueError("Estimated camera point must be finite with positive depth")
+        target.inlier_count = len(inlier_points)
         self.publish_point(
             self.camera_point_pub,
             estimated_camera,
             camera_frame,
-            cloud.header.stamp,
+            stamp,
         )
         self.camera_point_count += 1
 
@@ -659,62 +749,47 @@ class DamageLocalizer(Node):
         fy = float(self.camera_info.k[4])
         cx = float(self.camera_info.k[2])
         cy = float(self.camera_info.k[5])
-        estimated_uv = (
+        target.estimated_uv = (
             (
                 fx * estimated_camera[0] + skew * estimated_camera[1]
             ) / estimated_camera[2] + cx,
             fy * estimated_camera[1] / estimated_camera[2] + cy,
         )
-        self.publish_debug_image(
-            image,
-            projected_uv,
-            detection=detection,
-            roi_uv=roi_uv,
-            estimated_uv=estimated_uv,
-            mask_image=mask_image,
-            status_text=(
-                f"method={estimator_method} {selection_mode} "
-                f"ROI={len(roi_points)} inliers={len(inlier_points)} "
-                f"depth={estimated_camera[2]:.3f}m"
-            ),
+        target.status = (
+            f"{estimator_method} {selection_mode} "
+            f"ROI={len(roi_points)} inliers={len(inlier_points)}"
         )
-
-        global_frame = str(self.get_parameter("global_frame").value)
-        try:
-            camera_to_global = self.lookup_transform(
-                global_frame, camera_frame, cloud.header.stamp
-            )
-            estimated_global = transform_point(estimated_camera, camera_to_global)
-        except TransformException as exc:
-            self.global_tf_failure_count += 1
-            self.warn_throttled(f"Camera point available, but global TF failed: {exc}")
+        if camera_to_global is None:
+            target.status += " no global TF"
             return
-
-        global_point = self.publish_point(
+        estimated_global = transform_point(estimated_camera, camera_to_global)
+        if not np.all(np.isfinite(estimated_global)):
+            raise ValueError("Estimated global point must be finite")
+        target.global_point = self.publish_point(
             self.global_point_pub,
             estimated_global,
             global_frame,
-            cloud.header.stamp,
+            stamp,
         )
         self.global_point_count += 1
-        self.publish_estimated_marker(global_point)
-        self.publish_defect_event(
-            detections=detections,
-            detection=detection,
-            image=image,
-            global_point=global_point,
-            inlier_count=len(inlier_points),
-            roi_count=len(roi_points),
-        )
 
 
 def main():
-    rclpy.init()
+    rclpy.init(signal_handler_options=SignalHandlerOptions.NO)
+    stop_requested = False
+
+    def request_stop(_signum, _frame):
+        nonlocal stop_requested
+        stop_requested = True
+
+    signal.signal(signal.SIGINT, request_stop)
+    signal.signal(signal.SIGTERM, request_stop)
     node = DamageLocalizer()
     executor = MultiThreadedExecutor(num_threads=2)
     executor.add_node(node)
     try:
-        executor.spin()
+        while rclpy.ok() and not stop_requested:
+            executor.spin_once(timeout_sec=0.2)
     except (KeyboardInterrupt, ExternalShutdownException):
         pass
     finally:

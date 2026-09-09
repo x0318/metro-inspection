@@ -6,7 +6,7 @@ PROJECT_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 ROS_WS_DIR="${PROJECT_DIR}/ros_ws"
 VENV_DIR="${METRO_YOLO_VENV:-${PROJECT_DIR}/.venv-yolo}"
 COMPAT_DIR="${METRO_YOLO_COMPAT_DIR:-${PROJECT_DIR}/.yolo-ros-compat}"
-MODEL_PATH="${METRO_YOLO_MODEL_PATH:-/home/jo/incoming/best.pt}"
+MODEL_PATH="${METRO_YOLO_MODEL_PATH:-/home/jo/incoming/yolov8n_sim_demo_best(1).pt}"
 PUBLISHER_WAITER="${SCRIPT_DIR}/wait_for_ros_publishers.py"
 IMAGE_TOPICS=(
   /subway_v2/xj1/image_raw
@@ -79,9 +79,10 @@ echo "YOLO model=${MODEL_PATH}"
 echo "Coverage: five cameras -> /simulation/defect_coverage"
 echo "Simulation events: /simulation/defect_events"
 echo "Localization detections: /damage_detections/odin1"
-echo "Waiting for six Gazebo camera publishers before starting YOLO"
+echo "Waiting for actual frames from six Gazebo cameras before starting YOLO"
 
 python3 "${PUBLISHER_WAITER}" \
+  --images \
   --timeout "${METRO_YOLO_TOPIC_WAIT_TIMEOUT:-90}" \
   "${IMAGE_TOPICS[@]}"
 

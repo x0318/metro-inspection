@@ -22,6 +22,10 @@
 
 ## 巡检平台与 RViz
 
+桌面应用：Windows 双击仓库根目录的 `Open Metro Inspection.vbs`，Linux 可安装
+应用菜单入口。首次环境准备、模型选择和故障处理见 [桌面应用说明](docs/desktop_app.md)。
+桌面窗口内可启动、停止、修改运行设置和查看日志，无须日常输入 launch 命令。
+
 启动巡检可视化平台：
 
 ```bash

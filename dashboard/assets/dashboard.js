@@ -4,6 +4,9 @@ createApp({
   setup() {
     const activeView = ref('overview');
     const records = ref([]);
+    const sessions = ref([]);
+    const activeSessionId = ref('');
+    const selectedSessionId = ref('');
     const backendOnline = ref(false);
     const lastUpdated = ref(null);
     const errorMessage = ref('');
@@ -23,10 +26,13 @@ createApp({
     const focusedCameraId = ref('');
     const selectedMonitorCameraId = ref('xj1');
     const compactCameraLayout = ref(false);
+    const cameraFrameRevision = ref(Date.now());
     let pollTimer = null;
+    let cameraFrameTimer = null;
     let cameraMediaQuery = null;
     let severityChart = null;
     let typeChart = null;
+    let refreshSequence = 0;
 
     const cameraCatalog = Object.freeze([
       { id: 'xj1', label: 'XJ1' },
@@ -78,7 +84,7 @@ createApp({
         source_fps: Number(status?.source_fps || 0),
         age_seconds: status?.age_seconds ?? null,
         frames_received: Number(status?.frames_received || 0),
-        stream_url: status?.stream_url || `/api/cameras/${camera.id}/stream.mjpg`
+        frame_url: status?.frame_url || `/api/cameras/${camera.id}/frame.jpg`
       };
       });
     });
@@ -137,6 +143,15 @@ createApp({
       filteredRecords.value.find(item => item.event_id === selectedId.value) || null
     ));
 
+    const selectedSession = computed(() => (
+      sessions.value.find(session => session.session_id === selectedSessionId.value) || null
+    ));
+
+    const selectedSessionIsActive = computed(() => (
+      Boolean(selectedSessionId.value)
+      && selectedSessionId.value === activeSessionId.value
+    ));
+
     const summary = computed(() => ({
       total: records.value.length,
       localized: records.value.filter(item => item.has_3d_position).length,
@@ -174,17 +189,36 @@ createApp({
     }
 
     async function refreshData() {
-      if (refreshing.value) return;
+      const sequence = ++refreshSequence;
+      const requestedSessionId = selectedSessionId.value;
       refreshing.value = true;
       try {
+        const sessionData = await fetchJson('/api/sessions');
+        const availableSessions = Array.isArray(sessionData.sessions)
+          ? sessionData.sessions
+          : [];
+        const currentActiveSessionId = String(sessionData.active_session_id || '');
+        const selectedStillExists = availableSessions.some(
+          session => session.session_id === requestedSessionId
+        );
+        const targetSessionId = selectedStillExists
+          ? requestedSessionId
+          : currentActiveSessionId;
+        const sessionQuery = targetSessionId
+          ? `?session_id=${encodeURIComponent(targetSessionId)}`
+          : '';
         const [health, defects, cameraData] = await Promise.all([
           fetchJson('/api/health'),
-          fetchJson('/api/defects'),
+          fetchJson(`/api/defects${sessionQuery}`),
           fetchJson('/api/cameras')
         ]);
         if (health.service !== 'metro_dashboard_bridge' || health.status !== 'online') {
           throw new Error('服务响应不符合平台接口');
         }
+        if (sequence !== refreshSequence) return;
+        sessions.value = availableSessions;
+        activeSessionId.value = currentActiveSessionId;
+        selectedSessionId.value = targetSessionId;
         records.value = Array.isArray(defects.records) ? defects.records : [];
         cameraStatuses.value = Array.isArray(cameraData.cameras) ? cameraData.cameras : [];
         if (cameraData.preview && typeof cameraData.preview === 'object') {
@@ -194,11 +228,12 @@ createApp({
         errorMessage.value = '';
         lastUpdated.value = new Date();
       } catch (error) {
+        if (sequence !== refreshSequence) return;
         backendOnline.value = false;
         cameraStatuses.value = [];
         errorMessage.value = error instanceof Error ? error.message : '无法读取病害接口';
       } finally {
-        refreshing.value = false;
+        if (sequence === refreshSequence) refreshing.value = false;
       }
     }
 
@@ -227,6 +262,12 @@ createApp({
       const date = new Date(value);
       if (Number.isNaN(date.valueOf())) return '--';
       return date.toLocaleString('zh-CN', { hour12: false });
+    }
+
+    function sessionOptionText(session) {
+      const activeLabel = session?.active ? '实时' : '历史';
+      const count = Number(session?.record_count || 0);
+      return `${formatTime(session?.started_at)} · ${count} 条 · ${activeLabel}`;
     }
 
     function bboxText(bbox) {
@@ -290,9 +331,9 @@ createApp({
       return age < 0.1 ? '刚刚更新' : `${age.toFixed(1)} 秒前`;
     }
 
-    function streamUrl(camera) {
-      const separator = camera.stream_url.includes('?') ? '&' : '?';
-      return `${camera.stream_url}${separator}fps=${previewProfile.value.default_fps}`;
+    function cameraFrameUrl(camera) {
+      const separator = camera.frame_url.includes('?') ? '&' : '?';
+      return `${camera.frame_url}${separator}v=${cameraFrameRevision.value}`;
     }
 
     function updateCameraLayout(event) {
@@ -359,11 +400,17 @@ createApp({
       cameraMediaQuery.addEventListener('change', updateCameraLayout);
       refreshData();
       pollTimer = window.setInterval(refreshData, 2000);
+      cameraFrameTimer = window.setInterval(() => {
+        if (!document.hidden && (activeView.value === 'cameras' || activeView.value === 'yolo')) {
+          cameraFrameRevision.value = Date.now();
+        }
+      }, 500);
       window.addEventListener('resize', resizeCharts);
     });
 
     onBeforeUnmount(() => {
       if (pollTimer) window.clearInterval(pollTimer);
+      if (cameraFrameTimer) window.clearInterval(cameraFrameTimer);
       if (severityChart) severityChart.dispose();
       if (typeChart) typeChart.dispose();
       if (cameraMediaQuery) cameraMediaQuery.removeEventListener('change', updateCameraLayout);
@@ -373,6 +420,8 @@ createApp({
     return {
       activeView,
       records,
+      sessions,
+      selectedSessionId,
       backendOnline,
       lastUpdatedText,
       errorMessage,
@@ -392,6 +441,8 @@ createApp({
       selectedMonitorCamera,
       filteredRecords,
       selectedRecord,
+      selectedSession,
+      selectedSessionIsActive,
       summary,
       cameraLabel,
       cameraCount,
@@ -401,6 +452,7 @@ createApp({
       severityClass,
       confidenceText,
       formatTime,
+      sessionOptionText,
       bboxText,
       positionText,
       stageText,
@@ -411,7 +463,7 @@ createApp({
       formatFps,
       cameraFpsText,
       cameraAgeText,
-      streamUrl,
+      cameraFrameUrl,
       printReport
     };
   }

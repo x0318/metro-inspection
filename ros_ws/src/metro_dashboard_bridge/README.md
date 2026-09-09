@@ -20,6 +20,8 @@
 更新结果。存储层会替换该事件，而不是重复生成多条病害记录。默认最多保留 500 条记录，
 并持久化到 `~/.local/share/metro-inspection/defects.sqlite3`；服务重启后仍会加载原记录。
 `inspection_session_id` 用于隔离不同巡检批次，同一数据库中的不同会话不会互相覆盖。
+平台的“巡检历史”选择器通过只读接口切换显示数据库中的旧会话；切换查看不会改变当前
+ROS 2 事件的写入会话。
 
 ```text
 /subway_v2/{xj1,xj2,xj3,xj4,pitch_camera}/image_raw/compressed
@@ -104,8 +106,9 @@ ros2 run metro_dashboard_bridge defect_event_bridge \
 
 ```text
 GET /api/health
-GET /api/defects
-GET /api/defects/{event_id}
+GET /api/sessions
+GET /api/defects?session_id=<inspection_session_id>
+GET /api/defects/{event_id}?session_id=<inspection_session_id>
 GET /api/cameras
 GET /api/cameras/{camera_id}/stream.mjpg?fps=6
 ```

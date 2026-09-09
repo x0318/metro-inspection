@@ -23,8 +23,8 @@ Environment overrides:
   ROS_DOMAIN_ID                         ROS 2 discovery domain (default: 70)
   SUBWAY_TUNNEL_V2_GAZEBO_MASTER_URI  Gazebo master URI
                                        (default: http://127.0.0.1:11370)
-  SUBWAY_V2_INITIAL_PITCH_DEG          Pitch joint start command, -15 to +30
-                                       (default: 0; camera optical axis: 75 deg)
+  SUBWAY_V2_INITIAL_PITCH_DEG          Pitch joint start command, -15 to +45
+                                       (default: +45; upper-wall view: 30 deg)
 
 Examples:
   ./ros_ws/src/metro_sim/scripts/open_subway_tunnel_v2_sensors.sh
@@ -104,26 +104,43 @@ CMD_VEL_WATCHDOG_PID=""
 ODOMETRY_FUSION_PID=""
 PITCH_INITIALIZER_PID=""
 PITCH_CONTROLLER_SPAWNER_PID=""
+GAZEBO_PID=""
 
 cleanup() {
   local exit_code=$?
   trap - EXIT INT TERM
-  for child_pid in \
+  local child_pid
+  local children=(
+    "${GAZEBO_PID}" \
     "${PITCH_INITIALIZER_PID}" \
     "${PITCH_CONTROLLER_SPAWNER_PID}" \
     "${ODOMETRY_FUSION_PID}" \
     "${CAMERA_INFO_CALIBRATOR_PID}" \
     "${CMD_VEL_WATCHDOG_PID}" \
-    "${ROBOT_STATE_PUBLISHER_PID}"; do
+    "${ROBOT_STATE_PUBLISHER_PID}"
+  )
+  for child_pid in "${children[@]}"; do
     if [[ -n "${child_pid}" ]] && kill -0 "${child_pid}" 2>/dev/null; then
-      kill "${child_pid}" 2>/dev/null || true
+      # ros2 run assumes its executable receives terminal signals as well.
+      if [[ "${child_pid}" == "${ROBOT_STATE_PUBLISHER_PID}" ||
+            "${child_pid}" == "${CAMERA_INFO_CALIBRATOR_PID}" ||
+            "${child_pid}" == "${PITCH_CONTROLLER_SPAWNER_PID}" ]]; then
+        pkill -INT -P "${child_pid}" 2>/dev/null || true
+      fi
+      kill -INT "${child_pid}" 2>/dev/null || true
+    fi
+  done
+  for child_pid in "${children[@]}"; do
+    if [[ -n "${child_pid}" ]]; then
       wait "${child_pid}" 2>/dev/null || true
     fi
   done
   rm -rf -- "${RUN_DIR}"
   exit "${exit_code}"
 }
-trap cleanup EXIT INT TERM
+trap cleanup EXIT
+trap 'exit 0' INT
+trap 'exit 143' TERM
 
 ROBOT_SCALE="$(tr -d '[:space:]' < "${SCALE_FILE}")"
 python3 "${SCALE_SCRIPT}" \
@@ -150,7 +167,7 @@ python3 "${WATCHDOG_SCRIPT}" \
   --ros-args --params-file "${WATCHDOG_PARAMS}" &
 CMD_VEL_WATCHDOG_PID=$!
 
-ros2 launch metro_localization odometry_fusion.launch.py \
+env --default-signal=INT ros2 launch metro_localization odometry_fusion.launch.py \
   use_sim_time:=true &
 ODOMETRY_FUSION_PID=$!
 
@@ -159,12 +176,39 @@ ros2 run controller_manager spawner pitch_position_controller \
   --controller-manager-timeout 60 &
 PITCH_CONTROLLER_SPAWNER_PID=$!
 
-"${PITCH_COMMAND_SCRIPT}" "${SUBWAY_V2_INITIAL_PITCH_DEG:-0}" &
+"${PITCH_COMMAND_SCRIPT}" "${SUBWAY_V2_INITIAL_PITCH_DEG:-45}" &
 PITCH_INITIALIZER_PID=$!
 
 echo "Opening ${WORLD_FILE}"
 cd "${REPOSITORY_DIR}"
-ros2 launch gazebo_ros gazebo.launch.py \
+env --default-signal=INT ros2 launch gazebo_ros gazebo.launch.py \
   world:="${WORLD_FILE}" \
+  server_required:=true \
   verbose:=true \
-  "$@"
+  "$@" &
+GAZEBO_PID=$!
+
+# Successful one-shot initialization is expected; persistent services must stay alive.
+WATCHED_PIDS=(
+  "${GAZEBO_PID}" "${ROBOT_STATE_PUBLISHER_PID}" "${CAMERA_INFO_CALIBRATOR_PID}"
+  "${CMD_VEL_WATCHDOG_PID}" "${ODOMETRY_FUSION_PID}"
+  "${PITCH_CONTROLLER_SPAWNER_PID}" "${PITCH_INITIALIZER_PID}"
+)
+while ((${#WATCHED_PIDS[@]})); do
+  finished_pid=""
+  exit_code=0
+  wait -n -p finished_pid "${WATCHED_PIDS[@]}" || exit_code=$?
+  if [[ "${exit_code}" == "0" && (
+    "${finished_pid}" == "${PITCH_CONTROLLER_SPAWNER_PID}" ||
+    "${finished_pid}" == "${PITCH_INITIALIZER_PID}"
+  ) ]]; then
+    remaining=()
+    for child_pid in "${WATCHED_PIDS[@]}"; do
+      [[ "${child_pid}" == "${finished_pid}" ]] || remaining+=("${child_pid}")
+    done
+    WATCHED_PIDS=("${remaining[@]}")
+    continue
+  fi
+  echo "[ERROR] Simulation service PID ${finished_pid:-unknown} exited with code ${exit_code}." >&2
+  exit 1
+done

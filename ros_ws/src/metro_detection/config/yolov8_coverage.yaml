@@ -73,7 +73,7 @@ simulation_coverage_evaluator:
     publish_events: true
     event_republish_period_sec: 5.0
     status_period_sec: 2.0
-    model_name: best.pt
+    model_name: yolov8n_sim_demo_best(1).pt
 
 simulation_coverage_driver:
   ros__parameters:

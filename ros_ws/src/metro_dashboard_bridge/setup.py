@@ -26,6 +26,7 @@ setup(
         "console_scripts": [
             "defect_event_bridge = metro_dashboard_bridge.main:main",
             "dashboard_qt = metro_dashboard_bridge.qt_dashboard:main",
+            "inspection_desktop = metro_dashboard_bridge.desktop_app:main",
         ],
     },
 )

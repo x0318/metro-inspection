@@ -39,8 +39,8 @@ Environment overrides:
                                        (default: results/maps/subway_v2_rtabmap.db)
   SUBWAY_MAPPING_RESET_DATABASE        true starts a new graph; false resumes
                                        the database (default: true)
-  SUBWAY_V2_INITIAL_PITCH_DEG          Pitch joint start command, -15 to +30
-                                       (default: 0; camera optical axis: 75 deg)
+  SUBWAY_V2_INITIAL_PITCH_DEG          Pitch joint start command, -15 to +45
+                                       (default: +45; upper-wall view: 30 deg)
 
 Examples:
   ./ros_ws/src/metro_sim/scripts/open_subway_tunnel_v2_mapping.sh
@@ -213,7 +213,7 @@ ros2 run controller_manager spawner pitch_position_controller \
   --controller-manager-timeout 60 &
 PITCH_CONTROLLER_SPAWNER_PID=$!
 
-"${PITCH_COMMAND_SCRIPT}" "${SUBWAY_V2_INITIAL_PITCH_DEG:-0}" &
+"${PITCH_COMMAND_SCRIPT}" "${SUBWAY_V2_INITIAL_PITCH_DEG:-45}" &
 PITCH_INITIALIZER_PID=$!
 
 cd "${REPOSITORY_DIR}"

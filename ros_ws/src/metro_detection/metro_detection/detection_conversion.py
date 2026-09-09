@@ -36,6 +36,18 @@ CLASS_NAME_ALIASES = {
     "管线支架松脱": "bracket_loose",
 }
 
+DISPLAY_CLASS_NAMES = {
+    "crack": "liefeng",
+    "water_leakage": "shenloushui",
+    "segment_damage": "guanpianposundiaokuai",
+    "fastener_broken": "koujianduanlie",
+    "fastener_missing": "koujianqueshi",
+    "fastener_loose": "koujiansongdongwaixie",
+    "bracket_loose": "guanxianzhijiasongtuo",
+    "foreign_object": "yiwuruqin",
+}
+CLASS_NAME_ALIASES.update({label: name for name, label in DISPLAY_CLASS_NAMES.items()})
+
 
 def normalize_class_names(class_names: ClassNames) -> ClassNames:
     """Map checkpoint-specific labels onto the stable project taxonomy."""
@@ -45,6 +57,19 @@ def normalize_class_names(class_names: ClassNames) -> ClassNames:
             for index, name in class_names.items()
         }
     return [CLASS_NAME_ALIASES.get(str(name), str(name)) for name in class_names]
+
+
+def display_class_names(class_names: ClassNames) -> ClassNames:
+    """Map stable taxonomy names to ASCII pinyin for annotated images."""
+    if isinstance(class_names, Mapping):
+        return {
+            index: DISPLAY_CLASS_NAMES.get(str(name), str(name))
+            for index, name in class_names.items()
+        }
+    return [
+        DISPLAY_CLASS_NAMES.get(str(name), str(name))
+        for name in class_names
+    ]
 
 
 def class_name(class_names: ClassNames, index: int) -> str:

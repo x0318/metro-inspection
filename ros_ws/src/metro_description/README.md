@@ -56,11 +56,13 @@ range, noise, or requested frame rate.
 
 Yaw remains locked at the V6 CAD zero pose. Pitch is a bounded revolute joint
 held by a `gazebo_ros2_control` position controller; its joint range is
-`-15 deg` to `+30 deg`. The launch scripts command `0 deg` at startup so gravity
-cannot move it away from the inspection pose. At joint zero the camera optical
-axis is 75 degrees above robot +X; a `-15 deg` joint command aims it straight at
-the tunnel crown, while positive commands lower it toward the forward view. The
-raw controller input is `/subway_v2/pitch_position_controller/commands`.
+`-15 deg` to `+45 deg`. The launch scripts command `+45 deg` at startup, aiming
+the optical axis 30 degrees above robot +X so the approximately 42.7-degree
+vertical field of view includes the forward upper wall instead of only the
+nearby crown. At joint zero the optical axis is 75 degrees upward; `-15 deg`
+points straight at the crown, while positive commands lower it toward the
+forward view. The raw controller input is
+`/subway_v2/pitch_position_controller/commands`.
 
 Each V6 wheel assembly is split reproducibly into a 520-triangle rotating
 flanged wheel and a fixed motor/mount mesh. The wheel joint axes are moved to
@@ -85,23 +87,34 @@ the CAD-to-REP-103 root rotation.
 
 The V6 camera housings keep their CAD mounting translations, with inspection
 orientations restored explicitly: `xj1` and `xj2` look outward to the tunnel
-sides, while `xj3` and `xj4` look down toward the track. Camera body frames are
+sides, `xj3` covers the right wall-side track area, and `xj4` looks down toward
+the track. XJ2's simulated ray origin is moved just outside the scaled chassis
+edge so `base_link.STL` cannot occlude the upper part of its image; this is a
+simulation visibility correction and does not replace a measured physical
+camera extrinsic. From behind the robot, `xj3` is the rear-right camera and uses a
+simulation-only 70-degree horizontal field of view. Its center ray points
+toward the right wall and 75 degrees downward so that the wheel flange, rail,
+wall-side foreign objects, and track defects remain visible; rear-left `xj4`
+retains 44.95 degrees. XJ3's
+ray origin is 2 mm beyond the housing front face. Camera body frames are
 placed at the previously validated lens-center offsets instead of each STL's
 link origin. Because the V6 yaw zero points the Pitch camera toward the robot
 rear, the complete yaw-to-pitch assembly is turned 180 degrees around the robot
 vertical axis. Because the exported yaw origin is not at the assembly center,
 its translation is compensated so the combined yuntai/Pitch geometry and lens
 center remain on the robot centerline. The Pitch joint itself remains at its
-undeformed V6 CAD zero pose. Its invisible sensor frame points 75 degrees above
-`base_footprint +X`, so the vertical FOV includes the tunnel crown and stays
-aligned with the visible forward-facing housing. Odin1's calibrated internal
-transform is unchanged.
+undeformed V6 CAD zero pose. Its invisible sensor frame is placed 30 mm along
+the optical axis from the old internal point, just beyond the V6 lens surface,
+so the housing cannot occlude the simulated image. At joint zero it points 75
+degrees above `base_footprint +X` and remains aligned with the visible
+forward-facing housing. Odin1's calibrated internal transform is unchanged.
 
 With a simulation running, command the Pitch joint in degrees using:
 
 ```bash
 ./ros_ws/src/metro_sim/scripts/set_subway_v2_pitch.sh -15  # straight up
 ./ros_ws/src/metro_sim/scripts/set_subway_v2_pitch.sh 0    # 75 deg upward
+./ros_ws/src/metro_sim/scripts/set_subway_v2_pitch.sh 15   # 60 deg upper wall
 ./ros_ws/src/metro_sim/scripts/set_subway_v2_pitch.sh 30   # 45 deg upward
 ```
 

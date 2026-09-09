@@ -6,10 +6,10 @@
   <meta name="color-scheme" content="light">
   <link rel="icon" href="data:,">
   <title>地铁多领域病害综合智能巡检系统</title>
-  <link rel="stylesheet" href="./assets/dashboard.css?v=20260903-yolo-monitor-1">
+  <link rel="stylesheet" href="./assets/dashboard.css?v=20260907-session-history-1">
   <script defer src="./vendor/vue-3.3.4.global.prod.js"></script>
   <script defer src="./vendor/echarts-5.5.0.min.js"></script>
-  <script defer src="./assets/dashboard.js"></script>
+  <script defer src="./assets/dashboard.js?v=20260907-session-history-1"></script>
 </head>
 <body>
   <div id="app" v-cloak>
@@ -55,6 +55,28 @@
         <div><span>预览上限</span><strong>{{ previewProfile.max_width }} × {{ previewProfile.max_height }}</strong></div>
         <div><span>输出帧率</span><strong>{{ formatFps(previewProfile.default_fps) }} FPS</strong></div>
         <div><span>JPEG质量</span><strong>{{ previewProfile.jpeg_quality }}</strong></div>
+      </section>
+
+      <section v-if="activeView === 'overview' || activeView === 'report'"
+        class="session-band" aria-label="巡检历史">
+        <div class="session-summary">
+          <span>当前查看</span>
+          <strong>{{ selectedSessionId || '--' }}</strong>
+          <small>{{ selectedSession ? `${selectedSession.record_count} 条病害记录` : '暂无巡检批次' }}</small>
+        </div>
+        <label class="session-picker">
+          <span>巡检历史</span>
+          <select v-model="selectedSessionId" :disabled="!sessions.length" @change="refreshData">
+            <option v-if="!sessions.length" value="">暂无巡检记录</option>
+            <option v-for="session in sessions" :key="session.session_id"
+              :value="session.session_id">
+              {{ sessionOptionText(session) }}
+            </option>
+          </select>
+        </label>
+        <span :class="['session-mode', { active: selectedSessionIsActive }]">
+          {{ selectedSessionIsActive ? '实时巡检' : '历史记录' }}
+        </span>
       </section>
 
       <section v-if="activeView === 'overview'" class="overview-view">
@@ -219,7 +241,7 @@
               </span>
             </header>
             <div class="camera-media">
-              <img v-if="selectedMonitorCamera.available" :src="streamUrl(selectedMonitorCamera)"
+              <img v-if="selectedMonitorCamera.available" :src="cameraFrameUrl(selectedMonitorCamera)"
                 :alt="`${selectedMonitorCamera.label} 实时画面`">
               <div v-else class="camera-offline">
                 <strong>等待图像</strong><span>{{ cameraAgeText(selectedMonitorCamera) }}</span>
@@ -248,7 +270,7 @@
             </div>
           </header>
           <div class="camera-focus-frame">
-            <img v-if="focusedCamera.available" :src="streamUrl(focusedCamera)"
+            <img v-if="focusedCamera.available" :src="cameraFrameUrl(focusedCamera)"
               :alt="`${focusedCamera.label} 实时画面`">
             <div v-else class="camera-offline">
               <strong>等待图像</strong><span>{{ cameraAgeText(focusedCamera) }}</span>
@@ -271,7 +293,7 @@
             </header>
             <button type="button" class="camera-media" :title="`放大查看 ${camera.label}`"
               :aria-label="`放大查看 ${camera.label}`" @click="focusedCameraId = camera.id">
-              <img v-if="camera.available" :src="streamUrl(camera)" :alt="`${camera.label} 实时画面`">
+              <img v-if="camera.available" :src="cameraFrameUrl(camera)" :alt="`${camera.label} 实时画面`">
               <span v-else class="camera-offline">
                 <strong>等待图像</strong><span>{{ cameraAgeText(camera) }}</span>
               </span>
@@ -313,7 +335,7 @@
     </main>
 
     <section id="print-report">
-      <header><h1>地铁隧道病害智能巡检报告</h1><p>生成时间：{{ new Date().toLocaleString('zh-CN') }}</p></header>
+      <header><h1>地铁隧道病害智能巡检报告</h1><p>巡检批次：{{ selectedSessionId || '--' }}<br>生成时间：{{ new Date().toLocaleString('zh-CN') }}</p></header>
       <div class="print-summary">
         <span>事件总数：{{ summary.total }}</span><span>三维定位：{{ summary.localized }}</span>
         <span>工程定位：{{ summary.semantic }}</span><span>III级严重：{{ summary.severe }}</span>

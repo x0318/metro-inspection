@@ -21,6 +21,7 @@ __pycache__/
 datasets/
 videos/
 /results/
+/runs/
 *.mp4
 *.avi
 *.bag

@@ -25,9 +25,11 @@ image, lidar, and detection time synchronizer in `damage_localizer`.
 The JPEG-compressed annotated output carries the same header and is used by
 the dashboard's five-camera YOLO monitoring page.
 
-The optional `/home/jo/incoming/best.pt` checkpoint contains eight Chinese
-labels. The detector normalizes them to the stable project taxonomy before
-publishing:
+The complete simulation platform defaults to
+`/home/jo/incoming/yolov8n_sim_demo_best(1).pt`, which was trained on the
+synthetic tunnel domain. The optional `/home/jo/incoming/best.pt` checkpoint
+contains eight Chinese labels for real-image experiments. The detector
+normalizes them to the stable project taxonomy before publishing:
 
 ```text
 裂缝         -> crack
@@ -42,6 +44,21 @@ publishing:
 
 Normalization also prevents annotated-image rendering from trying to download
 a Unicode font during the first ROS image callback.
+
+The ROS detection messages retain the English taxonomy above for stable
+downstream interfaces. Bounding-box labels in the annotated YOLO images use
+full ASCII pinyin instead:
+
+```text
+crack            -> liefeng
+water_leakage    -> shenloushui
+segment_damage   -> guanpianposundiaokuai
+fastener_broken  -> koujianduanlie
+fastener_missing -> koujianqueshi
+fastener_loose   -> koujiansongdongwaixie
+bracket_loose    -> guanxianzhijiasongtuo
+foreign_object   -> yiwuruqin
+```
 
 Gazebo Classic advertises these camera image topics as `RELIABLE`, and its
 demand-driven sensor can remain asleep when only a best-effort subscriber is
@@ -147,9 +164,10 @@ Pitch ceiling image
   -> /damage_detection/pitch/annotated_image
 ```
 
-The visible Pitch assembly stays at its V6 CAD zero pose. Its independent
-sensor frame points 75 degrees above the robot forward axis, so the camera's
-approximately 34.5-degree vertical FOV includes the tunnel crown.
+The visible Pitch assembly is a controlled revolute joint. The complete
+platform starts it at `+45 deg`, placing the center ray 30 degrees above the
+robot forward axis; its approximately 42.7-degree vertical FOV then covers the
+forward upper wall. Use `initial_pitch_deg` to override this startup angle.
 
 Connect YOLO to an already running sensor or fusion simulation:
 
@@ -158,7 +176,8 @@ cd /home/jo/my-project/metro-inspection
 ./scripts/open_yolo_detector.sh
 ```
 
-The default model is:
+The generic single-camera detector defaults to the real-image experiment
+checkpoint:
 
 ```text
 /home/jo/incoming/best.pt

@@ -198,4 +198,7 @@ class CameraFrameStore:
             "stream_url": (
                 f"/api/cameras/{state.definition.camera_id}/stream.mjpg"
             ),
+            "frame_url": (
+                f"/api/cameras/{state.definition.camera_id}/frame.jpg"
+            ),
         }

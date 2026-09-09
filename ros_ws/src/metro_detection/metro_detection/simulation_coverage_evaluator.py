@@ -1,6 +1,7 @@
 """Evaluate ten-defect simulation coverage from real YOLO output messages."""
 
 import json
+import signal
 from functools import partial
 
 import rclpy
@@ -8,6 +9,7 @@ from metro_inspection_interfaces.msg import DefectEvent
 from nav_msgs.msg import Odometry
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
+from rclpy.signals import SignalHandlerOptions
 from rclpy.qos import (
     DurabilityPolicy,
     QoSProfile,
@@ -47,7 +49,9 @@ class SimulationCoverageEvaluator(Node):
         self.declare_parameter("publish_events", True)
         self.declare_parameter("event_republish_period_sec", 5.0)
         self.declare_parameter("status_period_sec", 2.0)
-        self.declare_parameter("model_name", "best.pt")
+        self.declare_parameter(
+            "model_name", "yolov8n_sim_demo_best(1).pt"
+        )
 
         camera_names = self._strings("camera_names")
         detection_topics = self._strings("detection_topics")
@@ -284,11 +288,20 @@ class SimulationCoverageEvaluator(Node):
 
 
 def main(args=None) -> None:
-    rclpy.init(args=args)
+    rclpy.init(args=args, signal_handler_options=SignalHandlerOptions.NO)
+    stop_requested = False
+
+    def request_stop(_signum, _frame):
+        nonlocal stop_requested
+        stop_requested = True
+
+    signal.signal(signal.SIGINT, request_stop)
+    signal.signal(signal.SIGTERM, request_stop)
     node = None
     try:
         node = SimulationCoverageEvaluator()
-        rclpy.spin(node)
+        while rclpy.ok() and not stop_requested:
+            rclpy.spin_once(node, timeout_sec=0.2)
     except (KeyboardInterrupt, ExternalShutdownException):
         pass
     finally:

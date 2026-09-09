@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Callable, Dict, Optional
 
 from fastapi import FastAPI, HTTPException, Query, WebSocket
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import JSONResponse, Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from .camera_store import CameraFrameStore
@@ -65,18 +65,41 @@ def create_app(
         )
 
     @app.get("/api/defects")
-    async def list_defects() -> JSONResponse:
+    async def list_defects(
+        session_id: Optional[str] = Query(
+            default=None, min_length=1, max_length=200
+        ),
+    ) -> JSONResponse:
+        selected_session_id = session_id or store.session_id
         return JSONResponse(
-            {"records": store.list()},
+            {
+                "session_id": selected_session_id,
+                "records": store.list(session_id=selected_session_id),
+            },
             headers={"Cache-Control": "no-store"},
         )
 
     @app.get("/api/defects/{event_id}")
-    async def get_defect(event_id: str) -> JSONResponse:
-        record = store.get(event_id)
+    async def get_defect(
+        event_id: str,
+        session_id: Optional[str] = Query(
+            default=None, min_length=1, max_length=200
+        ),
+    ) -> JSONResponse:
+        record = store.get(event_id, session_id=session_id)
         if record is None:
             raise HTTPException(status_code=404, detail="defect event not found")
         return JSONResponse(record, headers={"Cache-Control": "no-store"})
+
+    @app.get("/api/sessions")
+    async def list_sessions() -> JSONResponse:
+        return JSONResponse(
+            {
+                "active_session_id": store.session_id,
+                "sessions": store.list_sessions(),
+            },
+            headers={"Cache-Control": "no-store"},
+        )
 
     @app.get("/api/cameras")
     async def list_cameras() -> JSONResponse:
@@ -105,7 +128,9 @@ def create_app(
         fps: float = Query(default=stream_config.default_fps, ge=1.0, le=30.0),
     ) -> StreamingResponse:
         if camera_store is None or preview_encoder is None:
-            raise HTTPException(status_code=404, detail="camera streaming is disabled")
+            raise HTTPException(
+                status_code=404, detail="camera streaming is disabled"
+            )
         if not camera_store.contains(camera_id):
             raise HTTPException(status_code=404, detail="unknown camera")
 
@@ -116,6 +141,34 @@ def create_app(
                 "Cache-Control": "no-store, no-cache, must-revalidate",
                 "Pragma": "no-cache",
                 "X-Accel-Buffering": "no",
+            },
+        )
+
+    @app.get("/api/cameras/{camera_id}/frame.jpg")
+    def camera_frame(camera_id: str) -> Response:
+        if camera_store is None or preview_encoder is None:
+            raise HTTPException(status_code=404, detail="camera streaming is disabled")
+        if not camera_store.contains(camera_id):
+            raise HTTPException(status_code=404, detail="unknown camera")
+
+        frame = camera_store.get(camera_id)
+        if frame is None:
+            raise HTTPException(
+                status_code=503, detail="camera frame is not available"
+            )
+        preview = preview_encoder.encode(frame)
+        if preview is None:
+            raise HTTPException(
+                status_code=503, detail="camera frame could not be decoded"
+            )
+
+        return Response(
+            content=preview.data,
+            media_type="image/jpeg",
+            headers={
+                "Cache-Control": "no-store, no-cache, must-revalidate",
+                "Pragma": "no-cache",
+                "X-Camera-Sequence": str(preview.sequence),
             },
         )
 

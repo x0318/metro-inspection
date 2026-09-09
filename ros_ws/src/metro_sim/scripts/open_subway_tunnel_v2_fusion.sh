@@ -30,8 +30,8 @@ Environment overrides:
   ROS_DOMAIN_ID                         ROS 2 discovery domain (default: 70)
   SUBWAY_TUNNEL_V2_GAZEBO_MASTER_URI  Gazebo master URI
                                        (default: http://127.0.0.1:11374)
-  SUBWAY_V2_INITIAL_PITCH_DEG          Pitch joint start command, -15 to +30
-                                       (default: 0; camera optical axis: 75 deg)
+  SUBWAY_V2_INITIAL_PITCH_DEG          Pitch joint start command, -15 to +45
+                                       (default: +45; upper-wall view: 30 deg)
 
 Examples:
   ./ros_ws/src/metro_sim/scripts/open_subway_tunnel_v2_fusion.sh
@@ -186,7 +186,7 @@ ros2 run controller_manager spawner pitch_position_controller \
   --controller-manager-timeout 60 &
 PITCH_CONTROLLER_SPAWNER_PID=$!
 
-"${PITCH_COMMAND_SCRIPT}" "${SUBWAY_V2_INITIAL_PITCH_DEG:-0}" &
+"${PITCH_COMMAND_SCRIPT}" "${SUBWAY_V2_INITIAL_PITCH_DEG:-45}" &
 PITCH_INITIALIZER_PID=$!
 
 cd "${REPOSITORY_DIR}"

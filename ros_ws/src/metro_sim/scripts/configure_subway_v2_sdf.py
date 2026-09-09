@@ -42,9 +42,9 @@ INSPECTION_CAMERA_COMMON = {
     "P_cx": 693.56983,
     "P_cy": 545.3029,
 }
-# Simulation-only side-wall coverage. Values are scaled from the Hikrobot
+# Simulation-only wide coverage. Values are scaled from the Hikrobot
 # calibration; the real cameras still require individual bench calibration.
-SIDE_WALL_CAMERA_CALIBRATION = {
+WIDE_INSPECTION_CAMERA_CALIBRATION = {
     **INSPECTION_CAMERA_COMMON,
     # Gazebo Classic stores camera HFOV at six-decimal precision.
     "horizontal_fov": 1.22173,
@@ -70,9 +70,9 @@ PITCH_CAMERA_CALIBRATION = {
     "P_fy": 1370.0028058793007,
 }
 INSPECTION_CAMERA_CALIBRATIONS = {
-    "xj1_camera_sensor": SIDE_WALL_CAMERA_CALIBRATION,
-    "xj2_camera_sensor": SIDE_WALL_CAMERA_CALIBRATION,
-    "xj3_camera_sensor": TRACK_CAMERA_CALIBRATION,
+    "xj1_camera_sensor": WIDE_INSPECTION_CAMERA_CALIBRATION,
+    "xj2_camera_sensor": WIDE_INSPECTION_CAMERA_CALIBRATION,
+    "xj3_camera_sensor": WIDE_INSPECTION_CAMERA_CALIBRATION,
     "xj4_camera_sensor": TRACK_CAMERA_CALIBRATION,
     "pitch_camera_sensor": PITCH_CAMERA_CALIBRATION,
 }
@@ -82,9 +82,17 @@ SIDE_CAMERA_FORWARDS = {
 }
 PITCH_CAMERA_FORWARD = (0.258819045102521, 0.0, 0.965925826289068)
 PITCH_CAMERA_UP = (-0.965925826289068, 0.0, 0.258819045102521)
+PITCH_CAMERA_SENSOR_NATIVE_XYZ = (
+    -0.077300002798,
+    -0.025686200096,
+    0.095551824230,
+)
+XJ3_CAMERA_SENSOR_NATIVE_XYZ = (0.0, 0.0, 0.112)
+XJ3_CAMERA_FORWARD = (0.0, -0.258819045102521, -0.965925826289068)
+XJ3_CAMERA_UP = (0.0, -0.965925826289068, 0.258819045102521)
 PITCH_JOINT_AXIS = (-1.0, 0.0, 0.0)
 PITCH_JOINT_LOWER = -0.261799387799149
-PITCH_JOINT_UPPER = 0.523598775598299
+PITCH_JOINT_UPPER = 0.785398163397448
 PITCH_JOINT_EFFORT = 10.0
 PITCH_JOINT_VELOCITY = 0.5
 PITCH_CONTROL_NAMESPACE = "/subway_v2"
@@ -617,6 +625,85 @@ def validate_generated_model(model: ET.Element, urdf_root: ET.Element) -> None:
     validate_side_camera_mounts(urdf_root)
     validate_wheel_drive(model)
     validate_pitch_control(model, urdf_root)
+
+    xj3_sensor_joint = urdf_root.find("./joint[@name='xj3_camera_joint']")
+    xj3_sensor_origin = (
+        xj3_sensor_joint.find("origin") if xj3_sensor_joint is not None else None
+    )
+    if xj3_sensor_origin is None:
+        raise ValueError("URDF XJ3 camera sensor origin is missing")
+    xj3_sensor_xyz = parse_values(
+        xj3_sensor_origin.get("xyz", ""), 3, "XJ3 camera sensor origin"
+    )
+    xj3_mesh = urdf_root.find("./link[@name='xj3']/visual/geometry/mesh")
+    if xj3_mesh is None:
+        raise ValueError("URDF XJ3 visual mesh is missing")
+    xj3_mesh_scale = parse_values(
+        xj3_mesh.get("scale", "1 1 1"), 3, "XJ3 visual mesh scale"
+    )
+    expected_xj3_sensor_xyz = tuple(
+        XJ3_CAMERA_SENSOR_NATIVE_XYZ[index] * xj3_mesh_scale[index]
+        for index in range(3)
+    )
+    xj3_position_error = max(
+        abs(xj3_sensor_xyz[index] - expected)
+        for index, expected in enumerate(expected_xj3_sensor_xyz)
+    )
+    if xj3_position_error > POSITION_TOLERANCE:
+        raise ValueError(
+            "XJ3 camera ray origin must remain outside its housing: "
+            f"found {xj3_sensor_xyz}"
+        )
+    _, xj3_rotation = urdf_transform_to_link(urdf_root, "xj3_camera_link")
+    for axis_name, local_axis, expected_axis in (
+        ("forward", (1.0, 0.0, 0.0), XJ3_CAMERA_FORWARD),
+        ("up", (0.0, 0.0, 1.0), XJ3_CAMERA_UP),
+    ):
+        actual_axis = rotate_vector(xj3_rotation, local_axis)
+        axis_error = max(
+            abs(actual_axis[index] - expected)
+            for index, expected in enumerate(expected_axis)
+        )
+        if axis_error > AXIS_TOLERANCE:
+            raise ValueError(
+                f"XJ3 camera {axis_name} axis must cover the wheel/rail and right wall-side "
+                f"inspection area, found {actual_axis}"
+            )
+
+    pitch_sensor_joint = urdf_root.find(
+        "./joint[@name='pitch_camera_sensor_joint']"
+    )
+    pitch_sensor_origin = (
+        pitch_sensor_joint.find("origin")
+        if pitch_sensor_joint is not None
+        else None
+    )
+    if pitch_sensor_origin is None:
+        raise ValueError("URDF Pitch camera sensor origin is missing")
+    pitch_sensor_xyz = parse_values(
+        pitch_sensor_origin.get("xyz", ""), 3, "Pitch camera sensor origin"
+    )
+    pitch_mesh = urdf_root.find(
+        "./link[@name='pitch']/visual/geometry/mesh"
+    )
+    if pitch_mesh is None:
+        raise ValueError("URDF Pitch visual mesh is missing")
+    pitch_mesh_scale = parse_values(
+        pitch_mesh.get("scale", "1 1 1"), 3, "Pitch visual mesh scale"
+    )
+    expected_pitch_sensor_xyz = tuple(
+        PITCH_CAMERA_SENSOR_NATIVE_XYZ[index] * pitch_mesh_scale[index]
+        for index in range(3)
+    )
+    local_position_error = max(
+        abs(pitch_sensor_xyz[index] - expected)
+        for index, expected in enumerate(expected_pitch_sensor_xyz)
+    )
+    if local_position_error > POSITION_TOLERANCE:
+        raise ValueError(
+            "Pitch camera ray origin must remain outside its housing: "
+            f"found {pitch_sensor_xyz}"
+        )
 
     pitch_camera_position, pitch_camera_rotation = urdf_transform_to_link(
         urdf_root, "pitch_camera_sensor_link"

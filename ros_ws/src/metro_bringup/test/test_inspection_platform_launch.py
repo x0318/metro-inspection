@@ -1,13 +1,13 @@
 import importlib.util
+import json
 from pathlib import Path
+from types import SimpleNamespace
 
 from launch import LaunchContext
 from launch.actions import DeclareLaunchArgument, OpaqueFunction
 
 
-LAUNCH_FILE = (
-    Path(__file__).parents[1] / "launch" / "inspection_platform.launch.py"
-)
+LAUNCH_FILE = Path(__file__).parents[1] / "launch" / "inspection_platform.launch.py"
 
 
 def _load_launch_module():
@@ -32,6 +32,7 @@ def test_launch_exposes_expected_controls() -> None:
     assert set(arguments) == {
         "project_dir",
         "gui",
+        "initial_pitch_deg",
         "rviz",
         "detection",
         "yolo_model_path",
@@ -66,18 +67,31 @@ def test_boolean_launch_arguments_are_strict() -> None:
         raise AssertionError("invalid boolean value was accepted")
 
 
+def test_fault_status_records_component_and_ignores_requested_shutdown(
+    tmp_path, monkeypatch
+):
+    module = _load_launch_module()
+    status = tmp_path / "runtime.status.json"
+    monkeypatch.setenv("METRO_RUNTIME_STATUS_PATH", str(status))
+    handler = module._shutdown_after_exit("detection")
+    assert handler(SimpleNamespace(returncode=7), SimpleNamespace(is_shutdown=False))
+    assert json.loads(status.read_text())["component"] == "detection"
+    assert json.loads(status.read_text())["exit_code"] == 7
+    assert (
+        handler(SimpleNamespace(returncode=-2), SimpleNamespace(is_shutdown=True)) == []
+    )
+    assert json.loads(status.read_text())["exit_code"] == 7
+
+
 def test_default_project_directory_contains_runtime_assets() -> None:
     module = _load_launch_module()
     project_dir = Path(module._default_project_dir())
 
     assert (
-        project_dir
-        / "ros_ws/src/metro_sim/scripts/open_subway_tunnel_v2_sensors.sh"
+        project_dir / "ros_ws/src/metro_sim/scripts/open_subway_tunnel_v2_sensors.sh"
     ).is_file()
     assert (project_dir / "scripts/open_yolo_coverage.sh").is_file()
-    assert (
-        project_dir / "ros_ws/src/metro_sim/config/yolo_coverage.rviz"
-    ).is_file()
+    assert (project_dir / "ros_ws/src/metro_sim/config/yolo_coverage.rviz").is_file()
     assert (project_dir / "dashboard/index.html").is_file()
 
 
@@ -107,6 +121,7 @@ def test_runtime_actions_can_be_constructed_for_headless_mode() -> None:
         {
             "project_dir": module._default_project_dir(),
             "gui": "false",
+            "initial_pitch_deg": "45",
             "rviz": "false",
             "detection": "false",
             "yolo_auto_drive": "false",
