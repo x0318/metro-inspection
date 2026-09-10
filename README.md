@@ -29,7 +29,7 @@
 - [文档与运行数据](#文档与运行数据)
 - [详细技术方案见技术文档](#详细技术方案见技术文档)
 
-当前模型演示基线及复现步骤见 [2026-09-10 版本说明](docs/stable_demo_20260910.md)。
+当前启动流程与代码说明见 [项目详细说明](docs/project_details.md)。
 
 ## 环境与首次部署
 
@@ -37,6 +37,8 @@
 - 基础环境：ROS 2 Humble、Gazebo Classic 11、Python 3.10、colcon、Git LFS
 - 推理：PyTorch、Ultralytics
 - 平台：FastAPI、Uvicorn、SQLite、PyQt5 WebEngine
+
+若使用已解压的成果包，进入其中的 `metro-inspection` 目录，跳过下方 Git 安装、克隆及 `git lfs pull` 步骤，从“安装基础工具、桌面、仿真与导航依赖”开始。运行识别时，在桌面运行设置中选择本机的权重文件；新电脑需要重新安装依赖并编译。
 
 ```bash
 # 安装 Git 与 Git LFS
@@ -71,6 +73,9 @@ rosdep install --from-paths ros_ws/src --ignore-src -r -y --rosdistro humble
 
 # 准备 YOLO 推理环境
 bash scripts/setup_yolo_environment.sh
+
+# 数字孪生展示与三维引导模式所需的模型读取和遮挡计算依赖
+python3 -m pip install --user 'pycollada>=0.7,<1' 'trimesh>=4.5,<5' 'embreex>=2,<5'
 
 # 统一编译工作空间中的所有包
 cd ros_ws
@@ -192,7 +197,7 @@ tailscale serve status
 | 查看正在运行的感知链路           | `bash ros_ws/src/metro_sim/scripts/open_subway_v2_perception_rviz.sh` |
 | 独立三维建图                     | `bash ros_ws/src/metro_sim/scripts/open_subway_tunnel_v2_mapping.sh` |
 | 建图 RViz                        | `bash ros_ws/src/metro_sim/scripts/open_subway_v2_mapping_rviz.sh` |
-| 独立 Nav2分支避障演示            | `bash ros_ws/src/metro_sim/scripts/open_nav2_demo.sh`        |
+| 独立岔轨选路与避障测试           | `bash scripts/open_route_choice_platform.sh`               |
 
 ![巡检仿真演示](docs/images/inspection_demo.gif)
 
@@ -241,7 +246,7 @@ metro-inspection/
 │       ├── metro_localization/      # 三维定位、事件关联、工程语义、EKF
 │       ├── metro_pointcloud_mapping/ # 点云门控、RTAB-Map 集成、PCD 保存
 │       └── metro_closed_loop/       # 旧流程适配与相机内参校准
-├── docs/                            # 技术说明与阶段记录
+├── docs/                            # 文档导航、详细代码说明与 README 图片
 ├── configs/                         # 预留的项目级配置目录
 ├── hardware/                        # 硬件资料目录，当前分支内容有限
 └── samples/                         # 预留的示例资料目录
@@ -250,7 +255,6 @@ metro-inspection/
 ## 文档与运行数据
 
 - [项目详细说明](docs/project_details.md)：架构、算法、接口、配置、操作、测试、排障和真机对接。
-- [桌面应用说明](docs/desktop_app.md)：Windows/Linux 入口、设置、日志和既有验收记录。
 - [检测模块](ros_ws/src/metro_detection/README.md)、[定位模块](ros_ws/src/metro_mapping/metro_localization/README.md)、[建图模块](ros_ws/src/metro_mapping/metro_pointcloud_mapping/README.md)。
 - [仿真与导航](ros_ws/src/metro_sim/README.md)、[桥接与 API](ros_ws/src/metro_dashboard_bridge/README.md)、[事件接口](ros_ws/src/metro_inspection_interfaces/README.md)。
 
