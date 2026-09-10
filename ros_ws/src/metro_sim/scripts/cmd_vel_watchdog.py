@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import json
+import signal
 import time
 
 import rclpy
@@ -8,11 +9,18 @@ from geometry_msgs.msg import Twist
 from rclpy.clock import Clock, ClockType
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
-from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
+from rclpy.signals import SignalHandlerOptions
+from rclpy.qos import (
+    DurabilityPolicy,
+    QoSProfile,
+    ReliabilityPolicy,
+    qos_profile_sensor_data,
+)
+from sensor_msgs.msg import PointCloud2
 from std_msgs.msg import Bool, String
 from std_srvs.srv import Trigger
 
-from cmd_vel_watchdog_core import CommandWatchdog, WatchdogState
+from cmd_vel_watchdog_core import CommandWatchdog, InputFreshness, WatchdogState
 
 
 class CmdVelWatchdog(Node):
@@ -26,6 +34,8 @@ class CmdVelWatchdog(Node):
         )
         self.declare_parameter("timeout", 0.5)
         self.declare_parameter("output_rate", 20.0)
+        self.declare_parameter("required_sensor_topic", "")
+        self.declare_parameter("required_sensor_timeout", 1.0)
 
         input_topic = str(self.get_parameter("input_topic").value)
         output_topic = str(self.get_parameter("output_topic").value)
@@ -33,12 +43,26 @@ class CmdVelWatchdog(Node):
         status_topic = str(self.get_parameter("status_topic").value)
         self.timeout = float(self.get_parameter("timeout").value)
         output_rate = float(self.get_parameter("output_rate").value)
+        self.required_sensor_topic = str(
+            self.get_parameter("required_sensor_topic").value
+        ).strip()
+        required_sensor_timeout = float(
+            self.get_parameter("required_sensor_timeout").value
+        )
         if self.timeout <= 0.0:
             raise ValueError("timeout must be greater than zero")
         if output_rate <= 0.0:
             raise ValueError("output_rate must be greater than zero")
+        if required_sensor_timeout <= 0.0:
+            raise ValueError("required_sensor_timeout must be greater than zero")
 
         self.safety = CommandWatchdog(self.timeout)
+        self.sensor_freshness = (
+            InputFreshness(required_sensor_timeout)
+            if self.required_sensor_topic
+            else None
+        )
+        self.sensor_was_fresh = self.sensor_freshness is None
         self.last_command = Twist()
         self.last_status_payload = None
 
@@ -57,6 +81,14 @@ class CmdVelWatchdog(Node):
         self.estop_sub = self.create_subscription(
             Bool, estop_topic, self._estop_callback, safety_qos
         )
+        self.required_sensor_sub = None
+        if self.required_sensor_topic:
+            self.required_sensor_sub = self.create_subscription(
+                PointCloud2,
+                self.required_sensor_topic,
+                self._required_sensor_callback,
+                qos_profile_sensor_data,
+            )
         self.rearm_service = self.create_service(
             Trigger, "~/rearm", self._rearm_callback
         )
@@ -69,8 +101,15 @@ class CmdVelWatchdog(Node):
         self._publish_state(force=True)
 
         self.get_logger().info(
-            "Drive watchdog active: %s -> %s, e-stop %s, timeout %.2f s"
-            % (input_topic, output_topic, estop_topic, self.timeout)
+            "Drive watchdog active: %s -> %s, e-stop %s, timeout %.2f s, "
+            "required sensor %s"
+            % (
+                input_topic,
+                output_topic,
+                estop_topic,
+                self.timeout,
+                self.required_sensor_topic or "disabled",
+            )
         )
 
     def _command_callback(self, msg: Twist) -> None:
@@ -100,6 +139,11 @@ class CmdVelWatchdog(Node):
             )
         self._publish_state(force=True)
 
+    def _required_sensor_callback(self, msg: PointCloud2) -> None:
+        del msg
+        if self.sensor_freshness is not None:
+            self.sensor_freshness.observe(time.monotonic())
+
     def _rearm_callback(
         self, request: Trigger.Request, response: Trigger.Response
     ) -> Trigger.Response:
@@ -121,7 +165,17 @@ class CmdVelWatchdog(Node):
 
     def _publish_command(self) -> None:
         previous_state = self.safety.state
-        if self.safety.may_forward(time.monotonic()):
+        now = time.monotonic()
+        sensor_is_fresh = self._required_sensor_is_fresh(now)
+        if sensor_is_fresh != self.sensor_was_fresh:
+            self.sensor_was_fresh = sensor_is_fresh
+            if sensor_is_fresh:
+                self.get_logger().info("Required drive sensor stream restored")
+            else:
+                self.get_logger().error(
+                    "Required drive sensor stream is missing or stale; forcing stop"
+                )
+        if sensor_is_fresh and self.safety.may_forward(now):
             self.command_pub.publish(self.last_command)
             self._publish_state()
             return
@@ -138,14 +192,28 @@ class CmdVelWatchdog(Node):
             )
         self._publish_state()
 
+    def _required_sensor_is_fresh(self, now: float) -> bool:
+        if self.sensor_freshness is None:
+            return True
+        return self.sensor_freshness.is_fresh(now)
+
     def _publish_state(self, *, force: bool = False) -> None:
+        sensor_is_fresh = self._required_sensor_is_fresh(time.monotonic())
+        state = (
+            self.safety.state.value
+            if sensor_is_fresh
+            else "required_sensor_stale"
+        )
         payload = json.dumps(
             {
-                "state": self.safety.state.value,
+                "state": state,
                 "estop_active": self.safety.estop_active,
                 "rearm_required": self.safety.rearm_required,
+                "required_sensor_topic": self.required_sensor_topic,
+                "required_sensor_fresh": sensor_is_fresh,
                 "motion_authorized": (
-                    self.safety.state == WatchdogState.ACTIVE
+                    sensor_is_fresh
+                    and self.safety.state == WatchdogState.ACTIVE
                 ),
             },
             sort_keys=True,
@@ -159,16 +227,29 @@ class CmdVelWatchdog(Node):
 
 
 def main() -> None:
-    rclpy.init()
-    node = CmdVelWatchdog()
+    # Finish the executor and publish the final stop before destroying the ROS
+    # context. The default signal handler can shut it down during spin_once.
+    rclpy.init(signal_handler_options=SignalHandlerOptions.NO)
+    stopping = False
+
+    def request_stop(*_):
+        nonlocal stopping
+        stopping = True
+
+    signal.signal(signal.SIGINT, request_stop)
+    signal.signal(signal.SIGTERM, request_stop)
+    node = None
     try:
-        rclpy.spin(node)
+        node = CmdVelWatchdog()
+        while rclpy.ok() and not stopping:
+            rclpy.spin_once(node, timeout_sec=0.1)
     except (KeyboardInterrupt, ExternalShutdownException):
         pass
     finally:
-        if rclpy.ok():
-            node.command_pub.publish(Twist())
-        node.destroy_node()
+        if node is not None:
+            if rclpy.ok():
+                node.command_pub.publish(Twist())
+            node.destroy_node()
         if rclpy.ok():
             rclpy.shutdown()
 

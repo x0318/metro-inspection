@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>地铁多领域病害综合智能巡检系统</title>
+  <link rel="stylesheet" href="./assets/dashboard.css">
+  <script src="./vendor/vue-3.3.4.global.prod.js"></script>
+  <script src="./vendor/echarts-5.5.0.min.js"></script>
+</head>
+<body>
+  <div id="app" v-cloak>
+    <div class="app-shell">
+      <nav class="side-nav" aria-label="主导航">
+        <div class="brand-mark" title="地铁智能巡检中枢">M</div>
+        <button class="nav-button" :class="{ active: activeTab === 'monitor' }" @click="activeTab = 'monitor'">监控</button>
+        <button class="nav-button" :class="{ active: activeTab === 'report' }" @click="activeTab = 'report'">报表</button>
+      </nav>
+
+      <main class="workspace">
+        <header class="topbar">
+          <div>
+            <h1>地铁智能巡检中枢</h1>
+            <p>导航决策、运行安全与病害记录</p>
+          </div>
+          <div class="status-row">
+            <div class="status-chip" :title="backendTitle">
+              <span class="status-dot" :class="backendOnline ? 'online' : 'offline'"></span>
+              <span>{{ backendOnline ? '平台在线' : '平台离线' }}</span>
+            </div>
+            <div class="status-chip" :title="rosTitle">
+              <span class="status-dot" :class="rosOnline ? 'online' : 'offline'"></span>
+              <span>{{ rosOnline ? 'ROS 2 在线' : 'ROS 2 离线' }}</span>
+            </div>
+            <div class="status-chip strong">
+              <span class="status-dot" :class="stateDotClass"></span>
+              <span>{{ stateText }}</span>
+            </div>
+            <button class="button secondary" @click="generateReport">导出报告</button>
+          </div>
+        </header>
+
+        <div v-if="toast.message" class="toast" :class="toast.type" role="status">{{ toast.message }}</div>
+
+        <div v-show="activeTab === 'monitor'" class="monitor-grid">
+          <div class="primary-column">
+            <section class="camera-section">
+              <div class="section-heading camera-heading">
+                <div>
+                  <h2>训练场实时画面</h2>
+                  <p>岔轨导航测试 · 相机来自当前仿真小车</p>
+                </div>
+                <span class="camera-count" :class="{ complete: onlineCameraCount === cameras.length }">
+                  {{ onlineCameraCount }} / {{ cameras.length }} 在线
+                </span>
+              </div>
+              <div class="camera-grid">
+                <button
+                  v-for="camera in cameras"
+                  :key="camera.id"
+                  type="button"
+                  class="camera-tile"
+                  :class="{ selected: selectedCamera === camera.id, unavailable: !cameraAvailable(camera.id) }"
+                  :aria-label="'选择' + camera.label"
+                  :aria-pressed="selectedCamera === camera.id"
+                  @click="selectCamera(camera.id)"
+                >
+                  <img v-if="cameraAvailable(camera.id)" :src="cameraStreamUrl(camera.id)" :alt="camera.label + '实时画面'">
+                  <div v-else class="camera-empty">
+                    <strong>等待画面</strong>
+                    <span>{{ camera.label }}</span>
+                  </div>
+                  <div v-if="cameraBBox(camera.id)" class="detection-box" :style="cameraBBox(camera.id).style">
+                    <span>{{ cameraBBox(camera.id).label }}</span>
+                  </div>
+                  <div class="camera-tile-footer">
+                    <span class="camera-status-dot" :class="{ online: cameraAvailable(camera.id) }"></span>
+                    <strong>{{ camera.label }}</strong>
+                    <small>{{ cameraAvailable(camera.id) ? 'LIVE' : '离线' }}</small>
+                  </div>
+                </button>
+              </div>
+            </section>
+
+            <section class="navigation-section">
+              <div class="section-heading">
+                <div>
+                  <h2>巡检路线决策</h2>
+                  <p>{{ navigation.message || '等待任务' }}</p>
+                </div>
+                <span class="world-label">{{ options.world || '路线配置加载中' }}</span>
+              </div>
+
+              <div class="mode-control" role="group" aria-label="导航模式">
+                <button v-for="mode in options.modes" :key="mode.id" :class="{ active: selectedMode === mode.id }" @click="selectedMode = mode.id" :disabled="taskLocked">{{ mode.label }}</button>
+              </div>
+
+              <div v-if="selectedMode === 'destination'" class="destination-row">
+                <label for="destination-select">最终目的地</label>
+                <select id="destination-select" v-model="selectedDestination" class="select" :disabled="taskLocked">
+                  <option v-for="destination in options.destinations" :key="destination.id" :value="destination.id">{{ destination.label }}</option>
+                </select>
+              </div>
+
+              <div v-if="navigation.state === 'waiting_choice'" class="junction-prompt">
+                <div>
+                  <strong>已到达岔路口</strong>
+                  <span>请选择本次前进方向</span>
+                </div>
+                <div class="choice-buttons">
+                  <button v-for="choice in options.junction.choices" :key="choice.id" class="button choice" @click="chooseJunction(choice.id)">{{ choice.label }}</button>
+                </div>
+              </div>
+
+              <div class="progress-block">
+                <div class="progress-labels">
+                  <span>{{ navigation.label || '尚未选择路线' }}</span>
+                  <strong>{{ formatNumber(navigation.progress_percent, 1) }}%</strong>
+                </div>
+                <div class="progress-track"><span :style="{ width: progressWidth }"></span></div>
+              </div>
+
+              <div class="telemetry-grid">
+                <div><span>当前位置 X</span><strong>{{ formatMetric(odom.pose.x, 'm') }}</strong></div>
+                <div><span>当前位置 Y</span><strong>{{ formatMetric(odom.pose.y, 'm') }}</strong></div>
+                <div><span>累计里程</span><strong>{{ formatMetric(odom.mileage_m, 'm') }}</strong></div>
+                <div><span>线速度</span><strong>{{ formatMetric(odom.velocity.linear, 'm/s') }}</strong></div>
+                <div><span>剩余距离</span><strong>{{ formatMetric(navigation.distance_remaining_m, 'm') }}</strong></div>
+                <div><span>剩余路径点</span><strong>{{ navigation.poses_remaining ?? '--' }}</strong></div>
+              </div>
+
+              <div class="command-bar">
+                <button class="button primary" @click="startNavigation" :disabled="!canStart">启动巡检</button>
+                <button v-if="navigation.can_resume" class="button primary" @click="sendCommand('resume')">继续</button>
+                <button class="button warning" @click="sendCommand('pause')" :disabled="!navigation.can_pause">暂停</button>
+                <button class="button secondary" @click="sendCommand('cancel')" :disabled="!navigation.can_cancel">取消</button>
+                <button class="button danger" @click="sendCommand('estop')" :disabled="safety.estop_active">紧急制动</button>
+                <button v-if="safety.estop_active" class="button reset" @click="sendCommand('reset')">急停复位</button>
+              </div>
+              <p v-if="safety.estop_active" class="safety-message">{{ safety.message }}。复位只恢复安全许可，不会自动继续运动。</p>
+            </section>
+          </div>
+
+          <aside class="defect-section">
+            <div class="section-heading">
+              <div>
+                <h2>病害检测记录</h2>
+                <p>检测节点真实上报，共 {{ defectList.length }} 条</p>
+              </div>
+            </div>
+            <div v-if="defectList.length" class="defect-list">
+              <article v-for="item in defectList" :key="item.id" class="defect-item">
+                <img v-if="item.camera_name" :src="cameraSnapshotUrl(item.camera_name, item.id)" :alt="item.type + '抓拍'">
+                <div class="defect-image-empty" v-else>无抓拍</div>
+                <div class="defect-content">
+                  <div class="defect-title"><strong>{{ item.type }}</strong><span :class="levelClass(item.level)">{{ item.level }}</span></div>
+                  <dl>
+                    <dt>里程</dt><dd>{{ item.mileage }}</dd>
+                    <dt>环号</dt><dd>第 {{ item.ring_number }} 环</dd>
+                    <dt>方位</dt><dd>{{ item.clock_position }} 点钟</dd>
+                    <dt>坐标</dt><dd>{{ positionText(item.position) }}</dd>
+                  </dl>
+                  <small>{{ formatTime(item.created_at) }}<template v-if="item.confidence !== null"> · 置信度 {{ formatNumber(item.confidence * 100, 1) }}%</template></small>
+                </div>
+              </article>
+            </div>
+            <div v-else class="empty-records">
+              <strong>暂无真实病害记录</strong>
+              <span>检测节点可通过受保护的 /api/defects 接口写入结果</span>
+            </div>
+          </aside>
+        </div>
+
+        <div v-show="activeTab === 'report'" class="report-view">
+          <div class="report-actions">
+            <div><h2>本次巡检数据报告</h2><p>统计内容只来自检测节点真实上报</p></div>
+            <button class="button primary" @click="generateReport">打印或导出 PDF</button>
+          </div>
+          <div class="summary-grid">
+            <div><span>病害总数</span><strong>{{ reportStats.total }}</strong></div>
+            <div><span>I级 轻微</span><strong>{{ reportStats.level1 }}</strong></div>
+            <div><span>II级 中度</span><strong>{{ reportStats.level2 }}</strong></div>
+            <div class="critical"><span>III级 严重</span><strong>{{ reportStats.level3 }}</strong></div>
+          </div>
+          <div class="report-charts">
+            <section><h3>病害等级分布</h3><div id="levelChart" class="chart"></div></section>
+            <section><h3>病害类型分布</h3><div id="typeChart" class="chart"></div></section>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <div id="print-report">
+      <header><h1>多领域病害综合智能巡检报告</h1><p>生成时间：{{ new Date().toLocaleString('zh-CN') }}</p></header>
+      <table>
+        <thead><tr><th>序号</th><th>病害类型/等级</th><th>里程与位置</th><th>三维坐标</th><th>置信度</th></tr></thead>
+        <tbody>
+          <tr v-for="(item, index) in defectList" :key="item.id">
+            <td>{{ index + 1 }}</td><td>{{ item.type }}<br>{{ item.level }}</td>
+            <td>{{ item.mileage }} / 第 {{ item.ring_number }} 环 / {{ item.clock_position }} 点钟</td>
+            <td>{{ positionText(item.position) }}</td><td>{{ item.confidence === null ? '--' : formatNumber(item.confidence * 100, 1) + '%' }}</td>
+          </tr>
+          <tr v-if="!defectList.length"><td colspan="5">本次巡检暂无病害记录。</td></tr>
+        </tbody>
+      </table>
+      <footer><span>系统判定确认：________________</span><span>人工复核签字：________________</span></footer>
+    </div>
+  </div>
+  <script src="./assets/dashboard.js"></script>
+</body>
+</html>

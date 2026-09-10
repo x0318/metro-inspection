@@ -1,6 +1,7 @@
 """Configuration and owned process groups for the desktop application."""
 
 import json
+import importlib.util
 import os
 from pathlib import Path
 import signal
@@ -9,6 +10,18 @@ import subprocess
 import time
 from dataclasses import asdict, dataclass, fields
 from datetime import datetime
+from urllib.request import urlopen
+
+
+def dashboard_is_online(url):
+    """Only reuse a port when it answers as this dashboard service."""
+    try:
+        with urlopen(url.rstrip("/") + "/api/health", timeout=0.8) as response:
+            data = json.load(response)
+        return (isinstance(data, dict) and data.get("service") == "metro_dashboard_bridge"
+                and data.get("status") == "online")
+    except (OSError, ValueError):
+        return False
 
 
 @dataclass
@@ -16,6 +29,7 @@ class DesktopOptions:
     model_path: str = ""
     detection: bool = True
     localization: bool = True
+    model_demo: bool = False
     gazebo_gui: bool = False
     rviz: bool = False
     port: int = 8088
@@ -31,7 +45,7 @@ class DesktopOptions:
             raise ValueError("HTTP and Gazebo ports must be different")
         if type(self.domain) is not int or not 0 <= self.domain <= 101:
             raise ValueError("ROS domain must be between 0 and 101")
-        for name in ("detection", "localization", "gazebo_gui", "rviz"):
+        for name in ("detection", "localization", "model_demo", "gazebo_gui", "rviz"):
             if type(getattr(self, name)) is not bool:
                 raise ValueError(f"{name}: expected a boolean")
         if not isinstance(self.model_path, str):
@@ -76,7 +90,12 @@ def preflight(project: Path, options: DesktopOptions):
         project
         / "ros_ws/src/metro_sim/models/subway_tunnel_v2/meshes/subway_tunnel_v2.dae",
     ]
-    if options.detection:
+    if options.model_demo:
+        missing_modules = [name for name in ("collada", "trimesh", "embreex")
+                           if importlib.util.find_spec(name) is None]
+        if missing_modules:
+            raise ValueError("模型演示缺少依赖，请运行：python3 -m pip install --user pycollada 'trimesh>=4.5,<5' embreex")
+    if options.detection and not options.model_demo:
         required.extend(
             [
                 Path(options.model_path).expanduser()
@@ -130,6 +149,7 @@ def backend_command(project: Path, options: DesktopOptions):
         f"rviz:={flag(options.rviz)}",
         f"detection:={flag(options.detection)}",
         f"localization:={flag(options.localization)}",
+        f"model_demo:={flag(options.model_demo)}",
         f"yolo_model_path:={Path(options.model_path).expanduser()}",
         f"dashboard_port:={options.port}",
         f"ros_domain_id:={options.domain}",
@@ -193,6 +213,27 @@ class OwnedProcess:
             return ""
         return self._reader.read(65536).decode("utf-8", errors="replace")
 
+    def record_diagnostic(self, event, **details):
+        """Keep desktop decisions alongside the subprocess log."""
+        if self.log_path is None:
+            return
+        record = {"timestamp": datetime.now().isoformat(), "event": event, **details}
+        try:
+            memory = {}
+            for line in Path("/proc/meminfo").read_text().splitlines():
+                key, value = line.split(":", 1)
+                if key in {"MemTotal", "MemAvailable", "SwapTotal", "SwapFree"}:
+                    memory[key] = int(value.split()[0])
+            record["memory_kib"] = memory
+        except (OSError, ValueError):
+            pass
+        try:
+            with self.log_path.with_suffix(".diagnostics.jsonl").open("a", encoding="utf-8") as stream:
+                stream.write(json.dumps(record, ensure_ascii=False) + "\n")
+        except OSError:
+            # Diagnostics must not take down the interface if the disk is full.
+            pass
+
     def _signal(self, number):
         if self.process is not None:
             try:
@@ -255,6 +296,7 @@ class OwnedProcess:
                 "simulation": "Gazebo 仿真",
                 "localization": "三维定位",
                 "dashboard": "平台数据服务",
+                "model_annotation": "模型标注演示",
             }
             component = labels.get(status["component"], status["component"])
             return f"{component}进程已退出（退出码 {status['exit_code']}）。"

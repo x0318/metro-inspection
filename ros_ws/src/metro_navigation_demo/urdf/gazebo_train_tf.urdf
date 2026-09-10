@@ -139,22 +139,74 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <box size="0.18 0.10 0.10"/>
+        <box size="0.12 0.10 0.06"/>
       </geometry>
       <material name="black"/>
+    </visual>
+    <visual name="camera_lens_visual">
+      <origin xyz="0.064 0 0" rpy="0 1.5708 0"/>
+      <geometry>
+        <cylinder radius="0.018" length="0.012"/>
+      </geometry>
+      <material name="sensor_green"/>
     </visual>
   </link>
   <joint name="camera_joint" type="fixed">
     <parent link="base_link"/>
     <child link="camera_link"/>
-    <origin xyz="0.62 0 0.48" rpy="0 0 0"/>
+    <origin xyz="0.78 0 0.82" rpy="0 0.38 0"/>
   </joint>
 
   <link name="camera_lens_link"/>
   <joint name="camera_rgb_joint" type="fixed">
     <parent link="camera_link"/>
     <child link="camera_lens_link"/>
-    <origin xyz="0.10 0 0" rpy="0 0 0"/>
+    <origin xyz="0.06 0 0" rpy="0 0 0"/>
+  </joint>
+
+  <link name="left_side_camera_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.08 0.06 0.05"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+  </link>
+  <joint name="left_side_camera_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="left_side_camera_link"/>
+    <origin xyz="0.85 0.82 0.90" rpy="0 0.65 -0.20"/>
+  </joint>
+
+  <link name="right_side_camera_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.08 0.06 0.05"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+  </link>
+  <joint name="right_side_camera_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="right_side_camera_link"/>
+    <origin xyz="0.85 -0.82 0.90" rpy="0 0.65 0.20"/>
+  </joint>
+
+  <link name="ground_camera_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.08 0.06 0.05"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+  </link>
+  <joint name="ground_camera_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="ground_camera_link"/>
+    <origin xyz="1.10 0 1.05" rpy="0 1.05 0"/>
   </joint>
 
   <link name="imu_link"/>

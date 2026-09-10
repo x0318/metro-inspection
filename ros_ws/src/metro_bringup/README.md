@@ -29,7 +29,9 @@ ros2 launch metro_bringup inspection_platform.launch.py
 The dashboard is served at `http://127.0.0.1:8088` and opens in an embedded Qt
 window by default. The Qt window, browser mode, and dashboard backend all use
 the same ROS bridge and SQLite database. The default launch starts the full
-runtime stack but leaves the vehicle stopped until it receives a drive command:
+runtime stack but leaves the vehicle stopped until it receives a drive command.
+Every normal drive request passes through the Odin1 point-cloud collision
+monitor before reaching the existing command watchdog:
 
 ```text
 Gazebo sensors and odometry
@@ -37,7 +39,24 @@ Gazebo sensors and odometry
   -> Odin1 RGB YOLO + calibrated Odin1 point cloud
   -> 3D point + simulation chainage/ring semantics
   -> RViz + FastAPI/SQLite dashboard + Qt window
+
+/cmd_vel_raw
+  -> Odin1 front obstacle stop monitor
+  -> /cmd_vel_safe
+  -> command timeout / software e-stop watchdog
+  -> /cmd_vel_drive
 ```
+
+The front stop zone covers the vehicle's front half and full width, then extends
+about 2 m beyond its front edge. More than five Odin1 points between 0.12 m and
+1.80 m above
+`base_footprint` stop the vehicle. This height filter excludes the simulated
+drive surface and rail heads. The zone is published on
+`/safety/front_stop_zone` for RViz inspection. If the collision monitor exits,
+the complete platform shuts down; if its safe command stream disappears, the
+final watchdog continuously commands zero velocity. The main launch also makes
+fresh `/odin1/cloud_raw` data mandatory at the watchdog, so a missing or stale
+point-cloud stream cannot silently permit motion.
 
 The XJ1-XJ4 and Pitch streams remain the five visible monitor cameras. A sixth,
 localization-only Odin1 RGB stream is processed because it is the camera with a

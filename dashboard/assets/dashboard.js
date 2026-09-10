@@ -52,6 +52,10 @@ createApp({
       ...cameraCatalog,
       { id: 'odin1', label: 'Odin1（三维定位）' }
     ]);
+    const modelMode = computed(() => cameraStatuses.value.some(camera => camera.id.startsWith('model_')));
+    const modelCameraCatalog = eventCameraCatalog.map(camera => ({
+      id: `model_${camera.id}`, label: camera.id === 'odin1' ? 'Odin1' : camera.label
+    }));
     const cameras = Object.freeze([
       { id: 'all', label: '全部相机' },
       ...eventCameraCatalog
@@ -74,7 +78,9 @@ createApp({
     }
 
     const monitorCameras = computed(() => {
-      const catalog = activeView.value === 'yolo' ? yoloCameraCatalog : cameraCatalog;
+      const catalog = activeView.value === 'model' ? modelCameraCatalog
+        : activeView.value === 'yolo' ? yoloCameraCatalog
+        : modelMode.value ? eventCameraCatalog : cameraCatalog;
       return catalog.map(camera => {
       const status = cameraStatuses.value.find(item => item.id === camera.id);
       return {
@@ -154,8 +160,10 @@ createApp({
 
     const summary = computed(() => ({
       total: records.value.length,
-      localized: records.value.filter(item => item.has_3d_position).length,
-      semantic: records.value.filter(item => item.has_semantic_location).length,
+      reference: records.value.filter(item => item.source_kind === 'model_annotation' && item.has_3d_position).length,
+      referenceSemantic: records.value.filter(item => item.source_kind === 'model_annotation' && item.has_semantic_location).length,
+      localized: records.value.filter(item => item.has_3d_position && item.source_kind !== 'model_annotation').length,
+      semantic: records.value.filter(item => item.has_semantic_location && item.source_kind !== 'model_annotation').length,
       severe: records.value.filter(item => Number(item.severity) === 3).length,
       unknown: records.value.filter(item => Number(item.severity || 0) === 0).length
     }));
@@ -176,6 +184,7 @@ createApp({
       focusedCameraId.value = '';
       if (value === 'cameras') selectedMonitorCameraId.value = 'xj1';
       if (value === 'yolo') selectedMonitorCameraId.value = 'yolo_xj1';
+      if (value === 'model') selectedMonitorCameraId.value = 'model_odin1';
     });
 
     watch(records, () => {
@@ -281,6 +290,7 @@ createApp({
     }
 
     function stageText(item) {
+      if (item?.source_kind === 'model_annotation') return '模型标注演示';
       if (item?.has_semantic_location) return '工程定位完成';
       if (item?.has_3d_position) return '三维定位完成';
       return '二维识别';
@@ -291,7 +301,8 @@ createApp({
         none: '未定位',
         current_cloud: '当前点云',
         accumulated_map: '积累点云地图',
-        tunnel_model: '隧道模型求交'
+        tunnel_model: '隧道模型求交',
+        model_reference: '模型参考坐标（演示）'
       };
       return labels[item?.localization?.method_name] || item?.localization?.method_name || '--';
     }
@@ -401,7 +412,7 @@ createApp({
       refreshData();
       pollTimer = window.setInterval(refreshData, 2000);
       cameraFrameTimer = window.setInterval(() => {
-        if (!document.hidden && (activeView.value === 'cameras' || activeView.value === 'yolo')) {
+        if (!document.hidden && ['cameras', 'yolo', 'model'].includes(activeView.value)) {
           cameraFrameRevision.value = Date.now();
         }
       }, 500);
@@ -418,6 +429,7 @@ createApp({
     });
 
     return {
+      modelMode,
       activeView,
       records,
       sessions,

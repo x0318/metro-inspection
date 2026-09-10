@@ -76,7 +76,8 @@ def generate_launch_description():
             {
                 "use_sim_time": ParameterValue(
                     LaunchConfiguration("use_sim_time"), value_type=bool
-                )
+                ),
+                "command_topic": LaunchConfiguration("command_topic"),
             },
         ],
     )
@@ -100,6 +101,7 @@ def generate_launch_description():
             ),
             DeclareLaunchArgument("publish_events", default_value="true"),
             DeclareLaunchArgument("auto_drive", default_value="false"),
+            DeclareLaunchArgument("command_topic", default_value="/cmd_vel_safe"),
             RegisterEventHandler(
                 OnProcessExit(
                     target_action=detector,

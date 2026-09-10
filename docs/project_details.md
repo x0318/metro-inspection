@@ -1,7 +1,5 @@
 # Metro Inspection 项目详细说明
 
-> 文档基线：2026-09-09 当前工作副本。面向项目成员、部署人员及后续算法与硬件对接人员。本文说明已实现的流程和接口，历史实验结果单独引用，不将设计目标写成已验证指标。
-
 ## 目录
 
 1. [项目定位与实现范围](#1-项目定位与实现范围)
@@ -26,7 +24,7 @@ Metro Inspection 面向地铁隧道、轨道及附属结构巡检，将车辆仿
 | 场景 | 内容 | 与完整平台的关系 |
 | --- | --- | --- |
 | 巡检平台 | 全传感器仿真、六路 YOLO、Odin1 三维定位、事件数据库、Qt/Web | 主入口默认流程 |
-| 点云建图 | 无 RGB 相机的轻量仿真、ICP、EKF、RTAB-Map、优化点云保存 | 独立启动，不由主入口自动加载 |
+| 导航与停车演示 | 旧 `gazebo_train` 模型、Nav2、障碍守卫、watchdog | 独立实验，不等同于 V6 车辆已完 |
 | 导航与停车演示 | 旧 `gazebo_train` 模型、Nav2、障碍守卫、watchdog | 独立实验，不等同于 V6 车辆已完成自主巡检 |
 
 目前可展示图像与病害结果、保存事件、查看历史并打印报告；尚未实现网页任务下发、网页导航控制、病害截图归档或生产级病害等级评定。真机驱动、传感器实测标定与长期稳定性还需要独立验收。
@@ -57,8 +55,6 @@ flowchart TD
     API --> UI[Qt / Web 平台]
 ```
 
-`/localized/defect_events` 与 `/simulation/defect_events` 来源不同。桥接节点订阅所配置的一个事件话题，不会默认把两者混合。前者由当前帧点云定位产生；后者是参考位置辅助的仿真评估结果。
-
 ### 2.2 模块职责与源码入口
 
 | 模块 | 职责 | 主要入口 |
@@ -74,8 +70,6 @@ flowchart TD
 | `metro_dashboard_bridge` | ROS 事件与压缩图像订阅、SQLite、HTTP、桌面运行管理 | [main.py](../ros_ws/src/metro_dashboard_bridge/metro_dashboard_bridge/main.py)、[desktop_app.py](../ros_ws/src/metro_dashboard_bridge/metro_dashboard_bridge/desktop_app.py) |
 | `dashboard` | 相机、病害、历史、统计和打印页面 | [index.html](../dashboard/index.html)、[dashboard.js](../dashboard/assets/dashboard.js) |
 
-`metro_mapping` 是多个 ROS 包的父目录；`metro_sim` 是源码资源目录，目前不是独立 colcon 包。根目录 `configs/`、`samples/` 和 `hardware/` 不能替代各模块已有配置与运行模型。
-
 ## 3. 车辆模型与传感器
 
 ### 3.1 车辆与轨道
@@ -84,7 +78,7 @@ flowchart TD
 
 四个车轮使用 `libgazebo_ros_diff_drive.so` 驱动，车辆通过轮轨接触前进；当前 V2 模型不使用旧的 `planar_move` 位姿驱动。底盘正前方为 `base_footprint` 的 `+X`，正 `linear.x` 对应前进。
 
-Pitch 关节范围为 `-15°` 至 `+45°`，默认启动角为 `+45°`，此时光轴朝前上方约 `30°`。角度指令与光轴仰角不是同一概念，`-15°` 对应朝向拱顶。Yaw 保持锁定。相机外参中仍包含仿真可见性修正，后续真机必须使用实测标定。
+Pitch 关节范围为 `-15°` 至 `+45°`，默认启动角为 `+45°`，此时光轴朝前上方约 `30°`。角度指令与光轴仰角不是同一概念，`-15°` 对应朝向拱顶。Yaw 保持锁定。
 
 ### 3.2 相机与点云接口
 
@@ -97,10 +91,6 @@ Pitch 关节范围为 `-15°` 至 `+45°`，默认启动角为 `+45°`，此时�
 | Odin1 点云 | `/odin1/cloud_raw` | 病害定位和独立建图 |
 | Odin1 IMU | `/odin1/imu` | 本地里程计融合 |
 | 轮式里程计 | `/wheel/odom_raw` | EKF 输入、仿真覆盖位置与行驶状态 |
-
-原始图像为 `sensor_msgs/msg/Image`，平台订阅对应的 `image_raw/compressed`，类型为 `sensor_msgs/msg/CompressedImage`。点云、IMU 和里程计分别为 `PointCloud2`、`Imu` 和 `Odometry`。
-
-检测端 Pitch 的逻辑名为 `pitch`，平台原图 ID 为 `pitch_camera`，其带框画面 ID 为 `yolo_pitch_camera`。Odin1 事件可能出现在病害列表，但 Odin1 画面不属于平台默认五路监控布局。
 
 ## 4. 二维病害检测与覆盖评估
 
@@ -127,20 +117,19 @@ Pitch 关节范围为 `-15°` 至 `+45°`，默认启动角为 `+45°`，此时�
 
 ### 4.2 类别约定与模型边界
 
-| 中文类别 | ROS 稳定标识 |
+| 中文类别 | 拼音显示标签 |
 | --- | --- |
-| 裂缝 | `crack` |
-| 渗漏水 | `water_leakage` |
-| 管片破损掉块 | `segment_damage` |
-| 扣件断裂 | `fastener_broken` |
-| 扣件缺失 | `fastener_missing` |
-| 扣件松动歪斜 | `fastener_loose` |
-| 管线支架松脱 | `bracket_loose` |
-| 异物入侵 | `foreign_object` |
+| 裂缝 | `liefeng` |
+| 渗漏水 | `shenloushui` |
+| 管片破损掉块 | `guanpianposundiaokuai` |
+| 扣件断裂 | `koujianduanlie` |
+| 扣件缺失 | `koujianqueshi` |
+| 扣件松动歪斜 | `koujiansongdongwaixie` |
+| 管线支架松脱 | `guanxianzhijiasongtuo` |
+| 异物入侵 | `yiwuruqin` |
 
-这八类是接口归一化规则，实际可检类别由加载权重的训练内容决定。ROS 消息保留英文标识，带框图片使用 ASCII 拼音标签，平台提供中文显示。显示用拼音不应进入下游事件类别。
+以上拼音用于带框图像的类别显示；ROS 消息中的类别仍使用英文稳定标识。
 
-权重不随仓库分发；部分脚本保留开发机默认路径 `/home/jo/incoming/yolov8n_sim_demo_best(1).pt`，部署时必须显式选择本机文件。`yolov8` 文件名是现有流程命名，不能仅凭命名判断实际权重架构或检测效果。
 
 ### 4.3 十处参考病害覆盖评估
 
@@ -468,7 +457,7 @@ YOLO 脚本还支持 `METRO_YOLO_MODEL_PATH`、`METRO_YOLO_DEVICE`、`METRO_YOLO
 
 ## 10. 导航与速度控制边界
 
-独立 Nav2 演示使用如下链路：
+已废弃的旧 Nav2 演示使用如下链路（相关守卫组件仍保留）：
 
 ```text
 Nav2 /cmd_vel
@@ -483,15 +472,20 @@ Nav2 /cmd_vel
 
 完整 V2 传感器与建图脚本实际启动的是 `/cmd_vel_safe -> watchdog -> /cmd_vel_drive`，没有自动接入 Nav2 和前向障碍守卫。覆盖行驶器直接发布 `/cmd_vel_safe`。因此完整平台中的 watchdog 不能被描述成已经具备独立 Nav2 演示的全部障碍防护。
 
-安装并运行独立导航实验：
+运行当前岔轨导航测试平台：
 
 ```bash
 # 仓库根目录；先停止其他仿真
 sudo apt install ros-humble-navigation2 ros-humble-nav2-bringup
-bash ros_ws/src/metro_sim/scripts/open_nav2_demo.sh
+bash scripts/open_route_choice_platform.sh
 ```
 
-导航脚本的 ROS domain 和 Gazebo master 不应直接套用完整平台的默认值；诊断终端应与实际导航进程环境一致。硬件接入需提供最终速度指令适配、真实轮速与传感器、固件通信超时、制动和硬件急停。名称含 `production` 的配置只是候选参数，不能证明真机安全性能已经完成验收。
+当前平台默认网页端口为 8090、ROS domain 为 74、Gazebo master 端口为 11374，
+使用 `metro_navigation_demo` 中的岔轨世界和简易小车。速度链为
+`/cmd_vel -> watchdog -> /cmd_vel_drive`，未启用旧演示的障碍守卫。
+旧导航入口、旧世界和旧车模型已删除。诊断终端应与实际导航进程环境一致。
+硬件接入需提供最终速度指令适配、真实轮速与传感器、固件通信超时、制动和硬件急停。
+名称含 `production` 的配置只是候选参数，不能证明真机安全性能已经完成验收。
 
 ## 11. 验证与故障排查
 

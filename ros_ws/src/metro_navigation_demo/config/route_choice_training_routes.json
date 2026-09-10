@@ -1,0 +1,44 @@
+{
+  "world": "route_choice_training",
+  "frame_id": "odom",
+  "routes": {
+    "straight": {
+      "label": "沿主轨直行",
+      "waypoints": [
+        {"x": -7.0, "y": 0.0, "yaw": 0.0},
+        {"x": -3.0, "y": 0.0, "yaw": 0.0},
+        {"x": 2.0, "y": 0.0, "yaw": 0.0},
+        {"x": 7.0, "y": 0.0, "yaw": 0.0},
+        {"x": 12.0, "y": 0.0, "yaw": 0.0}
+      ]
+    },
+    "branch": {
+      "label": "进入唯一分叉",
+      "waypoints": [
+        {"x": -7.0, "y": 0.0, "yaw": 0.0},
+        {"x": -4.0, "y": 0.0, "yaw": 0.0},
+        {"x": -1.76, "y": 0.35, "yaw": 0.32},
+        {"x": 0.44, "y": 1.31, "yaw": 0.46},
+        {"x": 2.54, "y": 3.02, "yaw": 0.64},
+        {"x": 4.5, "y": 4.5, "yaw": 0.785398},
+        {"x": 8.0, "y": 8.0, "yaw": 0.785398},
+        {"x": 11.0, "y": 11.0, "yaw": 0.785398}
+      ]
+    }
+  },
+  "destinations": {
+    "main_end": {"label": "主轨终点", "route": "straight"},
+    "branch_end": {"label": "分叉终点", "route": "branch"}
+  },
+  "junction": {
+    "label": "训练场单岔路口",
+    "common_waypoints": [
+      {"x": -7.0, "y": 0.0, "yaw": 0.0},
+      {"x": -3.0, "y": 0.0, "yaw": 0.0}
+    ],
+    "choices": {
+      "straight": {"label": "沿主轨直行", "route": "straight", "start_index": 2},
+      "branch": {"label": "进入唯一分叉", "route": "branch", "start_index": 2}
+    }
+  }
+}

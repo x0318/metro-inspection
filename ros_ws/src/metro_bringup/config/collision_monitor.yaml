@@ -1,0 +1,37 @@
+collision_monitor:
+  ros__parameters:
+    use_sim_time: true
+    base_frame_id: base_footprint
+    odom_frame_id: odom
+
+    # Drive sources publish requests here. Only obstacle-checked commands may
+    # enter /cmd_vel_safe and the final command watchdog.
+    cmd_vel_in_topic: /cmd_vel_raw
+    cmd_vel_out_topic: /cmd_vel_safe
+
+    transform_tolerance: 0.2
+    source_timeout: 1.0
+    base_shift_correction: true
+    stop_pub_timeout: 2.0
+
+    polygons: [FrontStop]
+    FrontStop:
+      type: polygon
+      # The runtime V6 envelope is approximately 1.40 x 1.43 m. The zone
+      # covers its front half and extends about 2 m beyond the front edge.
+      points: [2.65, 0.80, 2.65, -0.80, 0.00, -0.80, 0.00, 0.80]
+      action_type: stop
+      max_points: 5
+      visualize: true
+      polygon_pub_topic: /safety/front_stop_zone
+      enabled: true
+
+    observation_sources: [odin1_pointcloud]
+    odin1_pointcloud:
+      type: pointcloud
+      topic: /odin1/cloud_raw
+      # The simulated rail head is about 5 cm above base_footprint. Exclude it
+      # and the drive surface while retaining person-sized obstacles.
+      min_height: 0.12
+      max_height: 1.80
+      enabled: true

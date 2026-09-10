@@ -21,6 +21,9 @@ from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 
+COLLISION_MONITOR_INPUT_TOPIC = "/cmd_vel_raw"
+
+
 def _default_project_dir() -> str:
     configured = os.environ.get("METRO_INSPECTION_PROJECT_DIR", "").strip()
     if configured:
@@ -77,6 +80,9 @@ def _launch_platform(context):
     simulation_script = (
         project_dir / "ros_ws/src/metro_sim/scripts/open_subway_tunnel_v2_sensors.sh"
     )
+    collision_monitor_config = (
+        project_dir / "ros_ws/src/metro_bringup/config/collision_monitor.yaml"
+    )
     yolo_script = project_dir / "scripts/open_yolo_coverage.sh"
     dashboard_dir = project_dir / "dashboard"
     localization_config = (
@@ -84,7 +90,8 @@ def _launch_platform(context):
         / "ros_ws/src/metro_mapping/metro_localization/config/localization.yaml"
     )
 
-    detection_enabled = _as_bool(
+    model_demo = _as_bool(LaunchConfiguration("model_demo").perform(context), "model_demo")
+    detection_enabled = not model_demo and _as_bool(
         LaunchConfiguration("detection").perform(context), "detection"
     )
     configured_rviz = LaunchConfiguration("rviz_config").perform(context).strip()
@@ -99,7 +106,8 @@ def _launch_platform(context):
     database_path = (
         Path(configured_database).expanduser().resolve()
         if configured_database
-        else Path.home() / ".local/share/metro-inspection/defects.sqlite3"
+        else Path.home() / ".local/share/metro-inspection" / (
+            "model-demo.sqlite3" if model_demo else "defects.sqlite3")
     )
 
     gui = _as_bool(LaunchConfiguration("gui").perform(context), "gui")
@@ -120,7 +128,10 @@ def _launch_platform(context):
     if qt_enabled and not dashboard_enabled:
         raise ValueError("qt:=true requires dashboard:=true")
 
-    required_paths = {"simulation script": simulation_script}
+    required_paths = {
+        "simulation script": simulation_script,
+        "collision monitor configuration": collision_monitor_config,
+    }
     if dashboard_enabled:
         required_paths["dashboard directory"] = dashboard_dir
     if rviz_enabled:
@@ -156,7 +167,7 @@ def _launch_platform(context):
     configured_defect_topic = (
         LaunchConfiguration("defect_topic").perform(context).strip()
     )
-    defect_topic = configured_defect_topic or (
+    defect_topic = "/model_annotation/defect_events" if model_demo else configured_defect_topic or (
         "/localized/defect_events"
         if localization_enabled
         else "/simulation/defect_events"
@@ -166,11 +177,35 @@ def _launch_platform(context):
         cmd=[str(simulation_script), f"gui:={'true' if gui else 'false'}"],
         output="screen",
         additional_env={
-            "SUBWAY_V2_INITIAL_PITCH_DEG": LaunchConfiguration("initial_pitch_deg")
+            "SUBWAY_V2_INITIAL_PITCH_DEG": LaunchConfiguration("initial_pitch_deg"),
+            "METRO_REQUIRED_DRIVE_SENSOR_TOPIC": "/odin1/cloud_raw",
+            "METRO_REQUIRED_DRIVE_SENSOR_TIMEOUT": "1.0",
         },
         # Gazebo Classic may use 15 seconds to stop its server cleanly.
         sigterm_timeout="25.0",
         sigkill_timeout="5.0",
+    )
+    collision_monitor = Node(
+        package="nav2_collision_monitor",
+        executable="collision_monitor",
+        name="collision_monitor",
+        output="screen",
+        emulate_tty=True,
+        parameters=[str(collision_monitor_config), {"use_sim_time": True}],
+    )
+    collision_monitor_lifecycle_manager = Node(
+        package="nav2_lifecycle_manager",
+        executable="lifecycle_manager",
+        name="collision_monitor_lifecycle_manager",
+        output="screen",
+        emulate_tty=True,
+        parameters=[
+            {
+                "use_sim_time": True,
+                "autostart": True,
+                "node_names": ["collision_monitor"],
+            }
+        ],
     )
     actions = [
         SetEnvironmentVariable("ROS_DOMAIN_ID", LaunchConfiguration("ros_domain_id")),
@@ -184,12 +219,29 @@ def _launch_platform(context):
                 on_exit=_shutdown_after_exit("simulation"),
             )
         ),
+        RegisterEventHandler(
+            OnProcessExit(
+                target_action=collision_monitor,
+                on_exit=_shutdown_after_exit("collision monitor"),
+            )
+        ),
+        RegisterEventHandler(
+            OnProcessExit(
+                target_action=collision_monitor_lifecycle_manager,
+                on_exit=_shutdown_after_exit("collision monitor lifecycle manager"),
+            )
+        ),
         simulation,
+        collision_monitor,
+        collision_monitor_lifecycle_manager,
     ]
 
     if detection_enabled:
         detection = ExecuteProcess(
-            cmd=[str(yolo_script)],
+            cmd=[
+                str(yolo_script),
+                f"command_topic:={COLLISION_MONITOR_INPUT_TOPIC}",
+            ],
             output="screen",
             additional_env={
                 "METRO_YOLO_MODEL_PATH": str(yolo_model_path),
@@ -248,6 +300,22 @@ def _launch_platform(context):
             ]
         )
 
+    if model_demo:
+        annotation = Node(
+            package="metro_localization", executable="model_annotation",
+            name="model_annotation", output="screen",
+            parameters=[{
+                "use_sim_time": True,
+                "mesh_path": str(project_dir / "ros_ws/src/metro_sim/models/subway_tunnel_v2/meshes/subway_tunnel_v2.dae"),
+                "event_topic": defect_topic,
+            }],
+        )
+        actions.extend([
+            RegisterEventHandler(OnProcessExit(target_action=annotation,
+                on_exit=_shutdown_after_exit("model_annotation"))),
+            annotation,
+        ])
+
     if rviz_enabled:
         actions.append(
             Node(
@@ -265,7 +333,7 @@ def _launch_platform(context):
             LaunchConfiguration("inspection_session_id").perform(context).strip()
         )
         inspection_session_id = configured_session_id or datetime.now().strftime(
-            "simulation-%Y%m%d-%H%M%S"
+            "model-demo-%Y%m%d-%H%M%S" if model_demo else "simulation-%Y%m%d-%H%M%S"
         )
         dashboard_bridge = Node(
             package="metro_dashboard_bridge",
@@ -284,6 +352,7 @@ def _launch_platform(context):
                     "defect_topic": defect_topic,
                     "database_path": str(database_path),
                     "inspection_session_id": inspection_session_id,
+                    "model_demo": model_demo,
                 }
             ],
         )
@@ -370,6 +439,10 @@ def generate_launch_description():
                 "detection",
                 default_value="true",
                 description="Start five-camera YOLO and use its RViz configuration.",
+            ),
+            DeclareLaunchArgument(
+                "model_demo", default_value="false",
+                description="Project known model regions instead of running YOLO; separate demo records.",
             ),
             DeclareLaunchArgument(
                 "yolo_model_path",

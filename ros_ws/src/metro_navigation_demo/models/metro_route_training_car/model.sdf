@@ -23,14 +23,7 @@
           <izz>0.6</izz>
         </inertia>
       </inertial>
-      <!--
-        修改前：
-        <mesh>
-          <scale>0.001 0.001 0.001</scale>
-          <uri>model://gazebo_train/meshes/waffle_custom_base.stl</uri>
-        </mesh>
-        修改后：用简单盒子做碰撞体，避免复杂 STL mesh 和地面接触时导致 Gazebo 抖动。
-      -->
+      <!-- Box collision keeps chassis contact stable without external meshes. -->
       <collision name='base_footprint_fixed_joint_lump__base_link_collision'>
         <pose>0 0 0 0 0 0</pose>
         <geometry>
@@ -39,10 +32,7 @@
           </box>
         </geometry>
       </collision>
-      <!--
-        修改前：可视外观使用 waffle_custom_base.stl，车壳方向容易和实际运动方向混淆。
-        修改后：可视外观改成与调试 URDF 一致的简化车体，方便判断 base_link +X 前进方向。
-      -->
+      <!-- The simple body matches the TF model and marks forward along +X. -->
       <visual name='base_footprint_fixed_joint_lump__base_link_visual'>
         <pose>0 0 0 0 0 0</pose>
         <geometry>
@@ -86,10 +76,10 @@
         修改后：绿色前向标记表示 base_link 的 +X 方向，也是 Nav2/cmd_vel 的前进方向。
       -->
       <visual name='front_marker_visual'>
-        <pose>0.62 0 0.16 0 0 0</pose>
+        <pose>0.34 0 -0.08 0 0 0</pose>
         <geometry>
           <box>
-            <size>0.10 1.05 0.08</size>
+            <size>0.08 0.28 0.03</size>
           </box>
         </geometry>
         <material>
@@ -151,6 +141,8 @@
     </joint>
 
     <link name="camera_link">
+      <!-- Positive pitch looks down along the forward track in Gazebo Classic. -->
+      <pose relative_to="base_link">0.78 0 0.82 0 0.38 0</pose>
       <inertial>
         <pose> 0 0 0 0 0 0</pose>
         <inertia>
@@ -163,31 +155,32 @@
         </inertia>
         <mass>0.001</mass>
       </inertial>
-      <visual name="camera_visual">
-        <pose> 0 -0.6 0.57 0 0 0</pose>
-        <geometry>
-          <mesh>
-            <uri>model://gazebo_train/meshes/webcam.stl</uri>
-            <scale>0.0006 0.0006 0.0006</scale>
-          </mesh>
-        </geometry>
+      <visual name="camera_housing">
+        <geometry><box><size>0.12 0.10 0.06</size></box></geometry>
         <material>
-          <script>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-            <name>Gazebo/DarkGrey</name>
-          </script>
+          <ambient>0.025 0.030 0.035 1</ambient>
+          <diffuse>0.060 0.075 0.090 1</diffuse>
+        </material>
+      </visual>
+      <visual name="camera_lens_visual">
+        <pose>0.064 0 0 0 1.5708 0</pose>
+        <geometry><cylinder><radius>0.018</radius><length>0.012</length></cylinder></geometry>
+        <material>
+          <ambient>0.02 0.10 0.20 1</ambient>
+          <diffuse>0.04 0.24 0.48 1</diffuse>
         </material>
       </visual>
     </link>
 
     <link name="camera_lens_link">
+      <pose relative_to="camera_link">0.06 0 0 0 0 0</pose>
       <sensor name="zed2i_depth" type="depth">
         <always_on>1</always_on>
         <visualize>0</visualize>
         <update_rate>10</update_rate>
-        <pose>0.022 -0.8 0.99 0 0 -1.571</pose>
+        <pose>0 0 0 0 0 0</pose>
         <camera name="realsense_depth_camera">
-          <horizontal_fov>1.02974</horizontal_fov>
+          <horizontal_fov>1.15</horizontal_fov>
           <image>
             <width>1920</width>  <!-- 640 -->
             <height>1080</height>  <!-- 380 -->
@@ -199,7 +192,7 @@
           <noise>
             <type>gaussian</type>
             <mean>0.0</mean>
-            <stddev>0.05</stddev>
+            <stddev>0.002</stddev>
           </noise>
         </camera>
 	  <plugin name="zed2i_depth_driver" filename="libgazebo_ros_camera.so">
@@ -217,14 +210,176 @@
     <joint name="camera_joint" type="fixed">
       <parent>base_link</parent>
       <child>camera_link</child>
-      <pose>0 -0.5 0.53 0 0 0</pose>
     </joint>
 
     <joint name="camera_rgb_joint" type="fixed">
       <parent>camera_link</parent>
       <child>camera_lens_link</child>
-      <pose>0 -0.5 0.53 0 0 0</pose>
     </joint>
+
+    <!--
+      The existing zed2i_depth sensor is the top/front camera. These three
+      additional RGB sensors complete the four-view inspection setup:
+      left side, right side, and straight down at the track.
+    -->
+    <joint name="left_side_camera_joint" type="fixed">
+      <parent>base_link</parent>
+      <child>left_side_camera_link</child>
+    </joint>
+    <link name="left_side_camera_link">
+      <!-- Oblique view from the left, aimed forward and toward the near rail. -->
+      <pose relative_to="base_link">0.85 0.82 0.90 0 0.65 -0.20</pose>
+      <inertial>
+        <mass>0.01</mass>
+        <inertia>
+          <ixx>0.00001</ixx><ixy>0</ixy><ixz>0</ixz>
+          <iyy>0.00001</iyy><iyz>0</iyz><izz>0.00001</izz>
+        </inertia>
+      </inertial>
+      <visual name="camera_housing">
+        <geometry><box><size>0.080 0.060 0.050</size></box></geometry>
+        <material>
+          <ambient>0.025 0.030 0.035 1</ambient>
+          <diffuse>0.060 0.075 0.090 1</diffuse>
+        </material>
+      </visual>
+      <visual name="camera_lens">
+        <pose>0.044 0 0 0 1.5708 0</pose>
+        <geometry><cylinder><radius>0.014</radius><length>0.008</length></cylinder></geometry>
+        <material>
+          <ambient>0.02 0.10 0.20 1</ambient>
+          <diffuse>0.04 0.24 0.48 1</diffuse>
+        </material>
+      </visual>
+      <sensor name="left_side_camera_sensor" type="camera">
+        <always_on>true</always_on>
+        <visualize>0</visualize>
+        <update_rate>15</update_rate>
+        <pose>0.050 0 0 0 0 0</pose>
+        <camera name="left_side_camera">
+          <horizontal_fov>1.35</horizontal_fov>
+          <image>
+            <width>640</width>
+            <height>360</height>
+            <format>R8G8B8</format>
+          </image>
+          <clip><near>0.05</near><far>30</far></clip>
+          <noise><type>gaussian</type><mean>0.0</mean><stddev>0.002</stddev></noise>
+        </camera>
+        <plugin name="left_side_camera_driver" filename="libgazebo_ros_camera.so">
+          <ros><namespace>gazebo_train</namespace></ros>
+          <camera_name>left_side</camera_name>
+          <frame_name>left_side_camera_link</frame_name>
+        </plugin>
+      </sensor>
+    </link>
+
+    <joint name="right_side_camera_joint" type="fixed">
+      <parent>base_link</parent>
+      <child>right_side_camera_link</child>
+    </joint>
+    <link name="right_side_camera_link">
+      <!-- Mirror the left mount to observe the right rail from outside. -->
+      <pose relative_to="base_link">0.85 -0.82 0.90 0 0.65 0.20</pose>
+      <inertial>
+        <mass>0.01</mass>
+        <inertia>
+          <ixx>0.00001</ixx><ixy>0</ixy><ixz>0</ixz>
+          <iyy>0.00001</iyy><iyz>0</iyz><izz>0.00001</izz>
+        </inertia>
+      </inertial>
+      <visual name="camera_housing">
+        <geometry><box><size>0.080 0.060 0.050</size></box></geometry>
+        <material>
+          <ambient>0.025 0.030 0.035 1</ambient>
+          <diffuse>0.060 0.075 0.090 1</diffuse>
+        </material>
+      </visual>
+      <visual name="camera_lens">
+        <pose>0.044 0 0 0 1.5708 0</pose>
+        <geometry><cylinder><radius>0.014</radius><length>0.008</length></cylinder></geometry>
+        <material>
+          <ambient>0.02 0.10 0.20 1</ambient>
+          <diffuse>0.04 0.24 0.48 1</diffuse>
+        </material>
+      </visual>
+      <sensor name="right_side_camera_sensor" type="camera">
+        <always_on>true</always_on>
+        <visualize>0</visualize>
+        <update_rate>15</update_rate>
+        <pose>0.050 0 0 0 0 0</pose>
+        <camera name="right_side_camera">
+          <horizontal_fov>1.35</horizontal_fov>
+          <image>
+            <width>640</width>
+            <height>360</height>
+            <format>R8G8B8</format>
+          </image>
+          <clip><near>0.05</near><far>30</far></clip>
+          <noise><type>gaussian</type><mean>0.0</mean><stddev>0.002</stddev></noise>
+        </camera>
+        <plugin name="right_side_camera_driver" filename="libgazebo_ros_camera.so">
+          <ros><namespace>gazebo_train</namespace></ros>
+          <camera_name>right_side</camera_name>
+          <frame_name>right_side_camera_link</frame_name>
+        </plugin>
+      </sensor>
+    </link>
+
+    <joint name="ground_camera_joint" type="fixed">
+      <parent>base_link</parent>
+      <child>ground_camera_link</child>
+    </joint>
+    <link name="ground_camera_link">
+      <!-- Camera +X, after pitch +90 degrees, points along model -Z.
+           Mount it beyond the front edge of the chassis so the blue body
+           cannot block the downward view.  The raised optical center and wide
+           FOV cover both rails and the track bed while the vehicle moves. -->
+      <pose relative_to="base_link">1.10 0 1.05 0 1.05 0</pose>
+      <inertial>
+        <mass>0.01</mass>
+        <inertia>
+          <ixx>0.00001</ixx><ixy>0</ixy><ixz>0</ixz>
+          <iyy>0.00001</iyy><iyz>0</iyz><izz>0.00001</izz>
+        </inertia>
+      </inertial>
+      <visual name="camera_housing">
+        <geometry><box><size>0.080 0.060 0.050</size></box></geometry>
+        <material>
+          <ambient>0.025 0.030 0.035 1</ambient>
+          <diffuse>0.060 0.075 0.090 1</diffuse>
+        </material>
+      </visual>
+      <visual name="camera_lens">
+        <pose>0.044 0 0 0 1.5708 0</pose>
+        <geometry><cylinder><radius>0.014</radius><length>0.008</length></cylinder></geometry>
+        <material>
+          <ambient>0.02 0.10 0.20 1</ambient>
+          <diffuse>0.04 0.24 0.48 1</diffuse>
+        </material>
+      </visual>
+      <sensor name="ground_camera_sensor" type="camera">
+        <always_on>true</always_on>
+        <visualize>0</visualize>
+        <update_rate>15</update_rate>
+        <pose>0.050 0 0 0 0 0</pose>
+        <camera name="ground_camera">
+          <horizontal_fov>1.55</horizontal_fov>
+          <image>
+            <width>640</width>
+            <height>360</height>
+            <format>R8G8B8</format>
+          </image>
+          <clip><near>0.04</near><far>12</far></clip>
+          <noise><type>gaussian</type><mean>0.0</mean><stddev>0.002</stddev></noise>
+        </camera>
+        <plugin name="ground_camera_driver" filename="libgazebo_ros_camera.so">
+          <ros><namespace>gazebo_train</namespace></ros>
+          <camera_name>ground</camera_name>
+          <frame_name>ground_camera_link</frame_name>
+        </plugin>
+      </sensor>
+    </link>
 
     <link name="imu_link">
       <sensor name="gazebo_train_imu" type="imu">
@@ -324,14 +479,7 @@
           <izz>0.0007</izz>
         </inertia>
       </inertial>
-      <!--
-        修改前：
-        <mesh>
-          <scale>0.001 0.001 0.001</scale>
-          <uri>model://gazebo_train/meshes/left_tire.stl</uri>
-        </mesh>
-        修改后：圆柱碰撞体比轮胎 STL 更稳定，物理求解更像真实轮子。
-      -->
+      <!-- Cylinder collision provides smooth wheel contact. -->
       <collision name='wheel_left2_link_collision'>
         <pose>0 0 0 -1.5708 0 0</pose>
         <geometry>

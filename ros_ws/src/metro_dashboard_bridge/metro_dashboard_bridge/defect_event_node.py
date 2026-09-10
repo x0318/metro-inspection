@@ -15,10 +15,12 @@ from rclpy.qos import (
     ReliabilityPolicy,
 )
 from sensor_msgs.msg import CompressedImage
+from visualization_msgs.msg import MarkerArray
 
 from .camera_store import CameraDefinition, CameraFrameStore
 from .camera_stream import CameraStreamConfig
 from .defect_store import DefectStore
+from .defect_markers import report_markers
 from .event_conversion import defect_event_to_record
 
 
@@ -65,6 +67,15 @@ class DefectEventBridgeNode(Node):
 
     def __init__(self) -> None:
         super().__init__("defect_event_bridge")
+        self.declare_parameter("model_demo", False)
+        model_demo = bool(self.get_parameter("model_demo").value)
+        definitions = DEFAULT_CAMERAS
+        if model_demo:
+            raw = tuple(item for item in DEFAULT_CAMERAS if not item[0].startswith("yolo_"))
+            raw += (("odin1", "Odin1", "/odin1/rgb/image_raw/compressed"),)
+            definitions = raw + tuple(
+                (f"model_{camera}", f"{label} 模型标注", f"/model_annotation/{camera}/image/compressed")
+                for camera, label, _ in raw)
         self.declare_parameter(
             "defect_topic",
             "defect_events",
@@ -98,7 +109,7 @@ class DefectEventBridgeNode(Node):
                 read_only=True,
             ),
         )
-        for camera_id, _, topic in DEFAULT_CAMERAS:
+        for camera_id, _, topic in definitions:
             self.declare_parameter(
                 f"camera_topics.{camera_id}",
                 topic,
@@ -181,6 +192,12 @@ class DefectEventBridgeNode(Node):
             database_path=database_path,
             session_id=inspection_session_id,
         )
+        self._marker_publisher = self.create_publisher(
+            MarkerArray, "/inspection/defect_markers",
+            QoSProfile(depth=1, reliability=ReliabilityPolicy.RELIABLE,
+                       durability=DurabilityPolicy.TRANSIENT_LOCAL),
+        )
+        self._publish_markers()
         self._statistics_lock = threading.Lock()
         self._accepted_count = 0
         self._rejected_count = 0
@@ -192,7 +209,7 @@ class DefectEventBridgeNode(Node):
                     self.get_parameter(f"camera_topics.{camera_id}").value
                 ).strip(),
             )
-            for camera_id, label, _ in DEFAULT_CAMERAS
+            for camera_id, label, _ in definitions
         ]
         self.camera_timeout_seconds = float(
             self.get_parameter("camera_timeout_seconds").value
@@ -264,6 +281,7 @@ class DefectEventBridgeNode(Node):
             self.get_logger().warning(f"Rejected invalid DefectEvent: {error}")
             return
 
+        self._publish_markers()
         with self._statistics_lock:
             self._accepted_count += 1
             accepted_count = self._accepted_count
@@ -272,6 +290,9 @@ class DefectEventBridgeNode(Node):
                 f"Accepted {accepted_count} DefectEvent messages; "
                 f"stored={self.store.count()}"
             )
+
+    def _publish_markers(self):
+        self._marker_publisher.publish(report_markers(self.store.list(), self.store.session_id))
 
     def _on_camera_frame(self, camera_id: str, message: CompressedImage) -> None:
         source_timestamp = (

@@ -6,20 +6,9 @@
 
 ## 系统流程
 
-```mermaid
-flowchart LR
-    S[Gazebo 车辆与传感器] --> Y[六路 YOLO 推理]
-    S --> C[Odin1 点云与相机标定]
-    Y --> L[Odin1 二维到三维定位]
-    C --> L
-    L --> E[里程与环号语义 / 病害事件]
-    E --> B[ROS 桥接与 SQLite]
-    Y --> V[五路带框画面]
-    S --> R[五路原始画面]
-    V --> B
-    R --> B
-    B --> UI[Qt 桌面 / 浏览器巡检平台]
-```
+[系统流程图（draw.io 源文件）](docs/inspection_system_flow.drawio)
+
+当前模型演示基线及复现步骤见 [2026-09-10 版本说明](docs/stable_demo_20260910.md)。
 
 ## 环境与首次部署
 
@@ -29,24 +18,43 @@ flowchart LR
 - 平台：FastAPI、Uvicorn、SQLite、PyQt5 WebEngine
 
 ```bash
+# 安装 Git 与 Git LFS
 sudo apt update
-sudo apt install git git-lfs
+sudo apt install -y git git-lfs
 git lfs install
+
+# 下载项目与模型资源
 git clone --branch feature/simulation https://github.com/x0318/metro-inspection.git
 cd metro-inspection
 git lfs pull
 
-sudo apt install python3-colcon-common-extensions python3-rosdep \
+# 安装基础工具、桌面、仿真与导航依赖
+sudo apt install -y \
+  python3-colcon-common-extensions python3-rosdep \
   python3-pyqt5.qtwebengine python3-venv fonts-noto-cjk \
   ros-humble-gazebo-ros-pkgs ros-humble-gazebo-ros2-control \
-  ros-humble-ros2-controllers ros-humble-robot-localization liburdfdom-tools
+  ros-humble-ros2-controllers ros-humble-robot-localization \
+  ros-humble-navigation2 ros-humble-nav2-bringup \
+  ros-humble-nav2-collision-monitor liburdfdom-tools
+
 source /opt/ros/humble/setup.bash
-# 仅在 rosdep 尚未初始化时执行：sudo rosdep init
+
+# 尚未初始化 rosdep 时执行初始化
+if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then
+  sudo rosdep init
+fi
+
+# 安装各模块声明的依赖
 rosdep update
 rosdep install --from-paths ros_ws/src --ignore-src -r -y --rosdistro humble
 
+# 准备 YOLO 推理环境
 bash scripts/setup_yolo_environment.sh
-bash scripts/run_inspection_backend.sh --build
+
+# 统一编译工作空间中的所有包
+cd ros_ws
+colcon build --symlink-install
+source install/setup.bash
 ```
 
 ## 快速启动
@@ -63,7 +71,7 @@ bash scripts/open_inspection_app.sh
 
 默认开启识别与三维定位、保持车辆静止，不额外打开 Gazebo GUI 或 RViz。没有权重时可关闭“病害识别”，先检查相机。
 
-Windows 可双击根目录的 `Open Metro Inspection.vbs`；`Open Metro Inspection.cmd` 保留诊断控制台。Linux 可安装应用菜单入口：
+Windows 可双击根目录的 `Open Metro Inspection.vbs`
 
 ```bash
 python3 scripts/install_inspection_shortcut.py
@@ -171,6 +179,27 @@ tailscale serve status
 
 完整平台默认订阅 `/localized/defect_events`。只打开网页不会产生病害数据。
 
+## 岔轨导航平台
+
+终端执行以下命令，编译导航平台并启动：
+
+```bash
+cd /home/jo/my-project/metro-inspection/ros_ws
+
+source /opt/ros/humble/setup.bash
+
+colcon build --symlink-install \
+  --packages-select metro_navigation_demo
+
+source install/setup.bash
+
+bash ../scripts/open_route_choice_platform.sh
+```
+
+终端运行，在浏览器中打开 [http://127.0.0.1:8090](http://127.0.0.1:8090)
+
+
+
 ## 仓库结构
 
 ```text
@@ -202,6 +231,6 @@ metro-inspection/
 - [检测模块](ros_ws/src/metro_detection/README.md)、[定位模块](ros_ws/src/metro_mapping/metro_localization/README.md)、[建图模块](ros_ws/src/metro_mapping/metro_pointcloud_mapping/README.md)。
 - [仿真与导航](ros_ws/src/metro_sim/README.md)、[桥接与 API](ros_ws/src/metro_dashboard_bridge/README.md)、[事件接口](ros_ws/src/metro_inspection_interfaces/README.md)。
 
-病害数据库默认位于 `~/.local/share/metro-inspection/defects.sqlite3`，每个巡检会话默认最多保留 500 条记录；桌面设置位于 `~/.config/metro-inspection/desktop.json`，日志位于 `~/.local/state/metro-inspection/`。相机流只缓存最新帧，当前不提供病害截图归档。
+病害数据库默认位于 `~/.local/share/metro-inspection/defects.sqlite3`，每个巡检会话默认最多保留 500 条记录；日志位于 `~/.local/state/metro-inspection/`。
 
 # 详细技术方案见技术文档

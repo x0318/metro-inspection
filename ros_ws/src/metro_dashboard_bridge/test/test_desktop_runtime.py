@@ -4,8 +4,21 @@ import signal
 import socket
 import sys
 import time
+import io
 
 import pytest
+
+
+@pytest.mark.parametrize("payload,expected", [
+    (b'{"service":"metro_dashboard_bridge","status":"online"}', True),
+    (b'{"service":"other","status":"online"}', False),
+    (b'[]', False),
+    (b'not json', False),
+])
+def test_existing_dashboard_probe_checks_service_identity(monkeypatch, payload, expected):
+    from metro_dashboard_bridge import desktop_runtime
+    monkeypatch.setattr(desktop_runtime, "urlopen", lambda *args, **kwargs: io.BytesIO(payload))
+    assert desktop_runtime.dashboard_is_online("http://127.0.0.1:8088") is expected
 
 from metro_dashboard_bridge.desktop_runtime import (
     DesktopOptions,

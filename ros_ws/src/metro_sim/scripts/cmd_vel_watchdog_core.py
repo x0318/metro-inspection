@@ -12,6 +12,28 @@ class WatchdogState(str, Enum):
     ESTOP = "estop"
 
 
+class InputFreshness:
+    """Track whether a required input has arrived recently on a steady clock."""
+
+    def __init__(self, timeout_sec: float) -> None:
+        if timeout_sec <= 0.0:
+            raise ValueError("timeout_sec must be positive")
+        self.timeout_sec = timeout_sec
+        self.last_input_steady_sec: float | None = None
+
+    def observe(self, steady_now_sec: float) -> bool:
+        if not math.isfinite(steady_now_sec):
+            return False
+        self.last_input_steady_sec = steady_now_sec
+        return True
+
+    def is_fresh(self, steady_now_sec: float) -> bool:
+        if self.last_input_steady_sec is None:
+            return False
+        age_sec = steady_now_sec - self.last_input_steady_sec
+        return math.isfinite(age_sec) and 0.0 <= age_sec <= self.timeout_sec
+
+
 class CommandWatchdog:
     """Decide whether the most recently received command may be forwarded."""
 

@@ -5,7 +5,11 @@ import sys
 SCRIPT_DIR = Path(__file__).resolve().parents[1] / "scripts"
 sys.path.insert(0, str(SCRIPT_DIR))
 
-from cmd_vel_watchdog_core import CommandWatchdog, WatchdogState  # noqa: E402
+from cmd_vel_watchdog_core import (  # noqa: E402
+    CommandWatchdog,
+    InputFreshness,
+    WatchdogState,
+)
 
 
 def test_normal_command_is_forwarded_until_timeout():
@@ -76,3 +80,20 @@ def test_steady_clock_regression_fails_closed():
 
     assert not watchdog.may_forward(1.0)
     assert watchdog.state == WatchdogState.COMMAND_TIMEOUT
+
+
+def test_required_input_must_arrive_and_remain_fresh():
+    freshness = InputFreshness(timeout_sec=1.0)
+
+    assert not freshness.is_fresh(0.5)
+    assert freshness.observe(0.5)
+    assert freshness.is_fresh(1.5)
+    assert not freshness.is_fresh(1.5001)
+
+
+def test_required_input_rejects_invalid_or_regressed_steady_time():
+    freshness = InputFreshness(timeout_sec=1.0)
+
+    assert not freshness.observe(float("nan"))
+    assert freshness.observe(2.0)
+    assert not freshness.is_fresh(1.0)

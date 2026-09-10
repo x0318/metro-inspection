@@ -25,6 +25,9 @@ Environment overrides:
                                        (default: http://127.0.0.1:11370)
   SUBWAY_V2_INITIAL_PITCH_DEG          Pitch joint start command, -15 to +45
                                        (default: +45; upper-wall view: 30 deg)
+  METRO_REQUIRED_DRIVE_SENSOR_TOPIC    Optional PointCloud2 heartbeat required
+                                       by the final drive watchdog
+  METRO_REQUIRED_DRIVE_SENSOR_TIMEOUT  Sensor heartbeat timeout (default: 1.0 s)
 
 Examples:
   ./ros_ws/src/metro_sim/scripts/open_subway_tunnel_v2_sensors.sh
@@ -163,8 +166,14 @@ ros2 run metro_closed_loop camera_info_calibrator \
   --ros-args -p use_sim_time:=true &
 CAMERA_INFO_CALIBRATOR_PID=$!
 
-python3 "${WATCHDOG_SCRIPT}" \
-  --ros-args --params-file "${WATCHDOG_PARAMS}" &
+WATCHDOG_ARGS=(--ros-args --params-file "${WATCHDOG_PARAMS}")
+if [[ -n "${METRO_REQUIRED_DRIVE_SENSOR_TOPIC:-}" ]]; then
+  WATCHDOG_ARGS+=(
+    -p "required_sensor_topic:=${METRO_REQUIRED_DRIVE_SENSOR_TOPIC}"
+    -p "required_sensor_timeout:=${METRO_REQUIRED_DRIVE_SENSOR_TIMEOUT:-1.0}"
+  )
+fi
+python3 "${WATCHDOG_SCRIPT}" "${WATCHDOG_ARGS[@]}" &
 CMD_VEL_WATCHDOG_PID=$!
 
 env --default-signal=INT ros2 launch metro_localization odometry_fusion.launch.py \

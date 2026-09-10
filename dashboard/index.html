@@ -35,23 +35,25 @@
           @click="activeView = 'overview'">识别总览</button>
         <button type="button" :class="{ active: activeView === 'cameras' }"
           @click="activeView = 'cameras'">相机监控</button>
-        <button type="button" :class="{ active: activeView === 'yolo' }"
+        <button v-if="!modelMode" type="button" :class="{ active: activeView === 'yolo' }"
           @click="activeView = 'yolo'">YOLO 识别监控</button>
+        <button v-if="modelMode" type="button" :class="{ active: activeView === 'model' }"
+          @click="activeView = 'model'">模型标注演示</button>
         <button type="button" :class="{ active: activeView === 'report' }"
           @click="activeView = 'report'">巡检报告</button>
       </nav>
     </header>
 
     <main class="page-shell">
-      <section v-if="activeView !== 'cameras' && activeView !== 'yolo'" class="metric-band" aria-label="病害统计摘要">
+      <section v-if="!['cameras', 'yolo', 'model'].includes(activeView)" class="metric-band" aria-label="病害统计摘要">
         <div><span>病害事件</span><strong>{{ summary.total }}</strong></div>
-        <div><span>完成三维定位</span><strong>{{ summary.localized }}</strong></div>
-        <div><span>完成工程定位</span><strong>{{ summary.semantic }}</strong></div>
+        <div><span>{{ modelMode ? '模型参考位置' : '完成三维定位' }}</span><strong>{{ modelMode ? summary.reference : summary.localized }}</strong></div>
+        <div><span>{{ modelMode ? '仿真工程位置' : '完成工程定位' }}</span><strong>{{ modelMode ? summary.referenceSemantic : summary.semantic }}</strong></div>
         <div class="metric-severe"><span>III级严重</span><strong>{{ summary.severe }}</strong></div>
         <div><span>尚未评估</span><strong>{{ summary.unknown }}</strong></div>
       </section>
       <section v-else class="camera-metric-band" aria-label="相机监控摘要">
-        <div><span>{{ activeView === 'yolo' ? 'YOLO画面在线' : '原始相机在线' }}</span><strong>{{ onlineCameraCount }} / {{ monitorCameras.length }}</strong></div>
+        <div><span>{{ activeView === 'model' ? '模型标注画面在线' : activeView === 'yolo' ? 'YOLO画面在线' : '原始相机在线' }}</span><strong>{{ onlineCameraCount }} / {{ monitorCameras.length }}</strong></div>
         <div><span>预览上限</span><strong>{{ previewProfile.max_width }} × {{ previewProfile.max_height }}</strong></div>
         <div><span>输出帧率</span><strong>{{ formatFps(previewProfile.default_fps) }} FPS</strong></div>
         <div><span>JPEG质量</span><strong>{{ previewProfile.jpeg_quality }}</strong></div>
@@ -209,11 +211,11 @@
         </div>
       </section>
 
-      <section v-else-if="activeView === 'cameras' || activeView === 'yolo'" class="camera-view">
+      <section v-else-if="activeView === 'cameras' || activeView === 'yolo' || activeView === 'model'" class="camera-view">
         <header class="camera-view-heading">
           <div>
-            <h2>{{ activeView === 'yolo' ? '五路 YOLO 识别监控' : '五路相机监控' }}</h2>
-            <p>{{ onlineCameraCount }} 路在线 · {{ activeView === 'yolo' ? '显示检测框、类别和置信度' : '显示未经识别标注的原始画面' }}</p>
+            <h2>{{ activeView === 'model' ? '模型标注演示' : activeView === 'yolo' ? '五路 YOLO 识别监控' : '相机监控' }}</h2>
+            <p>{{ onlineCameraCount }} 路在线 · {{ activeView === 'model' ? '模型参考区域 · 未运行 YOLO' : activeView === 'yolo' ? 'YOLO' : '原始画面' }}</p>
           </div>
           <span class="stream-profile">{{ previewProfile.max_width }} × {{ previewProfile.max_height }} · {{ formatFps(previewProfile.default_fps) }} FPS</span>
         </header>
@@ -237,15 +239,16 @@
             <header>
               <div><strong>{{ selectedMonitorCamera.label }}</strong><small>{{ selectedMonitorCamera.topic }}</small></div>
               <span :class="['camera-state', { online: selectedMonitorCamera.available }]">
-                {{ selectedMonitorCamera.available ? '在线' : '离线' }}
+                {{ selectedMonitorCamera.available ? '在线' : (selectedMonitorCamera.frames_received > 0 ? '未更新' : '离线') }}
               </span>
             </header>
             <div class="camera-media">
-              <img v-if="selectedMonitorCamera.available" :src="cameraFrameUrl(selectedMonitorCamera)"
-                :alt="`${selectedMonitorCamera.label} 实时画面`">
+              <img v-if="selectedMonitorCamera.available || selectedMonitorCamera.frames_received > 0" :src="cameraFrameUrl(selectedMonitorCamera)"
+                :alt="`${selectedMonitorCamera.label} ${selectedMonitorCamera.available ? '实时画面' : '最后一帧（未更新）'}`">
               <div v-else class="camera-offline">
                 <strong>等待图像</strong><span>{{ cameraAgeText(selectedMonitorCamera) }}</span>
               </div>
+              <span v-if="!selectedMonitorCamera.available && selectedMonitorCamera.frames_received > 0" class="camera-stale-frame">最后一帧 · 未更新</span>
             </div>
             <footer>
               <span>源帧率 {{ cameraFpsText(selectedMonitorCamera) }}</span>
@@ -257,24 +260,25 @@
         <section v-else-if="focusedCamera" class="camera-focus" aria-label="单路相机放大画面">
           <header>
             <div>
-              <span class="eyebrow">{{ activeView === 'yolo' ? 'YOLO 带框结果' : '单路监控' }}</span>
+              <span class="eyebrow">{{ activeView === 'model' ? '模型标注演示' : activeView === 'yolo' ? 'YOLO 带框结果' : '单路监控' }}</span>
               <h2>{{ focusedCamera.label }}</h2>
               <p>{{ focusedCamera.topic }}</p>
             </div>
             <div class="camera-focus-actions">
               <span :class="['camera-state', { online: focusedCamera.available }]">
-                {{ focusedCamera.available ? '在线' : '离线' }}
+                {{ focusedCamera.available ? '在线' : (focusedCamera.frames_received > 0 ? '未更新' : '离线') }}
               </span>
               <button type="button" class="close-camera-button" title="返回五画面"
                 aria-label="返回五画面" @click="focusedCameraId = ''">×</button>
             </div>
           </header>
           <div class="camera-focus-frame">
-            <img v-if="focusedCamera.available" :src="cameraFrameUrl(focusedCamera)"
-              :alt="`${focusedCamera.label} 实时画面`">
+            <img v-if="focusedCamera.available || focusedCamera.frames_received > 0" :src="cameraFrameUrl(focusedCamera)"
+              :alt="`${focusedCamera.label} ${focusedCamera.available ? '实时画面' : '最后一帧（未更新）'}`">
             <div v-else class="camera-offline">
               <strong>等待图像</strong><span>{{ cameraAgeText(focusedCamera) }}</span>
             </div>
+            <span v-if="!focusedCamera.available && focusedCamera.frames_received > 0" class="camera-stale-frame">最后一帧 · 未更新</span>
           </div>
           <footer>
             <span>源帧率 {{ cameraFpsText(focusedCamera) }}</span>
@@ -288,15 +292,16 @@
             <header>
               <div><strong>{{ camera.label }}</strong><small>{{ camera.topic }}</small></div>
               <span :class="['camera-state', { online: camera.available }]">
-                {{ camera.available ? '在线' : '离线' }}
+                {{ camera.available ? '在线' : (camera.frames_received > 0 ? '未更新' : '离线') }}
               </span>
             </header>
             <button type="button" class="camera-media" :title="`放大查看 ${camera.label}`"
               :aria-label="`放大查看 ${camera.label}`" @click="focusedCameraId = camera.id">
-              <img v-if="camera.available" :src="cameraFrameUrl(camera)" :alt="`${camera.label} 实时画面`">
+              <img v-if="camera.available || camera.frames_received > 0" :src="cameraFrameUrl(camera)" :alt="`${camera.label} ${camera.available ? '实时画面' : '最后一帧（未更新）'}`">
               <span v-else class="camera-offline">
                 <strong>等待图像</strong><span>{{ cameraAgeText(camera) }}</span>
               </span>
+              <span v-if="!camera.available && camera.frames_received > 0" class="camera-stale-frame">最后一帧 · 未更新</span>
             </button>
             <footer>
               <span>源帧率 {{ cameraFpsText(camera) }}</span>
@@ -322,7 +327,7 @@
             <thead><tr><th>序号</th><th>事件</th><th>等级</th><th>相机</th><th>里程 / 区段</th><th>三维坐标</th><th>时间</th></tr></thead>
             <tbody>
               <tr v-for="(item, index) in records" :key="item.event_id">
-                <td>{{ index + 1 }}</td><td><strong>{{ defectTypeLabel(item.type) }}</strong><small>{{ item.event_id }}</small></td>
+                <td>{{ index + 1 }}</td><td><strong>{{ defectTypeLabel(item.type) }}</strong><small>{{ item.event_id }} · {{ stageText(item) }}</small></td>
                 <td>{{ levelText(item) }}</td><td>{{ cameraLabel(item.camera_name) }}</td>
                 <td>{{ locationText(item) }}</td><td>{{ positionText(item.position) }}</td>
                 <td>{{ formatTime(item.updated_at || item.created_at) }}</td>
@@ -337,14 +342,14 @@
     <section id="print-report">
       <header><h1>地铁隧道病害智能巡检报告</h1><p>巡检批次：{{ selectedSessionId || '--' }}<br>生成时间：{{ new Date().toLocaleString('zh-CN') }}</p></header>
       <div class="print-summary">
-        <span>事件总数：{{ summary.total }}</span><span>三维定位：{{ summary.localized }}</span>
+        <span>事件总数：{{ summary.total }}</span><span>三维定位：{{ summary.localized }}</span><span v-if="summary.reference">模型参考位置：{{ summary.reference }}</span>
         <span>工程定位：{{ summary.semantic }}</span><span>III级严重：{{ summary.severe }}</span>
       </div>
       <table>
         <thead><tr><th>序号</th><th>事件 / 等级</th><th>相机</th><th>里程 / 区段</th><th>三维坐标</th><th>时间</th></tr></thead>
         <tbody>
           <tr v-for="(item, index) in records" :key="item.event_id">
-            <td>{{ index + 1 }}</td><td>{{ defectTypeLabel(item.type) }}<br>{{ levelText(item) }}</td>
+            <td>{{ index + 1 }}</td><td>{{ defectTypeLabel(item.type) }}<br>{{ levelText(item) }} · {{ stageText(item) }}</td>
             <td>{{ cameraLabel(item.camera_name) }}</td><td>{{ locationText(item) }}</td>
             <td>{{ positionText(item.position) }}</td><td>{{ formatTime(item.updated_at || item.created_at) }}</td>
           </tr>

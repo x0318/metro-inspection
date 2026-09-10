@@ -1,5 +1,9 @@
 # 导航复用与停车保护评估
 
+> 历史评估：本文描述评估时的状态。2026-09-10 已迁入独立的
+> `metro_navigation_demo` 岔轨平台，并删除本项目废弃的旧导航入口、旧世界和旧车模型。
+> 当前运行说明见 [岔轨导航测试模块](../ros_ws/src/metro_navigation_demo/README.md)。
+
 ## 1. 评估范围
 
 导航参考工作区为 `subway-patrol-robot-sim-simulation` 的
