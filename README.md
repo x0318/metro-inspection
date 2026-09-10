@@ -194,6 +194,8 @@ tailscale serve status
 | 建图 RViz                        | `bash ros_ws/src/metro_sim/scripts/open_subway_v2_mapping_rviz.sh` |
 | 独立 Nav2分支避障演示            | `bash ros_ws/src/metro_sim/scripts/open_nav2_demo.sh`        |
 
+![巡检仿真演示](docs/images/inspection_demo.gif)
+
 建图需额外构建 `metro_pointcloud_mapping`，导航需 Nav2 依赖，具体步骤见详细说明。
 
 独立网页脚本默认订阅 `/simulation/defect_events`；
