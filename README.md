@@ -6,7 +6,7 @@
 
 ## 系统流程
 
-[系统流程图（draw.io 源文件）](docs/inspection_system_flow.drawio)
+![系统流程图](docs/images/inspection_system_flow.jpg)
 
 ## 目录
 
