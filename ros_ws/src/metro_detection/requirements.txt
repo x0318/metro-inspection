@@ -1,0 +1,14 @@
+# 推理核心依赖（版本为本项目实际使用版本）
+ultralytics==8.4.75
+opencv-python==4.10.0
+numpy==2.2.6
+Pillow==12.2.0
+pyyaml
+
+# PyTorch（CUDA 版需按官方矩阵安装，本项目为 cu124）
+#   pip install torch==2.6.0 torchvision --index-url https://download.pytorch.org/whl/cu124
+torch>=2.6.0
+
+# ── 标注流程（可选，仅在复现 BBox→SAM→Labelme 预标注时用到）──
+# segment-anything
+# labelme

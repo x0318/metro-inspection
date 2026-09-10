@@ -1,0 +1,29 @@
+# 地铁病害 8 类体系（官方题目 CS-202613）
+# 两模型分治：模型A(土建+设备 5类, yolov8m-seg) + 模型B(轨道扣件 3类, yolov8l-seg)
+
+classes:
+  0: koujianwaixie      # 扣件松动歪斜
+  1: koujianduanlie     # 扣件断裂
+  2: koujianqueshi      # 扣件缺失
+  3: yiwu               # 异物入侵
+  4: guanxiansongtuo    # 管线支架松脱
+  5: guanpianposun      # 管片破损掉块
+  6: liefeng            # 裂缝
+  7: shenloushui        # 渗漏水
+
+domains:
+  轨道: [0, 1, 2]
+  设备: [3, 4]
+  土建: [5, 6, 7]
+
+# 模型A 训练类 id -> 官方 id（训练顺序: liefeng,shenloushui,yiwu,guanpianposun,guanxiansongtuo）
+model_a_map: {0: 6, 1: 7, 2: 3, 3: 5, 4: 4}
+
+# 模型B 训练类 id -> 官方 id（直接对应）
+model_b_map: {0: 0, 1: 1, 2: 2}
+
+# 赛制检出率目标
+targets:
+  土建: 0.95
+  轨道: 0.95
+  设备: 0.97
