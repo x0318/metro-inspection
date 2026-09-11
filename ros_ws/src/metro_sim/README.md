@@ -43,6 +43,12 @@ cd ~/my-project/metro-inspection
 `/wheel/odom_raw` 且不发布 TF，EKF 融合 `/odin1/imu` 后发布
 `/odometry/filtered`，并独占 `odom -> base_footprint`。
 
+统一巡检入口 `metro_bringup/inspection_platform.launch.py` 还会启动
+`nav2_collision_monitor`，直接使用 `/odin1/cloud_raw` 执行车头前方障碍
+停车。主项目速度链为 `/cmd_vel_raw -> collision_monitor -> /cmd_vel_safe ->
+watchdog -> /cmd_vel_drive`。本目录下单独运行的 V2 sensors/fusion/mapping
+脚本仍只包含 watchdog，不应视为已经独立启用点云障碍停车。
+
 点云建图模式从同一份 `subway_v2/model.sdf` 临时派生，只关闭六路
 RGB 相机并默认不启动 Gazebo GUI；雷达的 `240 x 180` 分辨率、FOV、
 量程、噪声和 10 Hz 请求值保持不变。首次使用前安装运行依赖并构建：
@@ -164,24 +170,21 @@ cd ~/my-project/metro-inspection
 建图模式只在 `/tmp` 写入轻量 SDF/config，退出时自动删除；不会复制
 `subway_v2` 的 STL，也不会在仓库中累积新模型。
 
-## 启动导航与安全演示
+## 启动岔轨导航测试
 
 ```bash
-cd ~/my-project/metro-inspection/ros_ws/src/metro_sim
-bash scripts/open_nav2_demo.sh
+cd ~/my-project/metro-inspection
+bash scripts/open_route_choice_platform.sh
 ```
 
-默认使用 demo 参数：障碍持续 10 秒后报告，速度 watchdog 超时为 2 秒。
-
-生产候选参数：
-
-```bash
-TUNNEL_GUARD_PROFILE=production bash scripts/open_nav2_demo.sh
-```
-
-生产候选配置使用 30 秒障碍报告和 0.5 秒 watchdog。上真机前必须根据实际通信抖动、制动距离和硬件急停链重新验收。
+浏览器访问 `http://127.0.0.1:8090`。当前岔轨测试使用独立的
+`metro_navigation_demo` 包，支持直行／分岔选择与四路相机，未启用障碍避让。
+旧导航演示入口、旧世界和旧车模型已删除。使用说明见
+[岔轨导航测试模块](../metro_navigation_demo/README.md)。
 
 ## 安全接口契约
+
+以下是保留的障碍守卫组件接口，不代表当前岔轨平台已启用此完整链路。
 
 ```text
 Nav2 /cmd_vel
@@ -193,8 +196,7 @@ Nav2 /cmd_vel
 → 车辆
 ```
 
-`open_nav2_demo.sh` 仍使用旧 `gazebo_train` 演示模型及其
-`train_planar_move`；V2 传感器、建图和融合入口使用四轮
+V2 传感器、建图和融合入口使用四轮
 `subway_v2_diff_drive`，车轮会按轮轨接触真实旋转。
 
 - `/scan`：前向障碍与雷达存活输入。
@@ -215,6 +217,8 @@ Nav2 /cmd_vel
 - 雷达断流或安全命令流失联时进入停车状态。
 
 ## 快速验收
+
+以下用于已单独接入 Nav2 和障碍守卫的安全链；岔轨平台验收步骤见其模块说明。
 
 检查 Nav2 和安全链：
 
@@ -265,14 +269,11 @@ python3 scripts/manage_nav_test_obstacle.py delete
 ## 目录
 
 - `models/subway_tunnel/`：Metro 原有隧道视觉与碰撞资源。
-- `models/gazebo_train/`：巡检车辆、雷达和 Gazebo 插件配置。
 - `worlds/subway_tunnel.world`：仅隧道预览世界。
-- `worlds/subway_track_tunnel.world`：隧道、轨道行驶面和巡检车辆导航世界。
-- `urdf/gazebo_train_tf.urdf`：RViz/TF 使用的车辆结构描述。
-- `config/nav2_odom_params.yaml`：Nav2、Footprint、Obstacle Layer 与 clearing 参数。
+- `config/nav2_odom_params.yaml`：保留供参考的 Nav2、Footprint、Obstacle Layer 与 clearing 参数。
 - `config/tunnel_guard_demo.yaml`：WSL 仿真参数。
 - `config/tunnel_guard_production.yaml`：生产候选参数。
-- `scripts/open_nav2_demo.sh`：完整系统启动入口。
+- `../metro_navigation_demo/`：当前独立岔轨测试世界、小车及平台。
 - `scripts/tunnel_obstacle_guard.py`：轨道直行与障碍停车守卫。
 - `scripts/cmd_vel_watchdog.py`：守卫失联停车保护。
 - `scripts/send_nav_goal_forward.py`：相对导航 Action 客户端。
@@ -288,6 +289,7 @@ python3 scripts/manage_nav_test_obstacle.py delete
 - 正式 dashboard/任务管理系统对 `/navigation/obstacle_error` 的订阅和持久化。
 ## 迁移验收记录
 
+以下为已废弃旧演示的历史记录，不作为当前岔轨平台的验收结论。
 2026-07-19 已在 Metro 源码路径下完成独立运行验收：
 
 - `bt_navigator` lifecycle 为 `active [3]`。

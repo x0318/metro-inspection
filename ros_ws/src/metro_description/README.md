@@ -27,9 +27,10 @@ metro_sim/models/subway_tunnel_v2/
 ```
 
 The V6 CAD export contains the chassis, four wheels, yaw and pitch assemblies,
-Odin1 housing, and four fixed-camera housings. Their CAD mounting transforms
-are retained. Existing Odin1, IMU, and five camera ROS interfaces are preserved;
-camera optical origins remain provisional until measured extrinsics are added.
+Odin1 housing, and four fixed-camera housings. Its mounting transforms are
+retained except for the explicit inspection-facing camera corrections described
+below. Existing Odin1, IMU, and five camera ROS interfaces are preserved; camera
+optical origins remain provisional until measured extrinsics are added.
 
 In simple_v6, `base_link.STL` already contains the installed Odin1 housing and
 `leida.STL` exports the same housing again. Runtime visual ownership therefore
@@ -53,10 +54,15 @@ temporary camera-free SDF from this same model and runs Gazebo without its GUI;
 it does not copy meshes or change the real lidar's resolution, field of view,
 range, noise, or requested frame rate.
 
-Yaw and pitch are locked at the V6 CAD zero pose because this model does not yet
-have a position controller for those joints. Making them freely revolute lets
-gravity rotate the gimbal away from its mounting pose. They can be made movable
-when a controller and commanded initial positions are added.
+Yaw remains locked at the V6 CAD zero pose. Pitch is a bounded revolute joint
+held by a `gazebo_ros2_control` position controller; its joint range is
+`-15 deg` to `+45 deg`. The launch scripts command `+45 deg` at startup, aiming
+the optical axis 30 degrees above robot +X so the approximately 42.7-degree
+vertical field of view includes the forward upper wall instead of only the
+nearby crown. At joint zero the optical axis is 75 degrees upward; `-15 deg`
+points straight at the crown, while positive commands lower it toward the
+forward view. The raw controller input is
+`/subway_v2/pitch_position_controller/commands`.
 
 Each V6 wheel assembly is split reproducibly into a 520-triangle rotating
 flanged wheel and a fixed motor/mount mesh. The wheel joint axes are moved to
@@ -77,17 +83,40 @@ contact. `tunnel_obstacle_guard.py` continues to remove lateral and yaw commands
 The physical Odin1/nose end defines `base_footprint +X`, so a positive
 `linear.x` command moves toward the visible robot front. The importer validates
 this convention and assigns wheels to the left/right drive pairs after applying
-the CAD-to-REP-103 root rotation. The Pitch camera faces `base_footprint -X` on
-this hardware assembly.
+the CAD-to-REP-103 root rotation.
 
 The V6 camera housings keep their CAD mounting translations, with inspection
 orientations restored explicitly: `xj1` and `xj2` look outward to the tunnel
-sides, while `xj3` and `xj4` look down toward the track. Camera body frames are
+sides, `xj3` covers the right wall-side track area, and `xj4` looks down toward
+the track. XJ2's simulated ray origin is moved just outside the scaled chassis
+edge so `base_link.STL` cannot occlude the upper part of its image; this is a
+simulation visibility correction and does not replace a measured physical
+camera extrinsic. From behind the robot, `xj3` is the rear-right camera and uses a
+simulation-only 70-degree horizontal field of view. Its center ray points
+toward the right wall and 75 degrees downward so that the wheel flange, rail,
+wall-side foreign objects, and track defects remain visible; rear-left `xj4`
+retains 44.95 degrees. XJ3's
+ray origin is 2 mm beyond the housing front face. Camera body frames are
 placed at the previously validated lens-center offsets instead of each STL's
-link origin. The pitch camera frame is located on the camera geometry embedded
-in `pitch.STL`; the complete Pitch assembly is articulated 75 degrees above
-`base_footprint +X`, so its vertical FOV includes the tunnel crown. Odin1's
-calibrated internal transform is unchanged.
+link origin. Because the V6 yaw zero points the Pitch camera toward the robot
+rear, the complete yaw-to-pitch assembly is turned 180 degrees around the robot
+vertical axis. Because the exported yaw origin is not at the assembly center,
+its translation is compensated so the combined yuntai/Pitch geometry and lens
+center remain on the robot centerline. The Pitch joint itself remains at its
+undeformed V6 CAD zero pose. Its invisible sensor frame is placed 30 mm along
+the optical axis from the old internal point, just beyond the V6 lens surface,
+so the housing cannot occlude the simulated image. At joint zero it points 75
+degrees above `base_footprint +X` and remains aligned with the visible
+forward-facing housing. Odin1's calibrated internal transform is unchanged.
+
+With a simulation running, command the Pitch joint in degrees using:
+
+```bash
+./ros_ws/src/metro_sim/scripts/set_subway_v2_pitch.sh -15  # straight up
+./ros_ws/src/metro_sim/scripts/set_subway_v2_pitch.sh 0    # 75 deg upward
+./ros_ws/src/metro_sim/scripts/set_subway_v2_pitch.sh 15   # 60 deg upper wall
+./ros_ws/src/metro_sim/scripts/set_subway_v2_pitch.sh 30   # 45 deg upward
+```
 
 After changing the URDF or meshes, regenerate the Gazebo model from the
 repository root:

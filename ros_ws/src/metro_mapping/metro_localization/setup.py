@@ -22,6 +22,7 @@ setup(
     tests_require=["pytest"],
     entry_points={
         "console_scripts": [
+            "model_annotation = metro_localization.model_annotation_node:main",
             "damage_localizer = metro_localization.damage_localizer:main",
             "localization_evaluator = metro_localization.localization_evaluator:main",
             "damage_semantic_mapper = metro_localization.damage_semantic_mapper:main",

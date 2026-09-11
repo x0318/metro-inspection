@@ -50,7 +50,7 @@ def main(args: Optional[Sequence[str]] = None) -> int:
     try:
         from PyQt5.QtCore import QTimer, QUrl
         from PyQt5.QtWidgets import QApplication, QMainWindow
-        from PyQt5.QtWebEngineWidgets import QWebEngineView
+        from .report_view import ReportView
     except ImportError as error:
         print(
             "Qt dashboard requires python3-pyqt5.qtwebengine. Install it with: "
@@ -66,7 +66,7 @@ def main(args: Optional[Sequence[str]] = None) -> int:
     window = QMainWindow()
     window.setWindowTitle(options.title)
     window.resize(1440, 900)
-    browser = QWebEngineView(window)
+    browser = ReportView(window)
     browser.setUrl(QUrl(options.url))
     window.setCentralWidget(browser)
     window.show()

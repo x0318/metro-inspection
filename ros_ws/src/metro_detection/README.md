@@ -17,23 +17,54 @@ Outputs:
 ```text
 /damage_detections                 vision_msgs/msg/Detection2DArray
 /damage_detection/annotated_image  sensor_msgs/msg/Image
+/damage_detection/annotated_image/compressed  sensor_msgs/msg/CompressedImage
 ```
 
 The output header is copied from the source image. This is required by the
 image, lidar, and detection time synchronizer in `damage_localizer`.
+The JPEG-compressed annotated output carries the same header and is used by
+the dashboard's five-camera YOLO monitoring page.
 
-The current simulation model contains these eight classes:
+The complete simulation platform defaults to
+`/home/jo/incoming/yolov8n_sim_demo_best(1).pt`, which was trained on the
+synthetic tunnel domain. The optional `/home/jo/incoming/best.pt` checkpoint
+contains eight Chinese labels for real-image experiments. The detector
+normalizes them to the stable project taxonomy before publishing:
 
 ```text
-crack
-water_leakage
-segment_damage
-foreign_object
-fastener_missing
-fastener_broken
-fastener_loose
-bracket_loose
+裂缝         -> crack
+渗漏水       -> water_leakage
+管片破损掉块 -> segment_damage
+扣件断裂     -> fastener_broken
+扣件缺失     -> fastener_missing
+扣件松动歪斜 -> fastener_loose
+管线支架松脱 -> bracket_loose
+异物入侵     -> foreign_object
 ```
+
+Normalization also prevents annotated-image rendering from trying to download
+a Unicode font during the first ROS image callback.
+
+The ROS detection messages retain the English taxonomy above for stable
+downstream interfaces. Bounding-box labels in the annotated YOLO images use
+full ASCII pinyin instead:
+
+```text
+crack            -> liefeng
+water_leakage    -> shenloushui
+segment_damage   -> guanpianposundiaokuai
+fastener_broken  -> koujianduanlie
+fastener_missing -> koujianqueshi
+fastener_loose   -> koujiansongdongwaixie
+bracket_loose    -> guanxianzhijiasongtuo
+foreign_object   -> yiwuruqin
+```
+
+Gazebo Classic advertises these camera image topics as `RELIABLE`, and its
+demand-driven sensor can remain asleep when only a best-effort subscriber is
+present. The simulation profiles therefore set `image_reliability: reliable`.
+Use `best_effort` instead when connecting the detector to hardware drivers that
+publish only sensor-data QoS.
 
 ## Install the inference environment
 
@@ -55,6 +86,65 @@ otherwise modify that environment.
 
 ## Build and run
 
+### Ten-site simulation coverage pass
+
+The coverage entry point uses one YOLO model instance for XJ1-XJ4 and Pitch.
+It starts a bounded drive at `0.2 m/s` and stops when all ten reference sites
+are confirmed or the robot reaches `x=31 m`:
+
+```bash
+cd /home/jo/my-project/metro-inspection
+./ros_ws/src/metro_sim/scripts/open_subway_tunnel_v2_yolo_coverage.sh gui:=true
+```
+
+Each site requires boxes from three unique source-image timestamps. Reference
+positions are used only to match and score real YOLO output; they never create
+a box. The result is therefore marked `truth_assisted` and is published on a
+simulation-only interface:
+
+The automatic driver remains stopped until all five cameras have completed at
+least one YOLO inference. This prevents model-loading time from skipping the
+first defects in the route.
+
+```text
+/simulation/defect_coverage  std_msgs/msg/String
+/simulation/defect_events    metro_inspection_interfaces/msg/DefectEvent
+```
+
+Inspect the complete result in another terminal:
+
+```bash
+source /opt/ros/humble/setup.bash
+source /home/jo/my-project/metro-inspection/ros_ws/install/setup.bash
+export ROS_DOMAIN_ID=70
+
+ros2 topic echo /simulation/defect_coverage --once --full-length
+```
+
+To show the ten stable simulation events in the dashboard, select the explicit
+simulation topic. Confirmed events are periodically republished with stable
+IDs, so starting the dashboard after the pass does not increase the stored
+count beyond ten:
+
+```bash
+cd /home/jo/my-project/metro-inspection
+METRO_DASHBOARD_DEFECT_TOPIC=/simulation/defect_events \
+  ./scripts/open_defect_dashboard.sh
+```
+
+Disable automatic movement when checking camera placement manually:
+
+```bash
+METRO_COVERAGE_AUTO_DRIVE=false \
+  ./ros_ws/src/metro_sim/scripts/open_subway_tunnel_v2_yolo_coverage.sh gui:=true
+```
+
+This pass measures coverage of the current simulation, not detector accuracy.
+A `10/10` result does not replace an independently labeled validation set, and
+the truth-assisted event topic must not be used as a production detector feed.
+
+### Existing two-camera profile
+
 Start the full fusion simulation and both YOLO detectors together:
 
 ```bash
@@ -74,8 +164,10 @@ Pitch ceiling image
   -> /damage_detection/pitch/annotated_image
 ```
 
-The complete Pitch assembly is tilted 75 degrees above the robot forward axis.
-Its approximately 34.5-degree vertical FOV therefore includes the tunnel crown.
+The visible Pitch assembly is a controlled revolute joint. The complete
+platform starts it at `+45 deg`, placing the center ray 30 degrees above the
+robot forward axis; its approximately 42.7-degree vertical FOV then covers the
+forward upper wall. Use `initial_pitch_deg` to override this startup angle.
 
 Connect YOLO to an already running sensor or fusion simulation:
 
@@ -84,10 +176,11 @@ cd /home/jo/my-project/metro-inspection
 ./scripts/open_yolo_detector.sh
 ```
 
-The default model is:
+The generic single-camera detector defaults to the real-image experiment
+checkpoint:
 
 ```text
-/home/jo/incoming/yolov8n_sim_demo_best(1).pt
+/home/jo/incoming/best.pt
 ```
 
 Override the model, topic, confidence, or device with environment variables:
@@ -129,7 +222,8 @@ Odin1 point-cloud samples before it can publish trustworthy 3D coordinates.
 
 ## Important limitation
 
-This model was trained from the `yolo_synthetic` simulation dataset recorded
-in its checkpoint metadata. Successful inference proves that the ROS image and
-detection pipeline works; it does not establish accuracy on real tunnel images.
-Evaluate it on held-out simulation images and real labeled images separately.
+The current checkpoint reports `yolo26x.pt`, a 320-pixel training image size,
+three requested epochs, and a best checkpoint saved at epoch zero with fitness
+`0.00262`. Its larger network and successful ROS inference do not establish an
+accuracy improvement. Compare it with the previous model on the same labeled
+simulation frames, then evaluate it separately on held-out real tunnel images.

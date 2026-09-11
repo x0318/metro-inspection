@@ -1,0 +1,10 @@
+/subway_v2/controller_manager:
+  ros__parameters:
+    update_rate: 100
+    pitch_position_controller:
+      type: position_controllers/JointGroupPositionController
+
+/subway_v2/pitch_position_controller:
+  ros__parameters:
+    joints:
+      - pitch_joint

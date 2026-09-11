@@ -1,0 +1,2108 @@
+<?xml version='1.0' encoding='utf-8'?>
+<sdf version="1.7">
+  <world name="route_choice_training">
+    <physics type="ode">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+    </physics>
+    <scene>
+      <ambient>0.55 0.56 0.58 1</ambient>
+      <background>0.07 0.08 0.09 1</background>
+      <shadows>true</shadows>
+      <grid>false</grid>
+      <origin_visual>false</origin_visual>
+    </scene>
+    <gui fullscreen="0">
+      <camera name="user_camera">
+        <pose>-15 -15 15 0 0.58 0.78</pose>
+        <view_controller>orbit</view_controller>
+        <projection_type>perspective</projection_type>
+      </camera>
+    </gui>
+    <light name="sun" type="directional">
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 20 0 0 0</pose>
+      <diffuse>0.82 0.82 0.80 1</diffuse>
+      <specular>0.20 0.20 0.20 1</specular>
+      <direction>-0.35 0.20 -0.92</direction>
+    </light>
+    <model name="route_choice_track">
+      <static>true</static>
+      <link name="track_link">
+        <visual name="main_rail_left_000">
+          <pose>0.00000 0.55000 0.35000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>30.06000 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_rail_right_000">
+          <pose>0.00000 -0.55000 0.35000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>30.06000 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <collision name="main_support_000">
+          <pose>0.00000 0.00000 0.30500 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>30.06000 2.10 0.05000</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="main_sleeper_000">
+          <pose>-15.00000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_001">
+          <pose>-14.35000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_002">
+          <pose>-13.70000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_003">
+          <pose>-13.05000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_004">
+          <pose>-12.40000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_005">
+          <pose>-11.75000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_006">
+          <pose>-11.10000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_007">
+          <pose>-10.45000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_008">
+          <pose>-9.80000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_009">
+          <pose>-9.15000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_010">
+          <pose>-8.50000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_011">
+          <pose>-7.85000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_012">
+          <pose>-7.20000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_013">
+          <pose>-6.55000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_014">
+          <pose>-5.90000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_015">
+          <pose>-5.25000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_016">
+          <pose>-4.60000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_017">
+          <pose>-3.95000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_018">
+          <pose>-3.30000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_019">
+          <pose>-2.65000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_020">
+          <pose>-2.00000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_021">
+          <pose>-1.35000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_022">
+          <pose>-0.70000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_023">
+          <pose>-0.05000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_024">
+          <pose>0.60000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_025">
+          <pose>1.25000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_026">
+          <pose>1.90000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_027">
+          <pose>2.55000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_028">
+          <pose>3.20000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_029">
+          <pose>3.85000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_030">
+          <pose>4.50000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_031">
+          <pose>5.15000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_032">
+          <pose>5.80000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_033">
+          <pose>6.45000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_034">
+          <pose>7.10000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_035">
+          <pose>7.75000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_036">
+          <pose>8.40000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_037">
+          <pose>9.05000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_038">
+          <pose>9.70000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_039">
+          <pose>10.35000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_040">
+          <pose>11.00000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_041">
+          <pose>11.65000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_042">
+          <pose>12.30000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_043">
+          <pose>12.95000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_044">
+          <pose>13.60000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_045">
+          <pose>14.25000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="main_sleeper_046">
+          <pose>14.90000 0.00000 0.27000 0 0 0.0000000</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_rail_left_000">
+          <pose>-3.82763 0.55495 0.35000 0 0 0.0274842</pose>
+          <geometry>
+            <box>
+              <size>0.43511 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_rail_right_000">
+          <pose>-3.79740 -0.54464 0.35000 0 0 0.0274842</pose>
+          <geometry>
+            <box>
+              <size>0.43511 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <collision name="branch_support_000">
+          <pose>-3.81252 0.00515 0.30500 0 0 0.0274842</pose>
+          <geometry>
+            <box>
+              <size>0.43511 2.10 0.05000</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="branch_rail_left_001">
+          <pose>-3.48226 0.57374 0.35000 0 0 0.0811840</pose>
+          <geometry>
+            <box>
+              <size>0.43599 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_rail_right_001">
+          <pose>-3.39306 -0.52264 0.35000 0 0 0.0811840</pose>
+          <geometry>
+            <box>
+              <size>0.43599 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <collision name="branch_support_001">
+          <pose>-3.43766 0.02555 0.30500 0 0 0.0811840</pose>
+          <geometry>
+            <box>
+              <size>0.43599 2.10 0.05000</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="branch_rail_left_002">
+          <pose>-3.13599 0.61096 0.35000 0 0 0.1328490</pose>
+          <geometry>
+            <box>
+              <size>0.43764 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_rail_right_002">
+          <pose>-2.99028 -0.47934 0.35000 0 0 0.1328490</pose>
+          <geometry>
+            <box>
+              <size>0.43764 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <collision name="branch_support_002">
+          <pose>-3.06313 0.06581 0.30500 0 0 0.1328490</pose>
+          <geometry>
+            <box>
+              <size>0.43764 2.10 0.05000</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="branch_rail_left_003">
+          <pose>-2.78888 0.66615 0.35000 0 0 0.1823482</pose>
+          <geometry>
+            <box>
+              <size>0.43996 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_rail_right_003">
+          <pose>-2.58941 -0.41561 0.35000 0 0 0.1823482</pose>
+          <geometry>
+            <box>
+              <size>0.43996 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <collision name="branch_support_003">
+          <pose>-2.68915 0.12527 0.30500 0 0 0.1823482</pose>
+          <geometry>
+            <box>
+              <size>0.43996 2.10 0.05000</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="branch_rail_left_004">
+          <pose>-2.44109 0.73885 0.35000 0 0 0.2296030</pose>
+          <geometry>
+            <box>
+              <size>0.44284 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_rail_right_004">
+          <pose>-2.19074 -0.33228 0.35000 0 0 0.2296030</pose>
+          <geometry>
+            <box>
+              <size>0.44284 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <collision name="branch_support_004">
+          <pose>-2.31592 0.20329 0.30500 0 0 0.2296030</pose>
+          <geometry>
+            <box>
+              <size>0.44284 2.10 0.05000</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="branch_rail_left_005">
+          <pose>-2.09280 0.82860 0.35000 0 0 0.2745816</pose>
+          <geometry>
+            <box>
+              <size>0.44618 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_rail_right_005">
+          <pose>-1.79454 -0.23019 0.35000 0 0 0.2745816</pose>
+          <geometry>
+            <box>
+              <size>0.44618 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <collision name="branch_support_005">
+          <pose>-1.94367 0.29921 0.30500 0 0 0.2745816</pose>
+          <geometry>
+            <box>
+              <size>0.44618 2.10 0.05000</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="branch_rail_left_006">
+          <pose>-1.74421 0.93493 0.35000 0 0 0.3172913</pose>
+          <geometry>
+            <box>
+              <size>0.44987 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_rail_right_006">
+          <pose>-1.40101 -0.11017 0.35000 0 0 0.3172913</pose>
+          <geometry>
+            <box>
+              <size>0.44987 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <collision name="branch_support_006">
+          <pose>-1.57261 0.41238 0.30500 0 0 0.3172913</pose>
+          <geometry>
+            <box>
+              <size>0.44987 2.10 0.05000</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="branch_rail_left_007">
+          <pose>-1.39557 1.05733 0.35000 0 0 0.3577710</pose>
+          <geometry>
+            <box>
+              <size>0.45382 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_rail_right_007">
+          <pose>-1.01036 0.02698 0.35000 0 0 0.3577710</pose>
+          <geometry>
+            <box>
+              <size>0.45382 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <collision name="branch_support_007">
+          <pose>-1.20296 0.54215 0.30500 0 0 0.3577710</pose>
+          <geometry>
+            <box>
+              <size>0.45382 2.10 0.05000</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="branch_rail_left_008">
+          <pose>-1.04714 1.19530 0.35000 0 0 0.3960845</pose>
+          <geometry>
+            <box>
+              <size>0.45796 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_rail_right_008">
+          <pose>-0.62275 0.18046 0.35000 0 0 0.3960845</pose>
+          <geometry>
+            <box>
+              <size>0.45796 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <collision name="branch_support_008">
+          <pose>-0.83494 0.68788 0.30500 0 0 0.3960845</pose>
+          <geometry>
+            <box>
+              <size>0.45796 2.10 0.05000</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="branch_rail_left_009">
+          <pose>-0.69920 1.34830 0.35000 0 0 0.4323136</pose>
+          <geometry>
+            <box>
+              <size>0.46220 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_rail_right_009">
+          <pose>-0.23833 0.34950 0.35000 0 0 0.4323136</pose>
+          <geometry>
+            <box>
+              <size>0.46220 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <collision name="branch_support_009">
+          <pose>-0.46877 0.84890 0.30500 0 0 0.4323136</pose>
+          <geometry>
+            <box>
+              <size>0.46220 2.10 0.05000</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="branch_rail_left_010">
+          <pose>-0.35205 1.51580 0.35000 0 0 0.4665526</pose>
+          <geometry>
+            <box>
+              <size>0.46647 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_rail_right_010">
+          <pose>0.14274 0.53336 0.35000 0 0 0.4665526</pose>
+          <geometry>
+            <box>
+              <size>0.46647 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <collision name="branch_support_010">
+          <pose>-0.10465 1.02458 0.30500 0 0 0.4665526</pose>
+          <geometry>
+            <box>
+              <size>0.46647 2.10 0.05000</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="branch_rail_left_011">
+          <pose>-0.00598 1.69721 0.35000 0 0 0.4989039</pose>
+          <geometry>
+            <box>
+              <size>0.47070 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_rail_right_011">
+          <pose>0.52033 0.73129 0.35000 0 0 0.4989039</pose>
+          <geometry>
+            <box>
+              <size>0.47070 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <collision name="branch_support_011">
+          <pose>0.25718 1.21425 0.30500 0 0 0.4989039</pose>
+          <geometry>
+            <box>
+              <size>0.47070 2.10 0.05000</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="branch_rail_left_012">
+          <pose>0.33872 1.89195 0.35000 0 0 0.5294740</pose>
+          <geometry>
+            <box>
+              <size>0.47484 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_rail_right_012">
+          <pose>0.89431 0.94257 0.35000 0 0 0.5294740</pose>
+          <geometry>
+            <box>
+              <size>0.47484 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <collision name="branch_support_012">
+          <pose>0.61652 1.41726 0.30500 0 0 0.5294740</pose>
+          <geometry>
+            <box>
+              <size>0.47484 2.10 0.05000</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="branch_rail_left_013">
+          <pose>0.68175 2.09944 0.35000 0 0 0.5583705</pose>
+          <geometry>
+            <box>
+              <size>0.47883 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_rail_right_013">
+          <pose>1.26454 1.16651 0.35000 0 0 0.5583705</pose>
+          <geometry>
+            <box>
+              <size>0.47883 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <collision name="branch_support_013">
+          <pose>0.97314 1.63298 0.30500 0 0 0.5583705</pose>
+          <geometry>
+            <box>
+              <size>0.47883 2.10 0.05000</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="branch_rail_left_014">
+          <pose>1.02281 2.31906 0.35000 0 0 0.5857002</pose>
+          <geometry>
+            <box>
+              <size>0.48262 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_rail_right_014">
+          <pose>1.63087 1.40240 0.35000 0 0 0.5857002</pose>
+          <geometry>
+            <box>
+              <size>0.48262 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <collision name="branch_support_014">
+          <pose>1.32684 1.86073 0.30500 0 0 0.5857002</pose>
+          <geometry>
+            <box>
+              <size>0.48262 2.10 0.05000</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="branch_rail_left_015">
+          <pose>1.36161 2.55019 0.35000 0 0 0.6115673</pose>
+          <geometry>
+            <box>
+              <size>0.48616 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_rail_right_015">
+          <pose>1.99317 1.64957 0.35000 0 0 0.6115673</pose>
+          <geometry>
+            <box>
+              <size>0.48616 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <collision name="branch_support_015">
+          <pose>1.67739 2.09988 0.30500 0 0 0.6115673</pose>
+          <geometry>
+            <box>
+              <size>0.48616 2.10 0.05000</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="branch_rail_left_016">
+          <pose>1.69785 2.79221 0.35000 0 0 0.6360724</pose>
+          <geometry>
+            <box>
+              <size>0.48943 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_rail_right_016">
+          <pose>2.35130 1.90733 0.35000 0 0 0.6360724</pose>
+          <geometry>
+            <box>
+              <size>0.48943 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <collision name="branch_support_016">
+          <pose>2.02458 2.34977 0.30500 0 0 0.6360724</pose>
+          <geometry>
+            <box>
+              <size>0.48943 2.10 0.05000</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="branch_rail_left_017">
+          <pose>2.03127 3.04448 0.35000 0 0 0.6593117</pose>
+          <geometry>
+            <box>
+              <size>0.49238 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_rail_right_017">
+          <pose>2.70510 2.17503 0.35000 0 0 0.6593117</pose>
+          <geometry>
+            <box>
+              <size>0.49238 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <collision name="branch_support_017">
+          <pose>2.36818 2.60975 0.30500 0 0 0.6593117</pose>
+          <geometry>
+            <box>
+              <size>0.49238 2.10 0.05000</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="branch_rail_left_018">
+          <pose>2.36157 3.30637 0.35000 0 0 0.6813768</pose>
+          <geometry>
+            <box>
+              <size>0.49498 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_rail_right_018">
+          <pose>3.05441 2.45199 0.35000 0 0 0.6813768</pose>
+          <geometry>
+            <box>
+              <size>0.49498 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <collision name="branch_support_018">
+          <pose>2.70799 2.87918 0.30500 0 0 0.6813768</pose>
+          <geometry>
+            <box>
+              <size>0.49498 2.10 0.05000</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="branch_rail_left_019">
+          <pose>2.68847 3.57722 0.35000 0 0 0.7023541</pose>
+          <geometry>
+            <box>
+              <size>0.49721 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_rail_right_019">
+          <pose>3.39909 2.73756 0.35000 0 0 0.7023541</pose>
+          <geometry>
+            <box>
+              <size>0.49721 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <collision name="branch_support_019">
+          <pose>3.04378 3.15739 0.30500 0 0 0.7023541</pose>
+          <geometry>
+            <box>
+              <size>0.49721 2.10 0.05000</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="branch_rail_left_020">
+          <pose>3.01172 3.85639 0.35000 0 0 0.7223253</pose>
+          <geometry>
+            <box>
+              <size>0.49903 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_rail_right_020">
+          <pose>3.73897 3.03109 0.35000 0 0 0.7223253</pose>
+          <geometry>
+            <box>
+              <size>0.49903 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <collision name="branch_support_020">
+          <pose>3.37534 3.44374 0.30500 0 0 0.7223253</pose>
+          <geometry>
+            <box>
+              <size>0.49903 2.10 0.05000</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="branch_rail_left_021">
+          <pose>3.33104 4.14323 0.35000 0 0 0.7413671</pose>
+          <geometry>
+            <box>
+              <size>0.50042 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_rail_right_021">
+          <pose>4.07387 3.33193 0.35000 0 0 0.7413671</pose>
+          <geometry>
+            <box>
+              <size>0.50042 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <collision name="branch_support_021">
+          <pose>3.70246 3.73758 0.30500 0 0 0.7413671</pose>
+          <geometry>
+            <box>
+              <size>0.50042 2.10 0.05000</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="branch_rail_left_022">
+          <pose>3.64617 4.43708 0.35000 0 0 0.7595518</pose>
+          <geometry>
+            <box>
+              <size>0.50137 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_rail_right_022">
+          <pose>4.40363 3.63942 0.35000 0 0 0.7595518</pose>
+          <geometry>
+            <box>
+              <size>0.50137 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <collision name="branch_support_022">
+          <pose>4.02490 4.03825 0.30500 0 0 0.7595518</pose>
+          <geometry>
+            <box>
+              <size>0.50137 2.10 0.05000</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="branch_rail_left_023">
+          <pose>3.95686 4.73729 0.35000 0 0 0.7769473</pose>
+          <geometry>
+            <box>
+              <size>0.50186 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_rail_right_023">
+          <pose>4.72807 3.95292 0.35000 0 0 0.7769473</pose>
+          <geometry>
+            <box>
+              <size>0.50186 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <collision name="branch_support_023">
+          <pose>4.34247 4.34511 0.30500 0 0 0.7769473</pose>
+          <geometry>
+            <box>
+              <size>0.50186 2.10 0.05000</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="branch_rail_left_024">
+          <pose>7.86109 8.63891 0.35000 0 0 0.7853982</pose>
+          <geometry>
+            <box>
+              <size>10.66660 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_rail_right_024">
+          <pose>8.63891 7.86109 0.35000 0 0 0.7853982</pose>
+          <geometry>
+            <box>
+              <size>10.66660 0.07500 0.10000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.42 0.45 0.48 1</ambient>
+            <diffuse>0.42 0.45 0.48 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <collision name="branch_support_024">
+          <pose>8.25000 8.25000 0.30500 0 0 0.7853982</pose>
+          <geometry>
+            <box>
+              <size>10.66660 2.10 0.05000</size>
+            </box>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>1.0</mu>
+                <mu2>1.0</mu2>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+        <visual name="branch_sleeper_004">
+          <pose>-1.45161 0.45212 0.27000 0 0 0.3172913</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_sleeper_005">
+          <pose>-0.84452 0.68387 0.27000 0 0 0.3960845</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_sleeper_006">
+          <pose>-0.25184 0.95045 0.27000 0 0 0.4665526</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_sleeper_007">
+          <pose>0.32446 1.25090 0.27000 0 0 0.4989039</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_sleeper_008">
+          <pose>0.88580 1.57841 0.27000 0 0 0.5583705</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_sleeper_009">
+          <pose>1.43208 1.93054 0.27000 0 0 0.5857002</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_sleeper_010">
+          <pose>1.96352 2.30468 0.27000 0 0 0.6360724</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_sleeper_011">
+          <pose>2.48136 2.69747 0.27000 0 0 0.6593117</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_sleeper_012">
+          <pose>2.98532 3.10791 0.27000 0 0 0.7023541</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_sleeper_013">
+          <pose>3.47685 3.53319 0.27000 0 0 0.7223253</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_sleeper_014">
+          <pose>3.95577 3.97260 0.27000 0 0 0.7595518</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_sleeper_015">
+          <pose>4.42308 4.42437 0.27000 0 0 0.7769473</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_sleeper_016">
+          <pose>4.88334 4.88334 0.27000 0 0 0.7853982</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_sleeper_017">
+          <pose>5.34296 5.34296 0.27000 0 0 0.7853982</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_sleeper_018">
+          <pose>5.80258 5.80258 0.27000 0 0 0.7853982</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_sleeper_019">
+          <pose>6.26220 6.26220 0.27000 0 0 0.7853982</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_sleeper_020">
+          <pose>6.72182 6.72182 0.27000 0 0 0.7853982</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_sleeper_021">
+          <pose>7.18144 7.18144 0.27000 0 0 0.7853982</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_sleeper_022">
+          <pose>7.64106 7.64106 0.27000 0 0 0.7853982</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_sleeper_023">
+          <pose>8.10068 8.10068 0.27000 0 0 0.7853982</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_sleeper_024">
+          <pose>8.56030 8.56030 0.27000 0 0 0.7853982</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_sleeper_025">
+          <pose>9.01992 9.01992 0.27000 0 0 0.7853982</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_sleeper_026">
+          <pose>9.47954 9.47954 0.27000 0 0 0.7853982</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_sleeper_027">
+          <pose>9.93916 9.93916 0.27000 0 0 0.7853982</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_sleeper_028">
+          <pose>10.39878 10.39878 0.27000 0 0 0.7853982</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_sleeper_029">
+          <pose>10.85839 10.85839 0.27000 0 0 0.7853982</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_sleeper_030">
+          <pose>11.31801 11.31801 0.27000 0 0 0.7853982</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+        <visual name="branch_sleeper_031">
+          <pose>11.77763 11.77763 0.27000 0 0 0.7853982</pose>
+          <geometry>
+            <box>
+              <size>0.18000 1.85000 0.12000</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.16 0.17 0.18 1</ambient>
+            <diffuse>0.16 0.17 0.18 1</diffuse>
+            <specular>0.35 0.35 0.35 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+    <include>
+      <uri>model://metro_route_training_car</uri>
+      <name>route_training_robot</name>
+      <pose>-12 0 0.42 0 0 0</pose>
+    </include>
+  </world>
+</sdf>

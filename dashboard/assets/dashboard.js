@@ -4,6 +4,9 @@ createApp({
   setup() {
     const activeView = ref('overview');
     const records = ref([]);
+    const sessions = ref([]);
+    const activeSessionId = ref('');
+    const selectedSessionId = ref('');
     const backendOnline = ref(false);
     const lastUpdated = ref(null);
     const errorMessage = ref('');
@@ -23,10 +26,13 @@ createApp({
     const focusedCameraId = ref('');
     const selectedMonitorCameraId = ref('xj1');
     const compactCameraLayout = ref(false);
+    const cameraFrameRevision = ref(Date.now());
     let pollTimer = null;
+    let cameraFrameTimer = null;
     let cameraMediaQuery = null;
     let severityChart = null;
     let typeChart = null;
+    let refreshSequence = 0;
 
     const cameraCatalog = Object.freeze([
       { id: 'xj1', label: 'XJ1' },
@@ -35,12 +41,47 @@ createApp({
       { id: 'xj4', label: 'XJ4' },
       { id: 'pitch_camera', label: 'Pitch' }
     ]);
+    const yoloCameraCatalog = Object.freeze([
+      { id: 'yolo_xj1', label: 'XJ1' },
+      { id: 'yolo_xj2', label: 'XJ2' },
+      { id: 'yolo_xj3', label: 'XJ3' },
+      { id: 'yolo_xj4', label: 'XJ4' },
+      { id: 'yolo_pitch_camera', label: 'Pitch' }
+    ]);
+    const eventCameraCatalog = Object.freeze([
+      ...cameraCatalog,
+      { id: 'odin1', label: 'Odin1（三维定位）' }
+    ]);
+    const modelMode = computed(() => cameraStatuses.value.some(camera => camera.id.startsWith('model_')));
+    const modelCameraCatalog = eventCameraCatalog.map(camera => ({
+      id: `model_${camera.id}`, label: camera.id === 'odin1' ? 'Odin1' : camera.label
+    }));
     const cameras = Object.freeze([
       { id: 'all', label: '全部相机' },
-      ...cameraCatalog
+      ...eventCameraCatalog
     ]);
+    const defectTypeLabels = Object.freeze({
+      fastener_loose: 'koujianwaixie',
+      fastener_broken: 'koujianduanlie',
+      fastener_missing: 'koujianqueshi',
+      foreign_object: 'yiwu',
+      bracket_loose: 'guanxiansongtuo',
+      segment_damage: 'guanpianposun',
+      crack: 'liefeng',
+      water_leakage: 'shenloushui'
+    });
 
-    const monitorCameras = computed(() => cameraCatalog.map(camera => {
+    function defectTypeLabel(value) {
+      const className = String(value || '').trim();
+      if (!className) return '未分类';
+      return defectTypeLabels[className] || className;
+    }
+
+    const monitorCameras = computed(() => {
+      const catalog = activeView.value === 'model' ? modelCameraCatalog
+        : activeView.value === 'yolo' ? yoloCameraCatalog
+        : modelMode.value ? eventCameraCatalog : cameraCatalog;
+      return catalog.map(camera => {
       const status = cameraStatuses.value.find(item => item.id === camera.id);
       return {
         ...camera,
@@ -49,9 +90,10 @@ createApp({
         source_fps: Number(status?.source_fps || 0),
         age_seconds: status?.age_seconds ?? null,
         frames_received: Number(status?.frames_received || 0),
-        stream_url: status?.stream_url || `/api/cameras/${camera.id}/stream.mjpg`
+        frame_url: status?.frame_url || `/api/cameras/${camera.id}/frame.jpg`
       };
-    }));
+      });
+    });
 
     const onlineCameraCount = computed(() => (
       monitorCameras.value.filter(camera => camera.available).length
@@ -94,6 +136,7 @@ createApp({
           item.detection_id,
           item.type,
           item.class_name,
+          defectTypeLabels[item.type],
           item.mileage,
           item.semantic_location?.segment_name,
           item.semantic_location?.segment_id
@@ -106,10 +149,21 @@ createApp({
       filteredRecords.value.find(item => item.event_id === selectedId.value) || null
     ));
 
+    const selectedSession = computed(() => (
+      sessions.value.find(session => session.session_id === selectedSessionId.value) || null
+    ));
+
+    const selectedSessionIsActive = computed(() => (
+      Boolean(selectedSessionId.value)
+      && selectedSessionId.value === activeSessionId.value
+    ));
+
     const summary = computed(() => ({
       total: records.value.length,
-      localized: records.value.filter(item => item.has_3d_position).length,
-      semantic: records.value.filter(item => item.has_semantic_location).length,
+      reference: records.value.filter(item => item.source_kind === 'model_annotation' && item.has_3d_position).length,
+      referenceSemantic: records.value.filter(item => item.source_kind === 'model_annotation' && item.has_semantic_location).length,
+      localized: records.value.filter(item => item.has_3d_position && item.source_kind !== 'model_annotation').length,
+      semantic: records.value.filter(item => item.has_semantic_location && item.source_kind !== 'model_annotation').length,
       severe: records.value.filter(item => Number(item.severity) === 3).length,
       unknown: records.value.filter(item => Number(item.severity || 0) === 0).length
     }));
@@ -127,7 +181,10 @@ createApp({
 
     watch(activeView, value => {
       if (value === 'report') nextTick(renderCharts);
-      if (value !== 'cameras') focusedCameraId.value = '';
+      focusedCameraId.value = '';
+      if (value === 'cameras') selectedMonitorCameraId.value = 'xj1';
+      if (value === 'yolo') selectedMonitorCameraId.value = 'yolo_xj1';
+      if (value === 'model') selectedMonitorCameraId.value = 'model_odin1';
     });
 
     watch(records, () => {
@@ -141,17 +198,36 @@ createApp({
     }
 
     async function refreshData() {
-      if (refreshing.value) return;
+      const sequence = ++refreshSequence;
+      const requestedSessionId = selectedSessionId.value;
       refreshing.value = true;
       try {
+        const sessionData = await fetchJson('/api/sessions');
+        const availableSessions = Array.isArray(sessionData.sessions)
+          ? sessionData.sessions
+          : [];
+        const currentActiveSessionId = String(sessionData.active_session_id || '');
+        const selectedStillExists = availableSessions.some(
+          session => session.session_id === requestedSessionId
+        );
+        const targetSessionId = selectedStillExists
+          ? requestedSessionId
+          : currentActiveSessionId;
+        const sessionQuery = targetSessionId
+          ? `?session_id=${encodeURIComponent(targetSessionId)}`
+          : '';
         const [health, defects, cameraData] = await Promise.all([
           fetchJson('/api/health'),
-          fetchJson('/api/defects'),
+          fetchJson(`/api/defects${sessionQuery}`),
           fetchJson('/api/cameras')
         ]);
         if (health.service !== 'metro_dashboard_bridge' || health.status !== 'online') {
           throw new Error('服务响应不符合平台接口');
         }
+        if (sequence !== refreshSequence) return;
+        sessions.value = availableSessions;
+        activeSessionId.value = currentActiveSessionId;
+        selectedSessionId.value = targetSessionId;
         records.value = Array.isArray(defects.records) ? defects.records : [];
         cameraStatuses.value = Array.isArray(cameraData.cameras) ? cameraData.cameras : [];
         if (cameraData.preview && typeof cameraData.preview === 'object') {
@@ -161,11 +237,12 @@ createApp({
         errorMessage.value = '';
         lastUpdated.value = new Date();
       } catch (error) {
+        if (sequence !== refreshSequence) return;
         backendOnline.value = false;
         cameraStatuses.value = [];
         errorMessage.value = error instanceof Error ? error.message : '无法读取病害接口';
       } finally {
-        refreshing.value = false;
+        if (sequence === refreshSequence) refreshing.value = false;
       }
     }
 
@@ -196,6 +273,12 @@ createApp({
       return date.toLocaleString('zh-CN', { hour12: false });
     }
 
+    function sessionOptionText(session) {
+      const activeLabel = session?.active ? '实时' : '历史';
+      const count = Number(session?.record_count || 0);
+      return `${formatTime(session?.started_at)} · ${count} 条 · ${activeLabel}`;
+    }
+
     function bboxText(bbox) {
       if (!bbox) return '--';
       return `x ${formatNumber(bbox.x, 0)}, y ${formatNumber(bbox.y, 0)}, ${formatNumber(bbox.width, 0)} x ${formatNumber(bbox.height, 0)} px`;
@@ -207,6 +290,7 @@ createApp({
     }
 
     function stageText(item) {
+      if (item?.source_kind === 'model_annotation') return '模型标注演示';
       if (item?.has_semantic_location) return '工程定位完成';
       if (item?.has_3d_position) return '三维定位完成';
       return '二维识别';
@@ -217,7 +301,8 @@ createApp({
         none: '未定位',
         current_cloud: '当前点云',
         accumulated_map: '积累点云地图',
-        tunnel_model: '隧道模型求交'
+        tunnel_model: '隧道模型求交',
+        model_reference: '模型参考坐标（演示）'
       };
       return labels[item?.localization?.method_name] || item?.localization?.method_name || '--';
     }
@@ -257,9 +342,9 @@ createApp({
       return age < 0.1 ? '刚刚更新' : `${age.toFixed(1)} 秒前`;
     }
 
-    function streamUrl(camera) {
-      const separator = camera.stream_url.includes('?') ? '&' : '?';
-      return `${camera.stream_url}${separator}fps=${previewProfile.value.default_fps}`;
+    function cameraFrameUrl(camera) {
+      const separator = camera.frame_url.includes('?') ? '&' : '?';
+      return `${camera.frame_url}${separator}v=${cameraFrameRevision.value}`;
     }
 
     function updateCameraLayout(event) {
@@ -294,7 +379,7 @@ createApp({
 
       const counts = {};
       records.value.forEach(item => {
-        const name = item.type || '未分类';
+        const name = defectTypeLabel(item.type);
         counts[name] = (counts[name] || 0) + 1;
       });
       const typeData = Object.entries(counts).map(([name, value]) => ({ name, value }));
@@ -326,11 +411,17 @@ createApp({
       cameraMediaQuery.addEventListener('change', updateCameraLayout);
       refreshData();
       pollTimer = window.setInterval(refreshData, 2000);
+      cameraFrameTimer = window.setInterval(() => {
+        if (!document.hidden && ['cameras', 'yolo', 'model'].includes(activeView.value)) {
+          cameraFrameRevision.value = Date.now();
+        }
+      }, 500);
       window.addEventListener('resize', resizeCharts);
     });
 
     onBeforeUnmount(() => {
       if (pollTimer) window.clearInterval(pollTimer);
+      if (cameraFrameTimer) window.clearInterval(cameraFrameTimer);
       if (severityChart) severityChart.dispose();
       if (typeChart) typeChart.dispose();
       if (cameraMediaQuery) cameraMediaQuery.removeEventListener('change', updateCameraLayout);
@@ -338,8 +429,11 @@ createApp({
     });
 
     return {
+      modelMode,
       activeView,
       records,
+      sessions,
+      selectedSessionId,
       backendOnline,
       lastUpdatedText,
       errorMessage,
@@ -359,14 +453,18 @@ createApp({
       selectedMonitorCamera,
       filteredRecords,
       selectedRecord,
+      selectedSession,
+      selectedSessionIsActive,
       summary,
       cameraLabel,
       cameraCount,
+      defectTypeLabel,
       refreshData,
       levelText,
       severityClass,
       confidenceText,
       formatTime,
+      sessionOptionText,
       bboxText,
       positionText,
       stageText,
@@ -377,7 +475,7 @@ createApp({
       formatFps,
       cameraFpsText,
       cameraAgeText,
-      streamUrl,
+      cameraFrameUrl,
       printReport
     };
   }

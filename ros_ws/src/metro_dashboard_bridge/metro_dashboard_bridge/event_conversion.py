@@ -16,6 +16,7 @@ LOCALIZATION_LABELS = {
     DefectEvent.LOCALIZATION_CURRENT_CLOUD: "current_cloud",
     DefectEvent.LOCALIZATION_ACCUMULATED_MAP: "accumulated_map",
     DefectEvent.LOCALIZATION_TUNNEL_MODEL: "tunnel_model",
+    DefectEvent.LOCALIZATION_MODEL_REFERENCE: "model_reference",
 }
 
 
@@ -149,8 +150,14 @@ def defect_event_to_record(message: DefectEvent) -> Dict[str, object]:
             "structure_area": message.structure_area.strip(),
         }
 
+    model_annotation = localization_method == DefectEvent.LOCALIZATION_MODEL_REFERENCE
+    if model_annotation:
+        confidence = None
+        localization["confidence"] = None
+
     return {
         "event_id": event_id,
+        "source_kind": "model_annotation" if model_annotation else "detection",
         "detection_id": message.detection_id.strip(),
         "source_stamp": _stamp(message.header.stamp),
         "source_frame_id": message.header.frame_id.strip(),

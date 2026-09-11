@@ -1,6 +1,7 @@
 # metro_dashboard_bridge
 
-订阅 `metro_inspection_interfaces/msg/DefectEvent` 和五路压缩相机图像，托管巡检平台
+订阅 `metro_inspection_interfaces/msg/DefectEvent`、五路原始相机图像和五路 YOLO
+带框图像，托管巡检平台
 页面，并提供只读病害记录与相机流 API。本包不运行二维识别算法，也不会生成随机或演示
 病害。
 
@@ -19,16 +20,20 @@
 更新结果。存储层会替换该事件，而不是重复生成多条病害记录。默认最多保留 500 条记录，
 并持久化到 `~/.local/share/metro-inspection/defects.sqlite3`；服务重启后仍会加载原记录。
 `inspection_session_id` 用于隔离不同巡检批次，同一数据库中的不同会话不会互相覆盖。
+平台的“巡检历史”选择器通过只读接口切换显示数据库中的旧会话；切换查看不会改变当前
+ROS 2 事件的写入会话。
 
 ```text
 /subway_v2/{xj1,xj2,xj3,xj4,pitch_camera}/image_raw/compressed
+以及 /damage_detection/{xj1,xj2,xj3,xj4,pitch}/annotated_image/compressed
   -> metro_dashboard_bridge（每路只保留最新压缩帧）
   -> 保持宽高比缩放、JPEG 质量和输出 FPS 限制
   -> GET /api/cameras/{camera_id}/stream.mjpg
   -> 桌面五画面 / 手机单画面
 ```
 
-相机图像不会写入病害存储。没有网页观看时不会进行 OpenCV 解码和二次 JPEG 编码。
+相机图像不会写入病害存储。原始画面和 YOLO 带框画面分别显示在“相机监控”和
+“YOLO 识别监控”页面；没有网页观看时不会进行 OpenCV 解码和二次 JPEG 编码。
 
 ## 启动
 
@@ -101,14 +106,15 @@ ros2 run metro_dashboard_bridge defect_event_bridge \
 
 ```text
 GET /api/health
-GET /api/defects
-GET /api/defects/{event_id}
+GET /api/sessions
+GET /api/defects?session_id=<inspection_session_id>
+GET /api/defects/{event_id}?session_id=<inspection_session_id>
 GET /api/cameras
 GET /api/cameras/{camera_id}/stream.mjpg?fps=6
 ```
 
 接口是只读的。真实病害只能由 ROS 2 `DefectEvent` 进入，避免网页端伪造检测结果。
-相机流只允许访问节点参数中明确配置的五路相机，`fps` 最终不会超过
+相机流只允许访问节点参数中明确配置的五路原始画面和五路 YOLO 画面，`fps` 最终不会超过
 `camera_stream_max_fps`。
 
 ## 主要参数

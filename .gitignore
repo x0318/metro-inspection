@@ -20,11 +20,12 @@ __pycache__/
 # Dataset and videos
 datasets/
 videos/
+/results/
+/runs/
 *.mp4
 *.avi
 *.bag
 *.db3
-/results/maps/*.pcd
 
 # IDE
 .vscode/
