@@ -56,6 +56,14 @@ def test_sessions_are_isolated_in_the_same_database(tmp_path) -> None:
     second_session = DefectStore(database_path=database_path, session_id="run-2")
     assert second_session.count() == 0
     second_session.upsert({"event_id": "event-1", "value": "second"})
+    assert second_session.list(session_id="run-1")[0]["value"] == "first"
+    assert second_session.get("event-1", session_id="run-1")["value"] == "first"
+    assert second_session.count(session_id="run-1") == 1
+    sessions = second_session.list_sessions()
+    assert [session["session_id"] for session in sessions] == ["run-2", "run-1"]
+    assert sessions[0]["active"] is True
+    assert sessions[1]["active"] is False
+    assert sessions[1]["record_count"] == 1
     second_session.close()
 
     reopened_first = DefectStore(database_path=database_path, session_id="run-1")

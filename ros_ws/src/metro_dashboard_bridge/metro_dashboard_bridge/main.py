@@ -5,6 +5,7 @@ from pathlib import Path
 import rclpy
 import uvicorn
 from rclpy.executors import SingleThreadedExecutor
+from rclpy.signals import SignalHandlerOptions
 
 from .api import create_app
 from .defect_event_node import DefectEventBridgeNode
@@ -35,7 +36,7 @@ def _read_dashboard_dir() -> Path:
 def main(args=None) -> None:
     host = os.environ.get("METRO_DASHBOARD_BIND_ADDRESS", "127.0.0.1")
     port = _read_port()
-    rclpy.init(args=args)
+    rclpy.init(args=args, signal_handler_options=SignalHandlerOptions.NO)
     node = DefectEventBridgeNode()
     executor = SingleThreadedExecutor()
     executor.add_node(node)

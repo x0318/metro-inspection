@@ -25,6 +25,8 @@ uint8 LOCALIZATION_NONE=0
 uint8 LOCALIZATION_CURRENT_CLOUD=1
 uint8 LOCALIZATION_ACCUMULATED_MAP=2
 uint8 LOCALIZATION_TUNNEL_MODEL=3
+# Known model coordinate used only for simulation annotation, not an estimate.
+uint8 LOCALIZATION_MODEL_REFERENCE=4
 
 bool has_3d_position
 geometry_msgs/PointStamped position

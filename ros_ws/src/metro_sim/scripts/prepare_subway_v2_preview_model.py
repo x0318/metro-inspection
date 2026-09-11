@@ -48,6 +48,16 @@ def main() -> None:
             if local_name(child.tag) in {"sensor", "plugin"}:
                 parent.remove(child)
 
+    # The sensor-free preview has no ROS controller, so lock Pitch at its
+    # zero-position inspection pose instead of allowing gravity to move it.
+    pitch_joint = model.find("./joint[@name='pitch_joint']")
+    if pitch_joint is None:
+        raise ValueError("Preview source is missing pitch_joint")
+    pitch_joint.set("type", "fixed")
+    axis = pitch_joint.find("axis")
+    if axis is not None:
+        pitch_joint.remove(axis)
+
     args.output_dir.mkdir(parents=True, exist_ok=True)
     ET.indent(tree, space="  ")
     tree.write(args.output_dir / "model.sdf", encoding="utf-8", xml_declaration=True)

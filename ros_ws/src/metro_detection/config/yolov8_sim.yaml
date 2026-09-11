@@ -12,4 +12,6 @@ yolo_detector:
     fallback_to_cpu: true
     max_inference_rate_hz: 10.0
     publish_annotated_image: true
+    annotated_jpeg_quality: 75
     status_period_sec: 5.0
+    image_reliability: reliable

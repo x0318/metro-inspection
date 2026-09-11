@@ -68,6 +68,17 @@ def test_allows_unlocalized_event_with_unknown_severity() -> None:
     assert record["semantic_location"] is None
 
 
+def test_model_reference_is_explicit_and_has_no_inference_confidence():
+    message = make_event()
+    message.localization_method = DefectEvent.LOCALIZATION_MODEL_REFERENCE
+    message.position.header.frame_id = "world"
+    record = defect_event_to_record(message)
+    assert record["source_kind"] == "model_annotation"
+    assert record["confidence"] is None
+    assert record["localization"]["confidence"] is None
+    assert record["localization"]["method_name"] == "model_reference"
+
+
 def test_rejects_event_without_stable_id() -> None:
     message = make_event()
     message.event_id = ""

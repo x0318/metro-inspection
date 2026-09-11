@@ -228,7 +228,7 @@
     </collision>
   </link>
   <joint name="yaw_joint" type="fixed">
-    <origin xyz="-0.0738710600481814 -0.166 -0.0109040290468001" rpy="3.14159265358979 1.5707963267949 0" />
+    <origin xyz="0.080728936235469 -0.166 0.033082880992946" rpy="3.14159265358979 -1.5707963267949 0" />
     <parent link="base_link" />
     <child link="yuntai" />
   </joint>
@@ -254,10 +254,13 @@
       </geometry>
     </collision>
   </link>
-  <joint name="pitch_joint" type="fixed">
-    <origin xyz="0 0.01 0" rpy="-1.83259571459394 1.5707963267949 0" />
+  <joint name="pitch_joint" type="revolute">
+    <origin xyz="0 0.01 0" rpy="3.14050535389669 -1.5707963267949 0" />
     <parent link="yuntai" />
     <child link="pitch" />
+    <axis xyz="-1 0 0" />
+    <limit lower="-0.261799387799149" upper="0.785398163397448" effort="10" velocity="0.5" />
+    <dynamics damping="0.5" friction="0.1" />
   </joint>
   <link name="leida">
     <inertial>
@@ -440,7 +443,7 @@
     <child link="xj1_optical_frame" />
   </joint>
   <joint name="xj2_camera_joint" type="fixed">
-    <origin xyz="0 0 0.018478" rpy="-3.14159265358979 -1.13446401379631 1.5707963267949" />
+    <origin xyz="0 0 0.082" rpy="-3.14159265358979 -1.13446401379631 1.5707963267949" />
     <parent link="xj2" />
     <child link="xj2_camera_link" />
   </joint>
@@ -450,7 +453,7 @@
     <child link="xj2_optical_frame" />
   </joint>
   <joint name="xj3_camera_joint" type="fixed">
-    <origin xyz="0 0 0.077" rpy="-1.5707963267949 -1.5707963267949 0" />
+    <origin xyz="0 0 0.112" rpy="3.14159265358979 -1.30899693899575 1.5707963267949" />
     <parent link="xj3" />
     <child link="xj3_camera_link" />
   </joint>
@@ -475,7 +478,7 @@
     <child link="pitch_camera" />
   </joint>
   <joint name="pitch_camera_sensor_joint" type="fixed">
-    <origin xyz="-0.077300002798 0.003299999982 0.087818765" rpy="1.5707963267949 -1.5707963267949 0" />
+    <origin xyz="-0.077300002798 -0.025686200096 0.095551824230" rpy="-3.14159265358979 -0.260712087614 -1.57079632679489" />
     <parent link="pitch_camera" />
     <child link="pitch_camera_sensor_link" />
   </joint>
@@ -484,6 +487,22 @@
     <parent link="pitch_camera_sensor_link" />
     <child link="pitch_camera_optical_frame" />
   </joint>
+  <ros2_control name="subway_v2_pitch_system" type="system">
+    <hardware>
+      <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+    </hardware>
+    <joint name="pitch_joint">
+      <command_interface name="position">
+        <param name="min">-0.261799387799149</param>
+        <param name="max">0.785398163397448</param>
+      </command_interface>
+      <state_interface name="position">
+        <param name="initial_value">0</param>
+      </state_interface>
+      <state_interface name="velocity" />
+      <state_interface name="effort" />
+    </joint>
+  </ros2_control>
   <gazebo>
     <static>false</static>
     <plugin name="subway_v2_diff_drive" filename="libgazebo_ros_diff_drive.so">
@@ -518,6 +537,16 @@
       <joint_name>w2_joint</joint_name>
       <joint_name>w3_joint</joint_name>
       <joint_name>w4_joint</joint_name>
+      <joint_name>pitch_joint</joint_name>
+    </plugin>
+    <plugin name="subway_v2_pitch_control" filename="libgazebo_ros2_control.so">
+      <ros>
+        <namespace>/subway_v2</namespace>
+      </ros>
+      <robot_param>robot_description</robot_param>
+      <robot_param_node>/robot_state_publisher</robot_param_node>
+      <parameters>ros_ws/src/metro_description/config/subway_v2_controllers.yaml</parameters>
+      <hold_joints>true</hold_joints>
     </plugin>
   </gazebo>
   <gazebo reference="base_link">
@@ -690,8 +719,9 @@
     </sensor>
   </gazebo>
   <!-- Simulation-only optics: XJ1/XJ2 use 70 degrees for raised side-wall
-       coverage, XJ3/XJ4 retain their calibrated 44.95-degree track view, and
-       Pitch uses 55 degrees. These do not replace physical calibration. -->
+       coverage. Rear-right XJ3 uses 70 degrees and aims 75 degrees downward
+       to include the wheel/rail and right wall-side area. XJ4 retains 44.95 degrees,
+       and Pitch uses 55 degrees. These do not replace physical calibration. -->
   <gazebo reference="xj1_camera_link">
     <sensor name="xj1_camera_sensor" type="camera">
       <always_on>true</always_on>
@@ -815,7 +845,7 @@
       <update_rate>30</update_rate>
       <pose>0 0 0 0 0 0</pose>
       <camera name="xj3_camera">
-        <horizontal_fov>0.784537</horizontal_fov>
+        <horizontal_fov>1.22173</horizontal_fov>
         <image>
           <width>1440</width>
           <height>1080</height>
@@ -840,8 +870,8 @@
         </distortion>
         <lens>
           <intrinsics>
-            <fx>1740.3529088647258</fx>
-            <fy>1740.4620389110569</fy>
+            <fx>1028.2670861548688</fx>
+            <fy>1028.3315643616631</fy>
             <cx>696.2963</cx>
             <cy>547.75936</cy>
             <s>0</s>
@@ -854,13 +884,13 @@
         </ros>
         <camera_name>xj3</camera_name>
         <frame_name>xj3_optical_frame</frame_name>
-        <focal_length>1740.3529088647258</focal_length>
+        <focal_length>1028.2670861548688</focal_length>
         <cx>696.2963</cx>
         <cy>547.75936</cy>
         <border_crop>false</border_crop>
         <rectification_matrix>1 0 0 0 1 0 0 0 1</rectification_matrix>
-        <P_fx>1715.0524881234628</P_fx>
-        <P_fy>1723.8636518642318</P_fy>
+        <P_fx>1013.3186295621878</P_fx>
+        <P_fy>1018.5246022239418</P_fy>
         <P_cx>693.56983</P_cx>
         <P_cy>545.3029</P_cy>
       </plugin>
